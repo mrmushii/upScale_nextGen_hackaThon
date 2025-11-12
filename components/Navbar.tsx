@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,9 +13,9 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <a href="/" className="text-2xl font-bold text-primary-600">
+            <Link href="/" className="text-2xl font-bold text-primary-600">
               Upscale
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
@@ -38,12 +39,12 @@ export default function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="text-gray-700 hover:text-primary-600 transition">
+            <Link href="/login" className="text-gray-700 hover:text-primary-600 transition font-semibold">
               Sign In
-            </button>
-            <button className="bg-primary-600 text-white px-6 py-2 rounded-full hover:bg-primary-700 transition transform hover:scale-105">
+            </Link>
+            <Link href="/register" className="bg-primary-600 text-white px-6 py-2 rounded-full hover:bg-primary-700 transition transform hover:scale-105">
               Get Started
-            </button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -93,12 +94,12 @@ export default function Navbar() {
               FAQ
             </a>
             <div className="pt-4 space-y-2">
-              <button className="w-full text-center py-2 text-gray-700 hover:text-primary-600 transition">
+              <Link href="/login" className="block w-full text-center py-2 text-gray-700 hover:text-primary-600 transition font-semibold">
                 Sign In
-              </button>
-              <button className="w-full bg-primary-600 text-white py-2 rounded-full hover:bg-primary-700 transition">
+              </Link>
+              <Link href="/register" className="block w-full bg-primary-600 text-white py-2 rounded-full hover:bg-primary-700 transition text-center">
                 Get Started
-              </button>
+              </Link>
             </div>
           </div>
         </div>

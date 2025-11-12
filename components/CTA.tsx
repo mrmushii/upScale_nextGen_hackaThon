@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export default function CTA() {
   return (
@@ -33,13 +34,13 @@ export default function CTA() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          <button className="group bg-white text-primary-600 px-8 py-4 rounded-full hover:bg-gray-50 transition transform hover:scale-105 flex items-center space-x-2 shadow-2xl font-semibold text-lg">
+          <Link href="/register" className="group bg-white text-primary-600 px-8 py-4 rounded-full hover:bg-gray-50 transition transform hover:scale-105 flex items-center space-x-2 shadow-2xl font-semibold text-lg">
             <span>Get Started Free</span>
             <ArrowRight size={20} className="group-hover:translate-x-1 transition" />
-          </button>
-          <button className="text-white px-8 py-4 rounded-full border-2 border-white hover:bg-white hover:text-primary-600 transition font-semibold text-lg">
+          </Link>
+          <a href="#pricing" className="text-white px-8 py-4 rounded-full border-2 border-white hover:bg-white hover:text-primary-600 transition font-semibold text-lg">
             View Pricing
-          </button>
+          </a>
         </div>
 
         {/* Trust indicators */}

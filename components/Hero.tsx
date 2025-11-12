@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -37,13 +38,13 @@ export default function Hero() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="group bg-primary-600 text-white px-8 py-4 rounded-full hover:bg-primary-700 transition transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-primary-200">
+              <Link href="/register" className="group bg-primary-600 text-white px-8 py-4 rounded-full hover:bg-primary-700 transition transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-primary-200">
                 <span className="font-semibold">Start Your Journey</span>
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition" />
-              </button>
-              <button className="bg-white text-gray-700 px-8 py-4 rounded-full hover:bg-gray-50 transition border-2 border-gray-200 font-semibold">
+              </Link>
+              <Link href="/features" className="bg-white text-gray-700 px-8 py-4 rounded-full hover:bg-gray-50 transition border-2 border-gray-200 font-semibold text-center">
                 Watch Demo
-              </button>
+              </Link>
             </div>
             
             {/* Stats */}

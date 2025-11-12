@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Sparkles, Zap, Crown } from "lucide-react";
+import Link from "next/link";
 
 const plans = [
   {
@@ -147,11 +148,12 @@ export default function Pricing() {
               </div>
 
               {/* CTA Button */}
-              <button
-                className={`w-full py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${plan.buttonStyle} mb-8`}
+              <Link
+                href="/register"
+                className={`block text-center w-full py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${plan.buttonStyle} mb-8`}
               >
                 {plan.buttonText}
-              </button>
+              </Link>
 
               {/* Features */}
               <div className="space-y-4">

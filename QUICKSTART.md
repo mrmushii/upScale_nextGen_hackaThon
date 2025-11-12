@@ -114,7 +114,7 @@ npm run lint     # Run ESLint
 - Component library built
 
 ### Phase 2: Backend (Next)
-1. Set up database (PostgreSQL + Prisma)
+1. Set up database (MongoDB + Mongoose)
 2. Create API routes
 3. Add authentication (NextAuth.js)
 4. Implement user profiles
@@ -215,7 +215,8 @@ npm run lint
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Prisma Docs](https://www.prisma.io/docs)
+- [MongoDB Docs](https://www.mongodb.com/docs/)
+- [Mongoose Docs](https://mongoosejs.com/docs/)
 
 ## 🤝 Getting Help
 

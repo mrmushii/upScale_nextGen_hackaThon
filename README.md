@@ -58,9 +58,10 @@ Transform fragmented learning into clear, evidence-backed career roadmaps. Conne
 - **Frontend**: Next.js 14 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
+- **Database**: MongoDB with Mongoose ODM
 - **Icons**: Lucide React
 - **Animations**: Custom CSS animations + Framer Motion ready
-- **Deployment**: Vercel (Frontend), Railway/Render (Backend when implemented)
+- **Deployment**: Vercel (Frontend), MongoDB Atlas (Database), Railway/Render (Backend when implemented)
 
 ## 🚀 Getting Started
 
@@ -104,7 +105,9 @@ Upscale/
 ├── app/
 │   ├── layout.tsx          # Root layout with metadata
 │   ├── page.tsx            # Main landing page
-│   └── globals.css         # Global styles & Tailwind
+│   ├── globals.css         # Global styles & Tailwind
+│   └── api/                # API routes
+│       └── test/           # MongoDB connection test
 ├── components/
 │   ├── Navbar.tsx          # Navigation header
 │   ├── Hero.tsx            # Hero section
@@ -123,8 +126,20 @@ Upscale/
 │       ├── CVAnalyzer.tsx
 │       ├── JobMatching.tsx
 │       └── CareerRoadmap.tsx
-├── public/                 # Static assets
-├── tailwind.config.ts      # Tailwind configuration
+├── models/                 # Mongoose schemas
+│   ├── User.ts            # User model
+│   ├── Job.ts             # Job model
+│   ├── Roadmap.ts         # Roadmap model
+│   ├── Mentor.ts          # Mentor model
+│   ├── Application.ts     # Application model
+│   └── index.ts           # Export all models
+├── lib/
+│   ├── mongodb.ts         # MongoDB connection
+│   ├── constants.ts       # App constants
+│   └── utils.ts           # Utility functions
+├── types/                 # TypeScript definitions
+├── public/                # Static assets
+├── tailwind.config.ts     # Tailwind configuration
 ├── tsconfig.json          # TypeScript configuration
 └── package.json           # Dependencies
 
@@ -183,7 +198,7 @@ The following AI features have placeholder components ready for integration:
 
 ### Phase 2 - Backend & Auth
 - [ ] User authentication system
-- [ ] Database schema setup (PostgreSQL + Prisma)
+- [ ] Database schema setup (MongoDB + Mongoose)
 - [ ] API routes for user management
 - [ ] Payment integration (bKash/Nagad/Stripe)
 
@@ -215,15 +230,29 @@ The following AI features have placeholder components ready for integration:
 3. Deploy automatically
 
 ### Environment Variables (When Backend is Ready)
+
+Create a `.env.local` file:
+
 ```env
-DATABASE_URL=
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=
-STRIPE_SECRET_KEY=
-BKASH_API_KEY=
-NAGAD_API_KEY=
-OPENAI_API_KEY=
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/upscale
+# Or for MongoDB Atlas:
+# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/upscale
+
+# NextAuth
+NEXTAUTH_SECRET=your-secret-key
+NEXTAUTH_URL=http://localhost:3000
+
+# Payment Gateways
+STRIPE_SECRET_KEY=sk_test_...
+BKASH_API_KEY=your-bkash-key
+NAGAD_API_KEY=your-nagad-key
+
+# OpenAI (for AI features)
+OPENAI_API_KEY=sk-...
 ```
+
+See [MONGODB_SETUP.md](./MONGODB_SETUP.md) for detailed database setup instructions.
 
 ## 🤝 Contributing
 

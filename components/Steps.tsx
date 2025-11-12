@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 const steps = [
   {
@@ -75,9 +76,9 @@ export default function Steps() {
 
           {/* CTA */}
           <div className="text-center mt-12">
-            <button className="bg-primary-600 text-white px-8 py-4 rounded-full hover:bg-primary-700 transition transform hover:scale-105 shadow-lg shadow-primary-200 font-semibold text-lg">
+            <Link href="/register" className="inline-block bg-primary-600 text-white px-8 py-4 rounded-full hover:bg-primary-700 transition transform hover:scale-105 shadow-lg shadow-primary-200 font-semibold text-lg">
               Get Started Free →
-            </button>
+            </Link>
           </div>
         </div>
       </div>
