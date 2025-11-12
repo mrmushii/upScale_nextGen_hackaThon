@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       fullName,
       email: email.toLowerCase(),
       password: hashedPassword,
+      role: "user",
       educationLevel: "Bachelor's Degree",
       experienceLevel: "Entry Level (0-1 years)",
       preferredTrack: "Frontend Development",

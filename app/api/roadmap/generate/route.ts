@@ -4,8 +4,11 @@ import Roadmap from "@/models/Roadmap";
 import User from "@/models/User";
 import { auth } from "@/auth";
 import { TIER_LIMITS } from "@/types";
+import { generatePersonalizedRoadmap, calculateRoadmapProgress } from "@/lib/roadmapGenerator";
+import { generateRoadmapWithGemini } from "@/lib/geminiAI";
+import { generateInteractiveRoadmap } from "@/lib/geminiAIEnhanced";
 
-// Mock roadmap templates (In production, this would use AI)
+// Legacy templates for reference (now using AI generator)
 const roadmapTemplates: Record<string, any> = {
   "Frontend Development": {
     stages: [
@@ -134,18 +137,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get template or generate from user's preferred track
-    const template =
-      roadmapTemplates[targetRole] ||
-      roadmapTemplates[user.preferredTrack] ||
-      roadmapTemplates["Frontend Development"];
+    // Try Gemini AI with interactive exercises first
+    let stages;
+    try {
+      stages = await generateInteractiveRoadmap({
+        skills: user.skills || [],
+        preferredTrack: user.preferredTrack,
+        experienceLevel: user.experienceLevel,
+        targetRole,
+      });
+      
+      // If Gemini fails or returns null/empty, use fallback
+      if (!stages || stages.length === 0) {
+        throw new Error("Gemini returned null or empty");
+      }
+    } catch (geminiError) {
+      console.log("Gemini AI unavailable, using template-based generation with exercises");
+      // Fallback includes interactive exercises
+      stages = generatePersonalizedRoadmap(
+        {
+          skills: user.skills || [],
+          preferredTrack: user.preferredTrack,
+          experienceLevel: user.experienceLevel,
+          targetRoles: user.targetRoles || [],
+        },
+        targetRole
+      );
+    }
+
+    const progress = calculateRoadmapProgress(stages);
 
     // Create roadmap
     const roadmap = await Roadmap.create({
       userId: user._id,
       targetRole,
-      stages: template.stages,
-      progress: 0,
+      stages,
+      progress,
       status: "active",
     });
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   TrendingUp,
   Briefcase,
@@ -13,86 +14,92 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function DashboardPage() {
-  // Mock data
-  const user = {
-    name: "John Doe",
-    tier: "pro",
-    profileCompletion: 85,
-  };
+  const { data: session } = useSession();
+  const [profile, setProfile] = useState<any>(null);
+  const [jobMatches, setJobMatches] = useState<any[]>([]);
+  const [roadmaps, setRoadmaps] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch user profile
+        const profileRes = await fetch("/api/user/profile");
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setProfile(profileData.user);
+        }
+
+        // Fetch job matches
+        const jobsRes = await fetch("/api/jobs/match");
+        if (jobsRes.ok) {
+          const jobsData = await jobsRes.json();
+          setJobMatches(jobsData.matches?.slice(0, 3) || []);
+        }
+
+        // Fetch roadmaps
+        const roadmapRes = await fetch("/api/roadmap");
+        if (roadmapRes.ok) {
+          const roadmapData = await roadmapRes.json();
+          setRoadmaps(roadmapData.roadmaps || []);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (session) {
+      fetchData();
+    }
+  }, [session]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const profileCompletion = calculateProfileCompletion(profile);
+  const currentRoadmap = roadmaps[0];
 
   const stats = [
     {
       icon: Briefcase,
       label: "Job Matches",
-      value: "24",
-      change: "+12%",
+      value: jobMatches.length.toString(),
+      change: "New matches",
       color: "bg-primary-50 text-primary-600",
     },
     {
       icon: Map,
       label: "Roadmap Progress",
-      value: "65%",
-      change: "+5%",
+      value: currentRoadmap ? `${currentRoadmap.progress}%` : "0%",
+      change: "Active",
       color: "bg-coral-50 text-coral-600",
     },
     {
       icon: CheckCircle2,
       label: "Mock Interviews",
-      value: "8/20",
-      change: "3 this week",
+      value: `${profile?.usageLimits?.mockInterviews || 0}`,
+      change: "Completed",
       color: "bg-green-50 text-green-600",
     },
     {
       icon: Users,
       label: "Mentor Sessions",
-      value: "3",
-      change: "2 scheduled",
+      value: `${profile?.usageLimits?.mentorSessions || 0}`,
+      change: "Booked",
       color: "bg-purple-50 text-purple-600",
-    },
-  ];
-
-  const recentJobs = [
-    {
-      id: 1,
-      title: "Frontend Developer",
-      company: "Tech Solutions Ltd",
-      location: "Dhaka, Bangladesh",
-      match: 92,
-      posted: "2 days ago",
-    },
-    {
-      id: 2,
-      title: "React Developer",
-      company: "Digital Innovations",
-      location: "Remote",
-      match: 88,
-      posted: "3 days ago",
-    },
-    {
-      id: 3,
-      title: "Full Stack Developer",
-      company: "StartupHub",
-      location: "Chattogram, Bangladesh",
-      match: 75,
-      posted: "1 week ago",
-    },
-  ];
-
-  const upcomingSessions = [
-    {
-      id: 1,
-      type: "Mentor Session",
-      mentor: "Sarah Ahmed",
-      topic: "Resume Review",
-      time: "Tomorrow, 3:00 PM",
-    },
-    {
-      id: 2,
-      type: "Mock Interview",
-      topic: "Technical Interview Practice",
-      time: "Friday, 10:00 AM",
     },
   ];
 
@@ -101,7 +108,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-          Welcome back, {user.name}! 👋
+          Welcome back, {profile?.fullName || session?.user?.name}! 👋
         </h1>
         <p className="text-gray-600 mt-2">
           Here's what's happening with your career journey today
@@ -109,17 +116,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Profile Completion Banner */}
-      {user.profileCompletion < 100 && (
+      {profileCompletion < 100 && (
         <div className="bg-gradient-to-r from-primary-600 to-coral-600 rounded-3xl p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10">
             <div className="flex items-start justify-between flex-wrap gap-4">
               <div>
-                <h3 className="text-xl font-bold mb-2">
-                  Complete Your Profile
-                </h3>
+                <h3 className="text-xl font-bold mb-2">Complete Your Profile</h3>
                 <p className="text-white/90 mb-4">
-                  {user.profileCompletion}% complete - Add more details to get better matches
+                  {profileCompletion}% complete - Add more details to get better matches
                 </p>
                 <Link
                   href="/dashboard/settings"
@@ -148,12 +153,14 @@ export default function DashboardPage() {
                     strokeWidth="8"
                     fill="transparent"
                     strokeDasharray={`${2 * Math.PI * 32}`}
-                    strokeDashoffset={`${2 * Math.PI * 32 * (1 - user.profileCompletion / 100)}`}
+                    strokeDashoffset={`${
+                      2 * Math.PI * 32 * (1 - profileCompletion / 100)
+                    }`}
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="text-center -mt-16 text-white font-bold">
-                  {user.profileCompletion}%
+                  {profileCompletion}%
                 </div>
               </div>
             </div>
@@ -204,42 +211,55 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className="space-y-4">
-              {recentJobs.map((job) => (
+            {jobMatches.length > 0 ? (
+              <div className="space-y-4">
+                {jobMatches.map((match: any) => (
+                  <Link
+                    key={match.job._id}
+                    href={`/dashboard/jobs/${match.job._id}`}
+                    className="block p-4 border-2 border-gray-100 rounded-xl hover:border-primary-300 hover:bg-primary-50 transition group"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 mb-1 group-hover:text-primary-700">
+                          {match.job.title}
+                        </h4>
+                        <p className="text-gray-600 text-sm mb-2">{match.job.company}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span>📍 {match.job.location}</span>
+                          <span>🕒 {new Date(match.job.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <div
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${
+                            match.score >= 85
+                              ? "bg-green-100 text-green-700"
+                              : match.score >= 70
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-orange-100 text-orange-700"
+                          }`}
+                        >
+                          <Sparkles size={14} />
+                          {match.score}% Match
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Briefcase size={48} className="mx-auto mb-4 opacity-50" />
+                <p>No job matches yet. Complete your profile to get personalized recommendations.</p>
                 <Link
-                  key={job.id}
-                  href={`/dashboard/jobs/${job.id}`}
-                  className="block p-4 border-2 border-gray-100 rounded-xl hover:border-primary-300 hover:bg-primary-50 transition group"
+                  href="/dashboard/settings"
+                  className="inline-block mt-4 text-primary-600 font-semibold hover:text-primary-700"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-bold text-gray-900 mb-1 group-hover:text-primary-700">
-                        {job.title}
-                      </h4>
-                      <p className="text-gray-600 text-sm mb-2">{job.company}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>📍 {job.location}</span>
-                        <span>🕒 {job.posted}</span>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <div
-                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${
-                          job.match >= 85
-                            ? "bg-green-100 text-green-700"
-                            : job.match >= 70
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-orange-100 text-orange-700"
-                        }`}
-                      >
-                        <Sparkles size={14} />
-                        {job.match}% Match
-                      </div>
-                    </div>
-                  </div>
+                  Complete Profile →
                 </Link>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Roadmap Progress */}
@@ -258,119 +278,113 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="font-semibold text-gray-700">Overall Progress</span>
-                <span className="font-bold text-primary-600">65%</span>
-              </div>
-              <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-primary-500 to-coral-500 rounded-full transition-all duration-500"
-                  style={{ width: "65%" }}
-                ></div>
-              </div>
-            </div>
+            {currentRoadmap ? (
+              <>
+                <div className="mb-6">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-semibold text-gray-700">
+                      {currentRoadmap.targetRole}
+                    </span>
+                    <span className="font-bold text-primary-600">
+                      {currentRoadmap.progress}%
+                    </span>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-primary-500 to-coral-500 rounded-full transition-all duration-500"
+                      style={{ width: `${currentRoadmap.progress}%` }}
+                    ></div>
+                  </div>
+                </div>
 
-            {/* Current Stage */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-primary-50 rounded-xl">
-                <CheckCircle2 size={20} className="text-primary-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900">Prerequisites</div>
-                  <div className="text-sm text-gray-600">Completed</div>
+                <div className="space-y-3">
+                  {currentRoadmap.stages.slice(0, 3).map((stage: any, index: number) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-3 p-3 rounded-xl ${
+                        stage.completed
+                          ? "bg-green-50"
+                          : index === 1
+                          ? "bg-primary-100 border-2 border-primary-300"
+                          : "bg-gray-50 opacity-60"
+                      }`}
+                    >
+                      {stage.completed ? (
+                        <CheckCircle2 size={20} className="text-green-600 flex-shrink-0" />
+                      ) : index === 1 ? (
+                        <div className="w-5 h-5 rounded-full border-2 border-primary-600 flex items-center justify-center">
+                          <div className="w-2 h-2 bg-primary-600 rounded-full"></div>
+                        </div>
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+                      )}
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">{stage.name}</div>
+                        <div className="text-sm text-gray-600">
+                          {stage.completed ? "Completed" : `${currentRoadmap.progress}% done`}
+                        </div>
+                      </div>
+                      {stage.completed && <Award size={20} className="text-yellow-500" />}
+                    </div>
+                  ))}
                 </div>
-                <Award size={20} className="text-yellow-500" />
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Map size={48} className="mx-auto mb-4 opacity-50" />
+                <p className="mb-4">No roadmap yet. Generate your personalized career path!</p>
+                <Link
+                  href="/dashboard/roadmap"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold"
+                >
+                  Generate Roadmap
+                  <Map size={20} />
+                </Link>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-primary-100 rounded-xl border-2 border-primary-300">
-                <div className="w-5 h-5 rounded-full border-2 border-primary-600 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-primary-600 rounded-full"></div>
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900">Core Skills</div>
-                  <div className="text-sm text-gray-600">In Progress - 65%</div>
-                </div>
-                <Clock size={20} className="text-primary-600" />
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl opacity-60">
-                <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900">Advanced Topics</div>
-                  <div className="text-sm text-gray-600">Locked</div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Right Column - Upcoming & Actions */}
+        {/* Right Column */}
         <div className="space-y-6">
-          {/* Upcoming Sessions */}
-          <div className="bg-white rounded-3xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Clock size={20} className="text-primary-600" />
-              Upcoming
-            </h3>
-            <div className="space-y-3">
-              {upcomingSessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="p-4 bg-gradient-to-br from-primary-50 to-coral-50 rounded-xl border-2 border-primary-100"
-                >
-                  <div className="text-xs font-semibold text-primary-600 uppercase mb-1">
-                    {session.type}
-                  </div>
-                  {"mentor" in session && (
-                    <div className="text-sm font-semibold text-gray-900 mb-1">
-                      with {session.mentor}
-                    </div>
-                  )}
-                  <div className="text-sm text-gray-700 mb-2">{session.topic}</div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1">
-                    <Clock size={12} />
-                    {session.time}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Quick Actions */}
           <div className="bg-white rounded-3xl p-6 shadow-lg">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <Link
-                href="/dashboard/interview"
+                href="/dashboard/jobs"
                 className="block p-4 bg-gradient-to-r from-primary-50 to-coral-50 rounded-xl hover:from-primary-100 hover:to-coral-100 transition group"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-white rounded-lg group-hover:scale-110 transition">
-                    <Sparkles size={20} className="text-primary-600" />
+                    <Briefcase size={20} className="text-primary-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">Start Mock Interview</div>
-                    <div className="text-sm text-gray-600">8/20 used this month</div>
+                    <div className="font-semibold text-gray-900">Browse Jobs</div>
+                    <div className="text-sm text-gray-600">{jobMatches.length} matches found</div>
                   </div>
                 </div>
               </Link>
 
               <Link
-                href="/dashboard/cv-analyzer"
+                href="/dashboard/roadmap"
                 className="block p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl hover:from-purple-100 hover:to-pink-100 transition group"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-white rounded-lg group-hover:scale-110 transition">
-                    <Award size={20} className="text-purple-600" />
+                    <Map size={20} className="text-purple-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">Analyze Resume</div>
-                    <div className="text-sm text-gray-600">Get AI feedback</div>
+                    <div className="font-semibold text-gray-900">View Roadmap</div>
+                    <div className="text-sm text-gray-600">
+                      {roadmaps.length > 0 ? "Track your progress" : "Generate your path"}
+                    </div>
                   </div>
                 </div>
               </Link>
 
               <Link
-                href="/dashboard/mentors"
+                href="/dashboard/settings"
                 className="block p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl hover:from-green-100 hover:to-teal-100 transition group"
               >
                 <div className="flex items-center gap-3">
@@ -378,28 +392,33 @@ export default function DashboardPage() {
                     <Users size={20} className="text-green-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">Book Mentor</div>
-                    <div className="text-sm text-gray-600">1 session included</div>
+                    <div className="font-semibold text-gray-900">Update Profile</div>
+                    <div className="text-sm text-gray-600">{profileCompletion}% complete</div>
                   </div>
                 </div>
               </Link>
             </div>
           </div>
 
-          {/* Upgrade Prompt (for Basic users) */}
+          {/* Subscription Info */}
           <div className="bg-gradient-to-br from-primary-600 to-coral-600 rounded-3xl p-6 text-white">
             <Sparkles size={32} className="mb-3" />
-            <h3 className="text-xl font-bold mb-2">Upgrade to Pro</h3>
-            <p className="text-white/90 text-sm mb-4">
-              Unlock unlimited mock interviews, AI resume optimization, and priority job matching
-            </p>
-            <Link
-              href="/dashboard/settings?tab=subscription"
-              className="inline-flex items-center gap-2 bg-white text-primary-600 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition"
-            >
-              View Plans
-              <ArrowRight size={16} />
-            </Link>
+            <h3 className="text-xl font-bold mb-2">
+              Current Plan: {profile?.subscription?.tier?.toUpperCase() || "BASIC"}
+            </h3>
+            <div className="text-white/90 text-sm mb-4">
+              <div>Roadmaps: {profile?.usageLimits?.careerRoadmaps || 0} used</div>
+              <div>CV Analyses: {profile?.usageLimits?.cvAnalyses || 0} used</div>
+            </div>
+            {profile?.subscription?.tier === "basic" && (
+              <Link
+                href="/dashboard/settings?tab=subscription"
+                className="inline-flex items-center gap-2 bg-white text-primary-600 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition"
+              >
+                Upgrade to Pro
+                <ArrowRight size={16} />
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -407,3 +426,15 @@ export default function DashboardPage() {
   );
 }
 
+function calculateProfileCompletion(profile: any): number {
+  if (!profile) return 0;
+  
+  let completion = 20; // Base
+  if (profile.skills?.length > 0) completion += 20;
+  if (profile.targetRoles?.length > 0) completion += 20;
+  if (profile.preferredTrack) completion += 20;
+  if (profile.educationLevel) completion += 10;
+  if (profile.experienceLevel) completion += 10;
+  
+  return Math.min(100, completion);
+}

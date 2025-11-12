@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   MapPin,
   Briefcase,
@@ -16,57 +17,97 @@ import {
 import Link from "next/link";
 
 export default function JobDetailPage({ params }: { params: { id: string } }) {
-  // Mock job data
-  const job = {
-    id: params.id,
-    title: "Frontend Developer",
-    company: "Tech Solutions Ltd",
-    location: "Dhaka, Bangladesh",
-    remote: true,
-    type: "Full-Time",
-    salary: { min: 40000, max: 60000, currency: "BDT" },
-    requiredSkills: ["React", "TypeScript", "Tailwind CSS", "Next.js", "Git"],
-    recommendedSkills: ["Node.js", "GraphQL"],
-    match: 92,
-    posted: "2 days ago",
-    saved: false,
-    description: `We are looking for a talented Frontend Developer to join our growing team. You will be responsible for building and maintaining user-facing features for our web applications.
+  const [job, setJob] = useState<any>(null);
+  const [matchData, setMatchData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [applying, setApplying] = useState(false);
 
-## Responsibilities
-- Develop new user-facing features using React and Next.js
-- Build reusable components and front-end libraries
-- Collaborate with designers to implement pixel-perfect UIs
-- Optimize applications for maximum speed and scalability
-- Participate in code reviews and team meetings
+  useEffect(() => {
+    fetchJobDetails();
+  }, [params.id]);
 
-## Requirements
-- 2+ years of experience with React
-- Strong understanding of TypeScript
-- Experience with modern CSS frameworks (Tailwind CSS preferred)
-- Proficient with Git and version control
-- Good communication skills in English`,
-    benefits: [
-      "Competitive salary",
-      "Health insurance",
-      "Flexible working hours",
-      "Remote work options",
-      "Annual bonuses",
-      "Learning & development budget",
-    ],
+  const fetchJobDetails = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch job details
+      const jobResponse = await fetch(`/api/jobs/${params.id}`);
+      if (jobResponse.ok) {
+        const jobData = await jobResponse.json();
+        setJob(jobData.job);
+      }
+
+      // Fetch all matches to find this job's match data
+      const matchResponse = await fetch("/api/jobs/match");
+      if (matchResponse.ok) {
+        const matchData = await matchResponse.json();
+        const thisJobMatch = matchData.matches?.find(
+          (m: any) => m.job._id === params.id
+        );
+        if (thisJobMatch) {
+          setMatchData(thisJobMatch);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching job:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Calculate skill match
-  const userSkills = ["React", "TypeScript", "Tailwind CSS", "Git"]; // Mock user skills
-  const overlapSkills = job.requiredSkills.filter((skill) =>
-    userSkills.includes(skill)
-  );
-  const missingSkills = job.requiredSkills.filter(
-    (skill) => !userSkills.includes(skill)
-  );
+  const handleApply = async () => {
+    try {
+      setApplying(true);
+      
+      const response = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId: job._id,
+          companyName: job.company,
+          position: job.title,
+          status: "applied",
+        }),
+      });
+
+      if (response.ok) {
+        alert("Application submitted successfully!");
+      }
+    } catch (error) {
+      console.error("Error applying:", error);
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading job details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Job Not Found</h2>
+        <Link href="/dashboard/jobs" className="text-primary-600 font-semibold">
+          ← Back to Jobs
+        </Link>
+      </div>
+    );
+  }
+
+  const overlapSkills = matchData?.overlapSkills || [];
+  const missingSkills = matchData?.missingSkills || [];
+  const matchScore = matchData?.score || 0;
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
       <Link
         href="/dashboard/jobs"
         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold"
@@ -80,7 +121,6 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           <div className="flex-1">
             <div className="flex items-start gap-4 mb-6">
-              {/* Company Logo */}
               <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-coral-100 rounded-2xl flex items-center justify-center text-3xl font-bold text-primary-600 flex-shrink-0">
                 {job.company.charAt(0)}
               </div>
@@ -91,7 +131,6 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                 </h1>
                 <div className="text-xl text-gray-600 mb-4">{job.company}</div>
 
-                {/* Job Meta */}
                 <div className="flex flex-wrap items-center gap-4 text-gray-600">
                   <span className="flex items-center gap-2">
                     <MapPin size={18} />
@@ -100,40 +139,56 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                   </span>
                   <span className="flex items-center gap-2">
                     <Briefcase size={18} />
-                    {job.type}
+                    {job.jobType}
                   </span>
-                  <span className="flex items-center gap-2">
-                    <DollarSign size={18} />
-                    ৳{job.salary.min.toLocaleString()} - ৳
-                    {job.salary.max.toLocaleString()}/mo
-                  </span>
+                  {job.salary && (
+                    <span className="flex items-center gap-2">
+                      <DollarSign size={18} />
+                      ৳{job.salary.min.toLocaleString()} - ৳
+                      {job.salary.max.toLocaleString()}/mo
+                    </span>
+                  )}
                   <span className="flex items-center gap-2">
                     <Clock size={18} />
-                    Posted {job.posted}
+                    Posted {new Date(job.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex flex-col gap-3">
-            <div
-              className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl text-lg font-bold ${
-                job.match >= 85
-                  ? "bg-green-100 text-green-700"
-                  : job.match >= 70
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-orange-100 text-orange-700"
-              }`}
-            >
-              <Sparkles size={20} />
-              {job.match}% Match
-            </div>
+            {matchScore > 0 && (
+              <div
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl text-lg font-bold ${
+                  matchScore >= 85
+                    ? "bg-green-100 text-green-700"
+                    : matchScore >= 70
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-orange-100 text-orange-700"
+                }`}
+              >
+                <Sparkles size={20} />
+                {matchScore}% Match
+              </div>
+            )}
 
-            <button className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold">
-              Apply Now
-              <ExternalLink size={18} />
+            <button
+              onClick={handleApply}
+              disabled={applying}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold disabled:opacity-50"
+            >
+              {applying ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Applying...
+                </>
+              ) : (
+                <>
+                  Apply Now
+                  <ExternalLink size={18} />
+                </>
+              )}
             </button>
 
             <div className="flex gap-2">
@@ -151,160 +206,117 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Skill Match Analysis */}
-          <div className="bg-white rounded-3xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Why You're a {job.match}% Match
-            </h2>
+          {matchData && (
+            <div className="bg-white rounded-3xl p-8 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Why You're a {matchScore}% Match
+              </h2>
 
-            {/* Matching Skills */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle2 size={20} className="text-green-600" />
-                <h3 className="font-bold text-gray-900">
-                  You have {overlapSkills.length} matching skills
-                </h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {overlapSkills.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="px-4 py-2 bg-green-100 text-green-700 rounded-full font-semibold flex items-center gap-1"
+              {overlapSkills.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle2 size={20} className="text-green-600" />
+                    <h3 className="font-bold text-gray-900">
+                      You have {overlapSkills.length} matching skills
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {overlapSkills.map((skill: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-green-100 text-green-700 rounded-full font-semibold flex items-center gap-1"
+                      >
+                        <CheckCircle2 size={14} />
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {missingSkills.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <XCircle size={20} className="text-orange-600" />
+                    <h3 className="font-bold text-gray-900">
+                      Skills to develop ({missingSkills.length})
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {missingSkills.map((skill: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full font-semibold flex items-center gap-1"
+                      >
+                        <XCircle size={14} />
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                  <Link
+                    href="/dashboard/roadmap"
+                    className="inline-flex items-center gap-2 text-primary-600 font-semibold hover:text-primary-700"
                   >
-                    <CheckCircle2 size={14} />
-                    {skill}
-                  </span>
-                ))}
-              </div>
+                    Add to learning roadmap
+                    <ExternalLink size={16} />
+                  </Link>
+                </div>
+              )}
             </div>
-
-            {/* Missing Skills */}
-            {missingSkills.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <XCircle size={20} className="text-orange-600" />
-                  <h3 className="font-bold text-gray-900">
-                    Skills to develop ({missingSkills.length})
-                  </h3>
-                </div>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {missingSkills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full font-semibold flex items-center gap-1"
-                    >
-                      <XCircle size={14} />
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  href="/dashboard/roadmap"
-                  className="inline-flex items-center gap-2 text-primary-600 font-semibold hover:text-primary-700"
-                >
-                  Add to learning roadmap
-                  <ExternalLink size={16} />
-                </Link>
-              </div>
-            )}
-
-            {/* Recommended Skills */}
-            {job.recommendedSkills && job.recommendedSkills.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h3 className="font-bold text-gray-900 mb-3">
-                  Nice to have (Bonus skills)
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {job.recommendedSkills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-semibold"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          )}
 
           {/* Job Description */}
           <div className="bg-white rounded-3xl p-8 shadow-lg">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Job Description
             </h2>
-            <div className="prose prose-primary max-w-none">
-              <div
-                className="text-gray-700 leading-relaxed whitespace-pre-line"
-                dangerouslySetInnerHTML={{
-                  __html: job.description.replace(/## /g, "<h3 class='font-bold text-xl mt-6 mb-3'>").replace(/\n/g, "<br />"),
-                }}
-              />
+            <div className="prose max-w-none">
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {job.description}
+              </p>
             </div>
-          </div>
 
-          {/* Benefits */}
-          <div className="bg-white rounded-3xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Benefits & Perks
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {job.benefits.map((benefit, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 p-4 bg-primary-50 rounded-xl"
-                >
-                  <CheckCircle2 size={20} className="text-primary-600 flex-shrink-0" />
-                  <span className="font-semibold text-gray-900">{benefit}</span>
+            {job.tags && job.tags.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="font-bold text-gray-900 mb-3">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {job.tags.map((tag: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-semibold"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Quick Apply */}
           <div className="bg-gradient-to-br from-primary-600 to-coral-600 rounded-3xl p-6 text-white sticky top-6">
             <h3 className="text-xl font-bold mb-4">Ready to apply?</h3>
             <p className="text-white/90 mb-6 text-sm">
-              Your profile is {job.match}% compatible with this role. Apply now to increase your chances!
+              Your profile is {matchScore}% compatible with this role. Apply now to increase
+              your chances!
             </p>
-            <button className="w-full bg-white text-primary-600 py-3 rounded-xl font-bold hover:bg-gray-100 transition mb-3">
-              Apply with Upscale
+            <button
+              onClick={handleApply}
+              disabled={applying}
+              className="w-full bg-white text-primary-600 py-3 rounded-xl font-bold hover:bg-gray-100 transition mb-3 disabled:opacity-50"
+            >
+              {applying ? "Applying..." : "Apply with Upscale"}
             </button>
             <p className="text-xs text-white/80 text-center">
               Your profile and resume will be sent
             </p>
-          </div>
-
-          {/* Similar Jobs */}
-          <div className="bg-white rounded-3xl p-6 shadow-lg">
-            <h3 className="font-bold text-gray-900 mb-4">Similar Jobs</h3>
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Link
-                  key={i}
-                  href={`/dashboard/jobs/${i}`}
-                  className="block p-4 bg-gray-50 rounded-xl hover:bg-primary-50 transition group"
-                >
-                  <div className="font-semibold text-gray-900 mb-1 group-hover:text-primary-600">
-                    React Developer
-                  </div>
-                  <div className="text-sm text-gray-600 mb-2">Tech Company Inc</div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500">Remote</span>
-                    <span className="font-semibold text-green-600">85% Match</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

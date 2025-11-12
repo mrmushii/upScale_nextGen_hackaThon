@@ -4,6 +4,7 @@ export interface IUser {
   fullName: string;
   email: string;
   password: string;
+  role: "user" | "admin" | "recruiter" | "mentor";
   educationLevel: string;
   experienceLevel: string;
   preferredTrack: string;
@@ -51,6 +52,11 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin", "recruiter", "mentor"],
+      default: "user",
     },
     educationLevel: {
       type: String,
@@ -148,6 +154,7 @@ const UserSchema = new Schema<IUser>(
 UserSchema.index({ email: 1 });
 UserSchema.index({ skills: 1 });
 UserSchema.index({ preferredTrack: 1 });
+UserSchema.index({ role: 1 });
 
 const User: Model<IUser> = models.User || model<IUser>("User", UserSchema);
 

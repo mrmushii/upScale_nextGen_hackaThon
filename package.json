@@ -10,6 +10,7 @@
     "seed:jobs": "tsx scripts/seedJobs.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.0",
     "framer-motion": "^11.0.0",

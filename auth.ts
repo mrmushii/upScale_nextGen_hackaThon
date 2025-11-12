@@ -41,6 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email,
           name: user.fullName,
           tier: user.subscription?.tier || "basic",
+          role: user.role || "user",
         };
       },
     }),
@@ -50,6 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.tier = (user as any).tier;
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -57,6 +59,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token && session.user) {
         session.user.id = token.id as string;
         (session.user as any).tier = token.tier;
+        (session.user as any).role = token.role;
       }
       return session;
     },

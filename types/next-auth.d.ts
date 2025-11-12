@@ -5,12 +5,14 @@ declare module "next-auth" {
     user: {
       id: string;
       tier: "basic" | "pro" | "ultimate";
+      role: "user" | "admin" | "recruiter" | "mentor";
     } & DefaultSession["user"];
   }
 
   interface User {
     id: string;
     tier: "basic" | "pro" | "ultimate";
+    role: "user" | "admin" | "recruiter" | "mentor";
   }
 }
 
@@ -18,6 +20,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     tier: "basic" | "pro" | "ultimate";
+    role: "user" | "admin" | "recruiter" | "mentor";
   }
 }
 

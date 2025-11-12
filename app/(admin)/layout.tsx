@@ -1,6 +1,6 @@
 import DynamicDashboardNav from "@/components/dashboard/DynamicDashboardNav";
 
-export default function DashboardLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -9,7 +9,6 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-gradient-primary">
       <DynamicDashboardNav />
       
-      {/* Main Content */}
       <main className="lg:ml-64 pt-16 lg:pt-20">
         <div className="p-4 lg:p-8">
           {children}
