@@ -18,8 +18,43 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Use unified jobs API to get both recruiter and findwork.dev jobs
+    const { searchParams } = new URL(request.url);
+    const track = user.preferredTrack || "";
+    
+    // Fetch from unified API
+    const baseUrl = request.nextUrl.origin;
+    const unifiedParams = new URLSearchParams();
+    unifiedParams.append("page", "1");
+    unifiedParams.append("track", track || "all");
+    
+    try {
+      const unifiedResponse = await fetch(`${baseUrl}/api/jobs/unified?${unifiedParams.toString()}`, {
+        headers: {
+          Cookie: request.headers.get("cookie") || "",
+        },
+      });
+
+      if (unifiedResponse.ok) {
+        const unifiedData = await unifiedResponse.json();
+        // Return top matches (already sorted by match score)
+        const topMatches = unifiedData.jobs.slice(0, 10).map((job: any) => ({
+          job,
+          score: job.matchScore || 0,
+          overlapSkills: job.overlapSkills || [],
+          missingSkills: job.missingSkills || [],
+          explanation: `You match ${job.overlapSkills?.length || 0} out of ${job.skills?.length || 0} required skills`,
+        }));
+
+        return NextResponse.json({ matches: topMatches });
+      }
+    } catch (error) {
+      console.error("Error fetching from unified API:", error);
+    }
+
+    // Fallback to old method (recruiter jobs only)
     const userSkills = user.skills || [];
-    const jobs = await Job.find({ status: "active" })
+    const jobs = await Job.find({ status: "active", approved: true })
       .sort({ createdAt: -1 })
       .limit(50)
       .lean();

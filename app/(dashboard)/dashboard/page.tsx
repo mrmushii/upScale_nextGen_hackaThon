@@ -303,40 +303,59 @@ export default function DashboardPage() {
 
             {jobMatches.length > 0 ? (
               <div className="space-y-4">
-                {jobMatches.map((match: any) => (
-                  <Link
-                    key={match.job._id}
-                    href={`/dashboard/jobs/${match.job._id}`}
-                    className="block p-4 border-2 border-gray-100 rounded-xl hover:border-primary-300 hover:bg-primary-50 transition group"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 mb-1 group-hover:text-primary-700">
-                          {match.job.title}
-                        </h4>
-                        <p className="text-gray-600 text-sm mb-2">{match.job.company}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>📍 {match.job.location}</span>
-                          <span>🕒 {new Date(match.job.createdAt).toLocaleDateString()}</span>
+                {jobMatches.map((match: any) => {
+                  const job = match.job || match;
+                  const score = match.score || match.matchScore || 0;
+                  return (
+                    <Link
+                      key={job._id || job.id}
+                      href={`/dashboard/jobs/${job._id || job.id}`}
+                      className="block p-4 border-2 border-gray-100 rounded-xl hover:border-primary-300 hover:bg-primary-50 transition group"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900 mb-1 group-hover:text-primary-700">
+                            {job.title}
+                          </h4>
+                          <p className="text-gray-600 text-sm mb-2">{job.company}</p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>📍 {job.location}</span>
+                            <span>🕒 {new Date(job.createdAt || job.postedDate).toLocaleDateString()}</span>
+                            {job.source && (
+                              <span className={`px-2 py-1 rounded text-xs ${
+                                job.source === "recruiter" 
+                                  ? "bg-purple-100 text-purple-700" 
+                                  : "bg-blue-100 text-blue-700"
+                              }`}>
+                                {job.source === "recruiter" ? "Verified" : "External"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${
+                              score >= 85
+                                ? "bg-green-100 text-green-700"
+                                : score >= 70
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-orange-100 text-orange-700"
+                            }`}
+                          >
+                            <Sparkles size={14} />
+                            {score}% Match
+                          </div>
                         </div>
                       </div>
-                      <div className="ml-4">
-                        <div
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${
-                            match.score >= 85
-                              ? "bg-green-100 text-green-700"
-                              : match.score >= 70
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-orange-100 text-orange-700"
-                          }`}
-                        >
-                          <Sparkles size={14} />
-                          {match.score}% Match
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
+                <Link
+                  href="/dashboard/jobs"
+                  className="block text-center p-4 border-2 border-dashed border-primary-300 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition text-primary-600 font-semibold"
+                >
+                  View All Jobs →
+                </Link>
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">

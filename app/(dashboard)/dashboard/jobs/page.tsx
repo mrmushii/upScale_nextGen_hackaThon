@@ -20,10 +20,15 @@ export default function JobsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedRemote, setSelectedRemote] = useState("all");
-  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedTrack, setSelectedTrack] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     fetchJobs(1);
@@ -39,31 +44,46 @@ export default function JobsPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch("/api/user/profile");
+      if (response.ok) {
+        const data = await response.json();
+        setUserProfile(data.user);
+        // Set default track filter to user's preferred track
+        if (data.user.preferredTrack && selectedTrack === "all") {
+          setSelectedTrack(data.user.preferredTrack);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
+
   const fetchJobs = async (page = 1) => {
     try {
       setLoading(true);
-      // Use findwork.dev API
+      // Use unified jobs API (combines recruiter jobs + findwork.dev)
       const params = new URLSearchParams();
       params.append("page", page.toString());
       if (searchTerm) params.append("search", searchTerm);
-      if (selectedLocation !== "all") params.append("location", selectedLocation);
+      if (selectedLocation !== "all" && selectedLocation) params.append("location", selectedLocation);
       if (selectedType !== "all") params.append("role", selectedType);
-      if (selectedRemote === "remote") params.append("remote", "true");
+      if (selectedRemote !== "all") params.append("remote", selectedRemote);
+      if (selectedTrack !== "all") params.append("track", selectedTrack);
       
-      const response = await fetch(`/api/jobs/findwork?${params.toString()}`);
+      const response = await fetch(`/api/jobs/unified?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        // Transform findwork.dev jobs to match our format
         setJobs(data.jobs || []);
-        setPagination(data.pagination);
+        setPagination({
+          ...data.pagination,
+          sources: data.sources,
+        });
       } else {
         console.error("Error fetching jobs:", response.status);
-        // Fallback to match API if findwork fails
-        const fallbackResponse = await fetch("/api/jobs/match");
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          setJobs(fallbackData.matches?.map((m: any) => m.job) || []);
-        }
+        const errorData = await response.json();
+        console.error("Error details:", errorData);
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -72,17 +92,17 @@ export default function JobsPage() {
     }
   };
 
+  // Jobs are already filtered by the API, but we can do additional client-side filtering if needed
   const filteredJobs = jobs.filter((job: any) => {
-    const matchesSearch =
-      job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === "all" || job.jobType === selectedType || job.employment_type === selectedType;
-    const matchesRemote =
-      selectedRemote === "all" ||
-      (selectedRemote === "remote" && job.remote) ||
-      (selectedRemote === "onsite" && !job.remote);
-    return matchesSearch && matchesType && matchesRemote;
+    // Additional client-side search filtering (API already does this, but for instant feedback)
+    if (searchTerm) {
+      const matchesSearch =
+        job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!matchesSearch) return false;
+    }
+    return true;
   });
 
   if (loading) {
@@ -100,9 +120,15 @@ export default function JobsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Job Matches</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Job Board</h1>
         <p className="text-gray-600 mt-2">
-          {pagination ? `Found ${pagination.total || filteredJobs.length} jobs` : `Found ${filteredJobs.length} jobs`} matching your search
+          {pagination ? `Found ${pagination.total || filteredJobs.length} jobs` : `Found ${filteredJobs.length} jobs`} 
+          {pagination?.sources && ` (${pagination.sources.recruiter || 0} verified, ${pagination.sources.findwork || 0} external)`}
+          {userProfile?.preferredTrack && (
+            <span className="ml-2 text-primary-600 font-medium">
+              • Filtered by: {userProfile.preferredTrack}
+            </span>
+          )}
         </p>
       </div>
 
@@ -172,8 +198,8 @@ export default function JobsPage() {
               </label>
               <input
                 type="text"
-                value={selectedLocation === "all" ? "" : selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value || "all")}
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
                 placeholder="e.g., New York, Remote"
                 className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none transition"
               />
@@ -188,12 +214,27 @@ export default function JobsPage() {
                 className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none transition"
               >
                 <option value="all">All Tracks</option>
-                <option value="Frontend Development">Frontend</option>
-                <option value="Backend Development">Backend</option>
-                <option value="Full Stack Development">Full Stack</option>
+                <option value="Frontend Development">Frontend Development</option>
+                <option value="Backend Development">Backend Development</option>
+                <option value="Full Stack Development">Full Stack Development</option>
+                <option value="Mobile Development">Mobile Development</option>
                 <option value="Data Science">Data Science</option>
+                <option value="Machine Learning">Machine Learning</option>
+                <option value="DevOps">DevOps</option>
                 <option value="UI/UX Design">UI/UX Design</option>
+                <option value="Product Management">Product Management</option>
+                <option value="Digital Marketing">Digital Marketing</option>
+                <option value="Quality Assurance">Quality Assurance</option>
+                <option value="Cybersecurity">Cybersecurity</option>
               </select>
+              {userProfile?.preferredTrack && (
+                <button
+                  onClick={() => setSelectedTrack(userProfile.preferredTrack)}
+                  className="mt-2 text-xs text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Use My Preferred Track: {userProfile.preferredTrack}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -284,17 +325,38 @@ export default function JobsPage() {
                 </div>
 
                 <div className="ml-4 flex flex-col items-end gap-3">
-                  {job.source === "findwork.dev" && (
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
-                      External
-                    </span>
-                  )}
+                  <div className="flex flex-col items-end gap-2">
+                    {job.matchScore !== undefined && (
+                      <div
+                        className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-bold ${
+                          job.matchScore >= 70
+                            ? "bg-green-100 text-green-700"
+                            : job.matchScore >= 50
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-orange-100 text-orange-700"
+                        }`}
+                      >
+                        <Sparkles size={16} />
+                        {job.matchScore}% Match
+                      </div>
+                    )}
+                    {job.source === "findwork.dev" && (
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                        External
+                      </span>
+                    )}
+                    {job.source === "recruiter" && (
+                      <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                        Verified
+                      </span>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-2">
                     <button className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition">
                       <Heart size={20} />
                     </button>
-                    {job.url ? (
+                    {job.source === "findwork.dev" && job.url ? (
                       <a
                         href={job.url}
                         target="_blank"
@@ -361,9 +423,9 @@ export default function JobsPage() {
               setSearchTerm("");
               setSelectedType("all");
               setSelectedRemote("all");
-              setSelectedLocation("all");
-              setSelectedTrack("all");
-              fetchJobs();
+              setSelectedLocation("");
+              setSelectedTrack(userProfile?.preferredTrack || "all");
+              fetchJobs(1);
             }}
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold"
           >
