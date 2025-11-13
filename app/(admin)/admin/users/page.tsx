@@ -178,13 +178,13 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4 text-gray-600">{user.email}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           user.role === "admin" ? "bg-red-100 text-red-700" :
                           user.role === "mentor" ? "bg-purple-100 text-purple-700" :
                           user.role === "recruiter" ? "bg-blue-100 text-blue-700" :
                           "bg-green-100 text-green-700"
                         }`}>
-                          {user.role.toUpperCase()}
+                          {user.role?.toUpperCase() || "USER"}
                         </span>
                       </td>
                       <td className="px-6 py-4">

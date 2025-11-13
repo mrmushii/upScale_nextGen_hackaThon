@@ -38,6 +38,7 @@ export default function NewJobPage() {
           currency: "BDT",
         } : undefined,
         status: "active",
+        approved: false, // Needs admin approval
       };
 
       const response = await fetch("/api/jobs", {
@@ -47,9 +48,11 @@ export default function NewJobPage() {
       });
 
       if (response.ok) {
+        alert("Job submitted for admin approval! You'll be notified when it's approved.");
         router.push("/recruiter/jobs");
       } else {
-        alert("Failed to create job");
+        const data = await response.json();
+        alert(data.error || "Failed to create job");
       }
     } catch (error) {
       console.error("Error:", error);

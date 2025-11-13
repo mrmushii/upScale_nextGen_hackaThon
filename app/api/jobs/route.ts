@@ -14,7 +14,10 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = 20;
 
-    let query: any = { status: "active" };
+    let query: any = { 
+      status: "active",
+      approved: true // Only show approved jobs to users
+    };
 
     if (track && track !== "all") {
       query.track = track;
@@ -67,7 +70,15 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const job = await Job.create(body);
+    
+    // Add postedBy field
+    const jobData = {
+      ...body,
+      postedBy: (session.user as any).id,
+      approved: body.approved !== undefined ? body.approved : false, // Default to false (needs approval)
+    };
+
+    const job = await Job.create(jobData);
 
     return NextResponse.json({ job }, { status: 201 });
   } catch (error) {

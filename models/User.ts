@@ -14,6 +14,10 @@ export interface IUser {
   country: string;
   city: string;
   avatar?: string;
+  verified?: boolean;
+  companyName?: string;
+  companyWebsite?: string;
+  position?: string;
   subscription?: {
     tier: "basic" | "pro" | "ultimate";
     status: "active" | "cancelled" | "expired";
@@ -89,6 +93,19 @@ const UserSchema = new Schema<IUser>(
       type: String,
     },
     avatar: {
+      type: String,
+    },
+    verified: {
+      type: Boolean,
+      default: true, // Default true for users, false for recruiters/mentors
+    },
+    companyName: {
+      type: String,
+    },
+    companyWebsite: {
+      type: String,
+    },
+    position: {
       type: String,
     },
     subscription: {

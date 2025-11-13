@@ -19,6 +19,7 @@ export interface IJob {
   applicationUrl?: string;
   postedBy?: mongoose.Types.ObjectId;
   status: "active" | "closed" | "draft";
+  approved?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -87,6 +88,10 @@ const JobSchema = new Schema<IJob>(
       type: String,
       enum: ["active", "closed", "draft"],
       default: "active",
+    },
+    approved: {
+      type: Boolean,
+      default: false, // Jobs need admin approval
     },
   },
   {

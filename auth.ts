@@ -36,6 +36,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("Invalid credentials");
         }
 
+        // Check if recruiter is verified
+        if (user.role === "recruiter" && !user.verified) {
+          throw new Error("Your recruiter account is pending admin approval. Please wait for verification.");
+        }
+
         return {
           id: user._id.toString(),
           email: user.email,

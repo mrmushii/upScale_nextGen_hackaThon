@@ -254,6 +254,17 @@ export default function RegisterPage() {
               Sign in
             </Link>
           </p>
+
+          {/* Recruiter Registration Link */}
+          <p className="text-center mt-4 text-sm text-gray-500">
+            Are you a recruiter?{" "}
+            <Link
+              href="/register-recruiter"
+              className="text-primary-600 hover:text-primary-700 font-semibold"
+            >
+              Register as Recruiter
+            </Link>
+          </p>
         </div>
 
         {/* Back to Home */}
