@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { Users, Briefcase, DollarSign, TrendingUp, Shield, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function AdminDashboard() {
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalJobs: 0,
@@ -14,6 +16,24 @@ export default function AdminDashboard() {
     pendingMentors: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  // Ensure only admins can access this page
+  useEffect(() => {
+    // Only redirect if session is loaded (not loading)
+    if (status === "authenticated" && session?.user) {
+      const userRole = (session.user as any)?.role || "user";
+      
+      if (userRole !== "admin") {
+        const roleUrls: Record<string, string> = {
+          user: "/dashboard",
+          recruiter: "/recruiter/dashboard",
+          mentor: "/mentor/dashboard",
+        };
+        
+        window.location.replace(roleUrls[userRole] || "/dashboard");
+      }
+    }
+  }, [session, status]);
 
   useEffect(() => {
     fetchStats();

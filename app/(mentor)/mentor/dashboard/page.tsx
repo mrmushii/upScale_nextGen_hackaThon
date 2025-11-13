@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Calendar, Users, DollarSign, Star, Clock } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function MentorDashboard() {
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState({
     totalSessions: 0,
     upcomingSessions: 0,
@@ -12,6 +14,24 @@ export default function MentorDashboard() {
     totalStudents: 0,
   });
   const [sessions, setSessions] = useState<any[]>([]);
+
+  // Ensure only mentors can access this page
+  useEffect(() => {
+    // Only redirect if session is loaded (not loading)
+    if (status === "authenticated" && session?.user) {
+      const userRole = (session.user as any)?.role || "user";
+      
+      if (userRole !== "mentor") {
+        const roleUrls: Record<string, string> = {
+          user: "/dashboard",
+          admin: "/admin/dashboard",
+          recruiter: "/recruiter/dashboard",
+        };
+        
+        window.location.replace(roleUrls[userRole] || "/dashboard");
+      }
+    }
+  }, [session, status]);
 
   useEffect(() => {
     fetchDashboardData();

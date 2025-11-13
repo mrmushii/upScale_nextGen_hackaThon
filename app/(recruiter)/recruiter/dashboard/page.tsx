@@ -3,14 +3,34 @@
 import { useEffect, useState } from "react";
 import { Briefcase, Users, Eye, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function RecruiterDashboard() {
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState({
     totalJobs: 0,
     activeJobs: 0,
     totalViews: 0,
     totalApplications: 0,
   });
+
+  // Ensure only recruiters can access this page
+  useEffect(() => {
+    // Only redirect if session is loaded (not loading)
+    if (status === "authenticated" && session?.user) {
+      const userRole = (session.user as any)?.role || "user";
+      
+      if (userRole !== "recruiter") {
+        const roleUrls: Record<string, string> = {
+          user: "/dashboard",
+          admin: "/admin/dashboard",
+          mentor: "/mentor/dashboard",
+        };
+        
+        window.location.replace(roleUrls[userRole] || "/dashboard");
+      }
+    }
+  }, [session, status]);
 
   useEffect(() => {
     fetchStats();

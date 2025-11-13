@@ -151,7 +151,7 @@ const UserSchema = new Schema<IUser>(
 );
 
 // Indexes for better query performance
-UserSchema.index({ email: 1 });
+// Note: email index is automatically created by unique: true
 UserSchema.index({ skills: 1 });
 UserSchema.index({ preferredTrack: 1 });
 UserSchema.index({ role: 1 });

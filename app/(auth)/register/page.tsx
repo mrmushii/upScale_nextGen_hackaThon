@@ -38,7 +38,7 @@ export default function RegisterPage() {
       }
 
       // Auto sign in after registration
-      const { signIn } = await import("next-auth/react");
+      const { signIn, getSession } = await import("next-auth/react");
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
@@ -46,7 +46,19 @@ export default function RegisterPage() {
       });
 
       if (result?.ok) {
-        window.location.href = "/dashboard";
+        // Fetch session to get user role
+        const session = await getSession();
+        const userRole = (session?.user as any)?.role || "user";
+        
+        // Redirect based on role
+        const dashboardUrls: Record<string, string> = {
+          admin: "/admin/dashboard",
+          recruiter: "/recruiter/dashboard",
+          mentor: "/mentor/dashboard",
+          user: "/dashboard",
+        };
+        
+        window.location.href = dashboardUrls[userRole] || "/dashboard";
       }
     } catch (error) {
       setError("Something went wrong. Please try again.");

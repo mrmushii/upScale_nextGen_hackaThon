@@ -17,11 +17,31 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [profile, setProfile] = useState<any>(null);
   const [jobMatches, setJobMatches] = useState<any[]>([]);
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Redirect users with different roles to their specific dashboards
+  useEffect(() => {
+    // Only redirect if session is loaded (not loading)
+    if (status === "authenticated" && session?.user) {
+      const userRole = (session.user as any)?.role || "user";
+      
+      if (userRole !== "user") {
+        const roleUrls: Record<string, string> = {
+          admin: "/admin/dashboard",
+          recruiter: "/recruiter/dashboard",
+          mentor: "/mentor/dashboard",
+        };
+        
+        if (roleUrls[userRole]) {
+          window.location.replace(roleUrls[userRole]);
+        }
+      }
+    }
+  }, [session, status]);
 
   useEffect(() => {
     async function fetchData() {

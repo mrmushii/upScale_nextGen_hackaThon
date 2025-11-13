@@ -9,14 +9,20 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
+      const currentPath = nextUrl.pathname;
       
+      // Check if user is on any dashboard path
+      const isOnDashboard = currentPath.startsWith("/dashboard") ||
+                           currentPath.startsWith("/admin") ||
+                           currentPath.startsWith("/recruiter") ||
+                           currentPath.startsWith("/mentor");
+      
+      // Require authentication for all dashboard paths
       if (isOnDashboard) {
         if (isLoggedIn) return true;
         return false; // Redirect unauthenticated users to login page
-      } else if (isLoggedIn) {
-        return Response.redirect(new URL("/dashboard", nextUrl));
       }
+      
       return true;
     },
   },
