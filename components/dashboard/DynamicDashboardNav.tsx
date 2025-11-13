@@ -50,10 +50,13 @@ export default function DynamicDashboardNav() {
 
   const userRole = session?.user?.role || profile?.role || "user";
 
+  // ensure user's dashboard link is /dashboard (not /user/dashboard)
+  const dashboardHref = userRole === "user" ? "/dashboard" : `/${userRole}/dashboard`;
+
   // Different navigation items based on role
   const getNavItems = () => {
     const baseItems = [
-      { icon: LayoutDashboard, label: "Dashboard", href: `/${userRole}/dashboard`, roles: ["user", "admin", "recruiter", "mentor"] },
+      { icon: LayoutDashboard, label: "Dashboard", href: dashboardHref, roles: ["user", "admin", "recruiter", "mentor"] },
     ];
 
     if (userRole === "admin") {
@@ -265,4 +268,3 @@ export default function DynamicDashboardNav() {
     </>
   );
 }
-
