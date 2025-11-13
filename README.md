@@ -1,284 +1,219 @@
-# Upscale - Career Readiness Ecosystem
+# Upscale Career Platform
 
-A modern, AI-powered SaaS platform connecting youth skills to real opportunities with personalized career roadmaps, expert mentorship, and transparent job matching.
-
-## 🎯 Mission
-
-Transform fragmented learning into clear, evidence-backed career roadmaps. Connect job seekers with real opportunities through AI-powered guidance, hands-on practice, and professional mentorship.
-
-## ✨ Features
-
-### Core Platform Features
-- **AI-Powered Skill Gap Analysis**: Intelligent radar system mapping current skills against target roles
-- **Personalized Career Roadmaps**: Step-by-step learning paths tailored to individual goals
-- **Expert 1-on-1 Mentorship**: Direct sessions with industry professionals
-- **AI Mock Interviews**: Practice with feedback on technical and behavioral questions
-- **Smart CV Analyzer**: AI-driven resume analysis with improvement suggestions
-- **Portfolio Builder**: Professional portfolio creation with project showcases
-- **Transparent Job Matching**: Clear explanations for every job recommendation
-- **Community Q&A**: Peer learning and mentor-led discussions
-- **Application Tracker**: Centralized tracking for all job applications
-
-### Pricing Tiers
-
-#### 🆓 Basic (Free)
-- One-time evaluation interview
-- Generate one career roadmap
-- One-time CV analyzer (no feedback)
-- Basic job matching
-- Community access
-- Basic portfolio builder
-
-#### 🚀 Pro (৳999/month)
-- 10 evaluation interviews/month
-- 5 career roadmaps/month
-- AI mock interviews with feedback
-- AI resume checker with feedback
-- Advanced portfolio builder
-- AI-powered job matching
-- 1 mentor session included
-- Application tracker
-- Priority support
-
-#### 👑 Ultimate (৳2,499/month)
-- **Unlimited** evaluation interviews
-- **Unlimited** career roadmaps
-- **Unlimited** AI mock interviews
-- Advanced AI resume optimization
-- Premium portfolio templates
-- Priority AI job matching
-- **Unlimited** mentor sessions
-- Dedicated career advisor
-- Interview guarantee program
-- Exclusive job opportunities
-- Early access to new features
-
-## 🛠️ Tech Stack
-
-- **Frontend**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: MongoDB with Mongoose ODM
-- **Icons**: Lucide React
-- **Animations**: Custom CSS animations + Framer Motion ready
-- **Deployment**: Vercel (Frontend), MongoDB Atlas (Database), Railway/Render (Backend when implemented)
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+ installed
-- npm or yarn package manager
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd Upscale
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-### Build for Production
-
-```bash
-npm run build
-npm start
-```
-
-## 📁 Project Structure
-
-```
-Upscale/
-├── app/
-│   ├── layout.tsx          # Root layout with metadata
-│   ├── page.tsx            # Main landing page
-│   ├── globals.css         # Global styles & Tailwind
-│   └── api/                # API routes
-│       └── test/           # MongoDB connection test
-├── components/
-│   ├── Navbar.tsx          # Navigation header
-│   ├── Hero.tsx            # Hero section
-│   ├── WhyStandOut.tsx     # Key differentiators
-│   ├── Features.tsx        # Feature showcase
-│   ├── HowItWorks.tsx      # Process steps
-│   ├── Statistics.tsx      # Platform statistics
-│   ├── Steps.tsx           # Getting started steps
-│   ├── Pricing.tsx         # 3-tier pricing section
-│   ├── Testimonials.tsx    # User testimonials
-│   ├── FAQ.tsx             # Frequently asked questions
-│   ├── CTA.tsx             # Call-to-action section
-│   ├── Footer.tsx          # Footer with links
-│   └── ai/                 # AI feature placeholders
-│       ├── MockInterview.tsx
-│       ├── CVAnalyzer.tsx
-│       ├── JobMatching.tsx
-│       └── CareerRoadmap.tsx
-├── models/                 # Mongoose schemas
-│   ├── User.ts            # User model
-│   ├── Job.ts             # Job model
-│   ├── Roadmap.ts         # Roadmap model
-│   ├── Mentor.ts          # Mentor model
-│   ├── Application.ts     # Application model
-│   └── index.ts           # Export all models
-├── lib/
-│   ├── mongodb.ts         # MongoDB connection
-│   ├── constants.ts       # App constants
-│   └── utils.ts           # Utility functions
-├── types/                 # TypeScript definitions
-├── public/                # Static assets
-├── tailwind.config.ts     # Tailwind configuration
-├── tsconfig.json          # TypeScript configuration
-└── package.json           # Dependencies
-
-```
-
-## 🎨 Design System
-
-### Color Palette
-- **Primary**: Pink/Rose tones (#f43f5e, #fecdd3, #fff1f2)
-- **Coral Accent**: Coral/Red tones (#ff4444, #ffa3a3)
-- **Neutral**: Grays for text and backgrounds
-
-### Gradients
-- `gradient-hero`: Pink to coral gradient for hero sections
-- `gradient-primary`: Soft pink gradient for backgrounds
-- Custom gradient utilities for CTAs and accents
-
-### Animations
-- Fade in/out effects
-- Slide transitions
-- Float animations for decorative elements
-- Hover transforms and scale effects
-
-## 🔮 AI Features (Placeholders)
-
-The following AI features have placeholder components ready for integration:
-
-1. **AI Mock Interview** (`/components/ai/MockInterview.tsx`)
-   - Video/text interview modes
-   - Real-time feedback system
-   - Response evaluation
-
-2. **CV Analyzer** (`/components/ai/CVAnalyzer.tsx`)
-   - Resume upload interface
-   - ATS compatibility check
-   - Keyword optimization
-
-3. **Job Matching** (`/components/ai/JobMatching.tsx`)
-   - Smart matching algorithm
-   - Transparent explanations
-   - Career growth alignment
-
-4. **Career Roadmap** (`/components/ai/CareerRoadmap.tsx`)
-   - Personalized learning paths
-   - Skill progression tracking
-   - Resource recommendations
-
-## 📋 Implementation Roadmap
-
-### Phase 1 - Foundation (Current)
-- ✅ Landing page with all sections
-- ✅ 3-tier pricing model
-- ✅ AI feature placeholders
-- ✅ Responsive design
-- ✅ Animations and gradients
-
-### Phase 2 - Backend & Auth
-- [ ] User authentication system
-- [ ] Database schema setup (MongoDB + Mongoose)
-- [ ] API routes for user management
-- [ ] Payment integration (bKash/Nagad/Stripe)
-
-### Phase 3 - Core Features
-- [ ] Profile creation & skill management
-- [ ] Career roadmap generation
-- [ ] Job listing & matching system
-- [ ] Application tracker
-- [ ] Portfolio builder
-
-### Phase 4 - Mentorship
-- [ ] Mentor profiles & vetting
-- [ ] Booking system with calendar
-- [ ] Payment escrow for sessions
-- [ ] Session notes & summaries
-
-### Phase 5 - AI Integration
-- [ ] CV parsing & skill extraction
-- [ ] Semantic job matching with embeddings
-- [ ] AI mock interview system
-- [ ] Adaptive learning recommendations
-- [ ] Resume optimization AI
-
-## 🌐 Deployment
-
-### Vercel (Recommended for Frontend)
-1. Push your code to GitHub
-2. Import project to Vercel
-3. Deploy automatically
-
-### Environment Variables (When Backend is Ready)
-
-Create a `.env.local` file:
-
-```env
-# MongoDB
-MONGODB_URI=mongodb://localhost:27017/upscale
-# Or for MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/upscale
-
-# NextAuth
-NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=http://localhost:3000
-
-# Payment Gateways
-STRIPE_SECRET_KEY=sk_test_...
-BKASH_API_KEY=your-bkash-key
-NAGAD_API_KEY=your-nagad-key
-
-# OpenAI (for AI features)
-OPENAI_API_KEY=sk-...
-```
-
-See [MONGODB_SETUP.md](./MONGODB_SETUP.md) for detailed database setup instructions.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is proprietary and confidential.
-
-## 📧 Contact
-
-- **Email**: support@upscale.com
-- **Phone**: +880 1234-567890
-- **Location**: Dhaka, Bangladesh
-
-## 🙏 Acknowledgments
-
-- Design inspiration from modern SaaS platforms
-- Bangladesh tech community for feedback
-- All contributors and early adopters
+Upscale is a full-stack career acceleration platform built with Next.js that helps job seekers discover learning resources, generate tailored roadmaps, track progress, and move quickly from learning to landing a role. Recruiters and mentors get dedicated dashboards, while an integrated payment system unlocks premium features for power users.
 
 ---
 
-**Built with ❤️ for the career success of Bangladesh's youth**
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Tech Stack](#tech-stack)
+- [Installation & Setup](#installation--setup)
+- [Usage Guide](#usage-guide)
+- [API Documentation](#api-documentation)
+- [Known Issues & Future Improvements](#known-issues--future-improvements)
+- [Contribution Guidelines](#contribution-guidelines)
+- [License](#license)
+
+---
+
+## Project Overview
+
+Upscale provides an end-to-end experience for aspiring professionals:
+
+- **Personalised onboarding** that enforces completion of critical profile data before unlocking premium features.
+- **Roadmap generation** powered by Google Gemini AI that blends paid Udemy content, curated YouTube playlists, and Microsoft Learn modules.
+- **Interactive learning pages** with code challenges, YouTube player progress tracking, bookmarking, and history.
+- **Smart job discovery** combining our recruiter postings with the Findwork API, scored against a user’s profile.
+- **Subscription tiers** (Basic, Pro, Ultimate) with payment processing and usage limits managed per plan.
+- **Role-based portals** for recruiters, mentors, admins, and job seekers.
+
+---
+
+## Tech Stack
+
+| Layer              | Technologies |
+|--------------------|--------------|
+| Frontend           | Next.js 13 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons |
+| Backend / API      | Next.js API Routes, NextAuth.js, Google Gemini AI SDK |
+| Database           | MongoDB Atlas, Mongoose ODM |
+| Authentication     | NextAuth (Credentials + Session) |
+| External Services  | RapidAPI (Findwork, Paid Udemy Courses), YouTube Data API v3, Microsoft Learn Catalog |
+| Tooling            | ESLint, Prettier, react-hot-toast |
+
+---
+
+## Installation & Setup
+
+### Prerequisites
+- **Node.js** v18 or higher
+- **npm** (or yarn/pnpm) and **Git**
+- **MongoDB Atlas** connection string
+- API keys for all external services (RapidAPI, Google, Gemini, etc.)
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-org/upscale.git
+cd upscale
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+Create a `.env.local` file in the project root:
+```bash
+cp .env.example .env.local
+```
+
+Populate the file with your own values:
+```
+NODE_ENV=development
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret
+MONGODB_URI=your_mongodb_connection
+
+# Authentication providers
+GEMINI_API_KEY=your_gemini_api_key
+YOUTUBE_API_KEY=your_youtube_key
+
+# RapidAPI keys
+RAPIDAPI_KEY=your_global_rapidapi_key
+PAID_UDEMY_API_HOST=paid-udemy-course-for-free.p.rapidapi.com
+PAID_UDEMY_API_KEY=your_specific_paid_udemy_key
+FINDWORK_API_TOKEN=your_findwork_api_token
+
+# Optional email / storage settings
+EMAIL_FROM=noreply@upscale.com
+
+```
+
+> **Tip:** Keep different `.env.local` files per environment. Never commit secrets.
+
+### 4. Run the development server
+```bash
+npm run dev
+```
+The app is now available at **http://localhost:3000**.
+
+---
+
+## Usage Guide
+
+### 1. Landing & Registration
+- Navigate to `/` to view the marketing landing page.
+- Choose a plan in **Pricing**. Signed-in users are routed to `/dashboard/payment` with the correct plan preselected; guests are taken to login.
+- Complete registration for job seeker, recruiter, or mentor roles.
+
+### 2. Completing the Profile
+- Basic users are redirected to `/dashboard/profile/complete` until required information is provided.
+- Progress indicators update in real time and the dashboard visualises completion status.
+
+### 3. Exploring the Dashboard
+- Access personalised stats, quick actions, and “Top Job Matches”.
+- A persistent profile completion card highlights missing data and the user’s current tier.
+
+### 4. Learning Resources (`/dashboard/resources`)
+- Tabs for **Udemy**, **YouTube**, **Microsoft Learn**, **Suggested**, **Bookmarks**, and **History**.
+- External APIs load lazily (Udemy coupons, curated YouTube playlists, Microsoft Learn catalog) and fall back to cached data during outages or rate limits.
+- Track progress with the custom YouTube player, bookmark courses, and resume from history.
+
+### 5. Job Board (`/dashboard/jobs`)
+- Combines recruiter-approved posts with Findwork listings.
+- Filters by job type, remote status, location, and career track. Results are sorted using profile match scoring.
+
+### 6. Subscription & Payments
+- Use `/dashboard/payment` to upgrade plans (Pro/Ultimate). Auto-renew can be managed in **Settings → Billing**.
+- Usage limits are enforced at the API level (`/api/subscription`, `/api/roadmap/generate`, etc.).
+
+> _Screenshots:_ Place PNGs or GIFs in `public/docs/` and reference them, e.g.:
+> ```markdown
+> ![Dashboard](public/docs/dashboard.png)
+> ```
+
+---
+
+## API Documentation
+
+### Authentication & Profile
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/[...nextauth]` | POST | NextAuth credential login & session handling |
+| `/api/auth/register` | POST | Create a new job seeker account |
+| `/api/auth/register-recruiter` | POST | Create a recruiter account |
+| `/api/user/profile` | GET | Fetch current user profile |
+| `/api/user/profile` | PATCH | Update core profile fields, experience, projects, etc. |
+| `/api/user/profile/completion` | GET | Retrieve recalculated profile completion metrics |
+
+### Settings
+| Endpoint | Method | Notes |
+|----------|--------|-------|
+| `/api/settings/profile` | GET / PUT | Fetch & update account profile and password |
+| `/api/settings/preferences` | GET / PUT | Manage account, notification, privacy, and billing preferences |
+
+### Subscriptions & Billing
+| Endpoint | Method | Notes |
+|----------|--------|-------|
+| `/api/subscription` | GET | Get current plan & usage limits |
+| `/api/subscription` | POST | Upgrade or change subscription tier |
+| `/api/subscription` | PUT | Cancel plan or toggle auto-renew |
+
+### Roadmaps & Learning
+| Endpoint | Method | Notes |
+|----------|--------|-------|
+| `/api/roadmap/generate` | POST | Generate AI-assisted roadmap (usage-limited) |
+| `/api/roadmap/[id]` | GET | Fetch specific roadmap |
+| `/api/resources/udemy` | GET | Fetch Udemy coupons via RapidAPI (with fallback) |
+| `/api/resources/youtube` | GET | Fetch curated YouTube content (FreeCodeCamp, JavaScript Mastery) |
+| `/api/resources/microsoft` | GET | Fetch Microsoft Learn catalog |
+| `/api/resources/suggest` | GET | Roadmap-aware course suggestions |
+| `/api/resources/bookmarks` | GET / POST | Manage course bookmarks |
+| `/api/resources/history` | GET | Retrieve watch history |
+| `/api/resources/progress` | GET / POST | Persist course progress |
+
+### Jobs & Recruiters
+| Endpoint | Method | Notes |
+|----------|--------|-------|
+| `/api/jobs/unified` | GET | Unified job feed (recruiter + Findwork) |
+| `/api/jobs/match` | GET | Get top scored jobs for dashboard widgets |
+| `/api/recruiter/my-jobs` | GET | Recruiter job management |
+
+> For complete request/response samples, check the corresponding files in `app/api/**/route.ts`.
+
+---
+
+## Known Issues & Future Improvements
+
+- **External API rate limits:** RapidAPI and YouTube enforce quotas. We currently fall back to cached data when hitting limits; adding persistent caching (Redis) would improve resilience.
+- **Payment flow:** The payment experience is simulated. Integrating an actual PSP (Stripe, SSLCOMMERZ, etc.) is planned.
+- **Automated testing:** End-to-end and integration tests are limited. Adding Playwright/Cypress coverage is a priority.
+- **Accessibility & localisation:** Additional a11y audits and multi-language support would expand reach.
+- **Realtime notifications:** WebSockets (or Pusher) could enhance recruiter ↔ candidate messaging.
+
+---
+
+## Contribution Guidelines
+
+1. **Fork** the repository and create a local branch.
+2. Run `npm install` and ensure `npm run lint` passes.
+3. Make changes (include tests where possible).
+4. Submit a PR with:
+   - A descriptive title
+   - Summary of changes
+   - Screenshots or curl samples (when applicable)
+5. One reviewer approval is required before merging.
+
+Please follow conventional commits (`feat:`, `fix:`, etc.) and keep pull requests focused.
+
+---
+
+## License
+
+This project is released under the **MIT License**. You are free to use, modify, and distribute it as long as the license terms are respected.
+
+---
+
+Built with ❤️ by the Upscale team — accelerating careers one roadmap at a time.
 
