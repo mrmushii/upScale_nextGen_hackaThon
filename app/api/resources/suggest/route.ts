@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import Roadmap from "@/models/Roadmap";
+import { checkProfileCompletion } from "@/lib/profileCompletion";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +17,19 @@ export async function GET(request: NextRequest) {
     const user = await User.findById(session.user.id);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check profile completion
+    const completion = checkProfileCompletion(user);
+    if (!completion.isComplete) {
+      return NextResponse.json(
+        {
+          error: "Profile incomplete",
+          message: "Please complete your profile to get personalized course suggestions.",
+          completion: completion,
+        },
+        { status: 403 }
+      );
     }
 
     // Get user's active roadmap

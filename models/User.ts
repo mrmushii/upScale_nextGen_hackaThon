@@ -15,6 +15,20 @@ export interface IUser {
   city: string;
   avatar?: string;
   verified?: boolean;
+  phone?: string;
+  bio?: string;
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+  website?: string;
+  dateOfBirth?: Date;
+  gender?: string;
+  languages?: string[];
+  availability?: string;
+  salaryExpectation?: string;
+  workAuthorization?: string;
+  profileCompleted?: boolean;
+  profileCompletionPercentage?: number;
   companyName?: string;
   companyWebsite?: string;
   position?: string;
@@ -98,6 +112,54 @@ const UserSchema = new Schema<IUser>(
     verified: {
       type: Boolean,
       default: true, // Default true for users, false for recruiters/mentors
+    },
+    phone: {
+      type: String,
+    },
+    bio: {
+      type: String,
+      maxlength: 1000,
+    },
+    linkedin: {
+      type: String,
+    },
+    github: {
+      type: String,
+    },
+    portfolio: {
+      type: String,
+    },
+    website: {
+      type: String,
+    },
+    dateOfBirth: {
+      type: Date,
+    },
+    gender: {
+      type: String,
+    },
+    languages: {
+      type: [String],
+      default: [],
+    },
+    availability: {
+      type: String,
+    },
+    salaryExpectation: {
+      type: String,
+    },
+    workAuthorization: {
+      type: String,
+    },
+    profileCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    profileCompletionPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
     },
     companyName: {
       type: String,

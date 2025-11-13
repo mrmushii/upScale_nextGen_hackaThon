@@ -7,6 +7,7 @@ import { TIER_LIMITS } from "@/types";
 import { generatePersonalizedRoadmap, calculateRoadmapProgress } from "@/lib/roadmapGenerator";
 import { generateRoadmapWithGemini } from "@/lib/geminiAI";
 import { generateInteractiveRoadmap } from "@/lib/geminiAIEnhanced";
+import { checkProfileCompletion } from "@/lib/profileCompletion";
 
 // Legacy templates for reference (now using AI generator)
 const roadmapTemplates: Record<string, any> = {
@@ -114,6 +115,19 @@ export async function POST(request: NextRequest) {
     const user = await User.findById(session.user.id);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check profile completion
+    const completion = checkProfileCompletion(user);
+    if (!completion.isComplete) {
+      return NextResponse.json(
+        {
+          error: "Profile incomplete",
+          message: "Please complete your profile before generating a roadmap.",
+          completion: completion,
+        },
+        { status: 403 }
+      );
     }
 
     // Check usage limits

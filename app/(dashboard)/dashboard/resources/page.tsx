@@ -101,9 +101,19 @@ export default function ResourcesPage() {
         setYoutubeCourses(youtubeData.courses || []);
       }
 
-      if (suggestedRes.ok) {
-        const suggestedData = await suggestedRes.json();
-        setSuggestedCourses(suggestedData.suggestions || null);
+      // Only fetch suggestions if profile is complete (this requires completion)
+      try {
+        const suggestedRes = await fetch("/api/resources/suggest");
+        if (suggestedRes.ok) {
+          const suggestedData = await suggestedRes.json();
+          setSuggestedCourses(suggestedData.suggestions || null);
+        } else if (suggestedRes.status === 403) {
+          // Profile incomplete - suggestions not available
+          setSuggestedCourses(null);
+        }
+      } catch (error) {
+        // Silently fail if profile incomplete - suggestions tab will show message
+        console.log("Suggestions not available - profile may be incomplete");
       }
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -424,13 +434,32 @@ export default function ResourcesPage() {
       </div>
 
       {/* Suggested Courses Info */}
-      {activeTab === "suggested" && suggestedCourses && (
-        <div className="bg-gradient-to-r from-primary-50 to-coral-50 rounded-xl p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Based on Your Roadmap: {suggestedCourses.stageName}
-          </h3>
-          <p className="text-gray-700">{suggestedCourses.message}</p>
-        </div>
+      {activeTab === "suggested" && (
+        <>
+          {suggestedCourses ? (
+            <div className="bg-gradient-to-r from-primary-50 to-coral-50 rounded-xl p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Based on Your Roadmap: {suggestedCourses.stageName}
+              </h3>
+              <p className="text-gray-700">{suggestedCourses.message}</p>
+            </div>
+          ) : (
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Complete Your Profile to Get Personalized Suggestions
+              </h3>
+              <p className="text-gray-700 mb-4">
+                To receive course suggestions based on your roadmap, please complete your profile first.
+              </p>
+              <Link
+                href="/dashboard/profile/complete"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold"
+              >
+                Complete Profile
+              </Link>
+            </div>
+          )}
+        </>
       )}
 
       {/* Video Player Modal */}

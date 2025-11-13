@@ -15,13 +15,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [profile, setProfile] = useState<any>(null);
   const [jobMatches, setJobMatches] = useState<any[]>([]);
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileCompletionData, setProfileCompletionData] = useState<any>(null);
 
   // Redirect users with different roles to their specific dashboards
   useEffect(() => {
@@ -51,6 +54,19 @@ export default function DashboardPage() {
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           setProfile(profileData.user);
+        }
+
+        // Check profile completion
+        const completionRes = await fetch("/api/user/profile/completion");
+        if (completionRes.ok) {
+          const completionData = await completionRes.json();
+          setProfileCompletionData(completionData.completion);
+          
+          // Redirect to profile completion if incomplete
+          if (!completionData.completion.isComplete) {
+            router.push("/dashboard/profile/complete");
+            return;
+          }
         }
 
         // Fetch job matches

@@ -47,22 +47,78 @@ export async function PATCH(request: NextRequest) {
       "experienceLevel",
       "city",
       "country",
+      "phone",
+      "bio",
+      "linkedin",
+      "github",
+      "portfolio",
+      "website",
+      "dateOfBirth",
+      "gender",
+      "languages",
+      "availability",
+      "salaryExpectation",
+      "workAuthorization",
     ];
 
     const updateData: any = {};
     allowedFields.forEach((field) => {
       if (body[field] !== undefined) {
-        updateData[field] = body[field];
+        // Handle dateOfBirth conversion
+        if (field === "dateOfBirth") {
+          if (body[field] && String(body[field]).trim() !== "") {
+            try {
+              updateData[field] = new Date(body[field]);
+            } catch (e) {
+              console.error("Invalid date format:", body[field]);
+            }
+          }
+          // If empty, don't include it in updateData
+        } else {
+          // For other fields, include empty strings (they can be cleared)
+          updateData[field] = body[field];
+        }
       }
     });
 
+    console.log("Updating user profile with:", updateData);
+
+    // Update user profile
     const user = await User.findByIdAndUpdate(
       session.user.id,
       { $set: updateData },
       { new: true }
     ).select("-password");
 
-    return NextResponse.json({ user });
+    // Re-fetch user to get all fields (including defaults)
+    const updatedUser = await User.findById(session.user.id).select("-password");
+
+    // Update profile completion status based on updated user
+    const { checkProfileCompletion } = await import("@/lib/profileCompletion");
+    const completion = checkProfileCompletion(updatedUser);
+    
+    console.log("Profile completion check:", {
+      isComplete: completion.isComplete,
+      percentage: completion.percentage,
+      missingFields: completion.missingFields,
+    });
+    
+    await User.findByIdAndUpdate(session.user.id, {
+      profileCompleted: completion.isComplete,
+      profileCompletionPercentage: completion.percentage,
+    });
+
+    // Return updated user with completion status
+    const finalUser = await User.findById(session.user.id).select("-password");
+
+    return NextResponse.json({ 
+      user: finalUser,
+      completion: {
+        isComplete: completion.isComplete,
+        percentage: completion.percentage,
+        missingFields: completion.missingFields,
+      }
+    });
   } catch (error) {
     console.error("Profile update error:", error);
     return NextResponse.json(

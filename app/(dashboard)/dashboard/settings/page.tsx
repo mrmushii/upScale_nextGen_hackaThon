@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { User, Lock, CreditCard, Bell, Shield, Crown, Save } from "lucide-react";
 import { CAREER_TRACKS, EXPERIENCE_LEVELS, EDUCATION_LEVELS } from "@/lib/constants";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: User },
@@ -63,11 +64,14 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json();
         setProfile(data.user);
-        alert("Profile updated successfully!");
+        toast.success("Profile updated successfully!");
+      } else {
+        const data = await response.json();
+        toast.error(data.error || "Failed to save profile");
       }
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert("Failed to save profile");
+      toast.error("Failed to save profile");
     } finally {
       setSaving(false);
     }

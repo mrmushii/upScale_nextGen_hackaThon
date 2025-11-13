@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Application from "@/models/Application";
+import User from "@/models/User";
 import { auth } from "@/auth";
+import { checkProfileCompletion } from "@/lib/profileCompletion";
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,6 +37,24 @@ export async function POST(request: NextRequest) {
     }
 
     await connectDB();
+
+    // Check profile completion
+    const user = await User.findById(session.user.id);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const completion = checkProfileCompletion(user);
+    if (!completion.isComplete) {
+      return NextResponse.json(
+        {
+          error: "Profile incomplete",
+          message: "Please complete your profile before applying to jobs.",
+          completion: completion,
+        },
+        { status: 403 }
+      );
+    }
 
     const body = await request.json();
     const { jobId, externalLink, companyName, position, notes } = body;

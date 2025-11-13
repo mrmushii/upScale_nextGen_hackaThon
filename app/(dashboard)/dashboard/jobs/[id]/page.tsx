@@ -15,8 +15,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function JobDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const [job, setJob] = useState<any>(null);
   const [matchData, setMatchData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -70,11 +73,23 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        alert("Application submitted successfully!");
+        toast.success("Application submitted successfully!");
+      } else if (response.status === 403 && data.error === "Profile incomplete") {
+        toast.error("Please complete your profile before applying to jobs.", {
+          duration: 5000,
+        });
+        setTimeout(() => {
+          router.push("/dashboard/profile/complete");
+        }, 2000);
+      } else {
+        toast.error(data.message || data.error || "Failed to submit application");
       }
     } catch (error) {
       console.error("Error applying:", error);
+      toast.error("An error occurred while submitting your application");
     } finally {
       setApplying(false);
     }

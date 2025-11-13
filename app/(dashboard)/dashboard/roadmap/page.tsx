@@ -15,8 +15,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function RoadmapPage() {
+  const router = useRouter();
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -56,20 +59,34 @@ export default function RoadmapPage() {
 
       if (!response.ok) {
         if (response.status === 403) {
-          const errorMsg = data.message || data.error || "Usage limit reached";
-          const details = data.current !== undefined 
-            ? ` (Used ${data.current}/${data.limit} on ${data.tier} plan)`
-            : "";
-          setError(errorMsg + details + ". You can view your existing roadmap below.");
+          if (data.error === "Profile incomplete") {
+            toast.error("Please complete your profile before generating a roadmap.", {
+              duration: 5000,
+            });
+            setTimeout(() => {
+              router.push("/dashboard/profile/complete");
+            }, 2000);
+            return;
+          } else {
+            const errorMsg = data.message || data.error || "Usage limit reached";
+            const details = data.current !== undefined 
+              ? ` (Used ${data.current}/${data.limit} on ${data.tier} plan)`
+              : "";
+            toast.error(errorMsg + details);
+            setError(errorMsg + details);
+          }
         } else {
+          toast.error(data.error || "Failed to generate roadmap");
           setError(data.error || "Failed to generate roadmap");
         }
         return;
       }
 
+      toast.success("Roadmap generated successfully!");
       // Refresh roadmaps
       await fetchRoadmaps();
     } catch (error) {
+      toast.error("Something went wrong. Please try again.");
       setError("Something went wrong. Please try again.");
     } finally {
       setGenerating(false);
