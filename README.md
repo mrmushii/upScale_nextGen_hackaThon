@@ -1,182 +1,218 @@
-# Upscale – Next-Gen Career Platform
+# Upscale Career Platform
 
-Upscale is a full-stack career-readiness platform for Bangladeshi youth. It blends AI-assisted learning with human mentorship, tailored job discovery, portfolio tooling and recruiter dashboards so each persona can move from fragmented learning to verifiable employment pathways.
-
-- Landing experience: `/` (marketing site, pricing, testimonials, CTA)
-- Auth flows: `/login`, `/register`, `/register-recruiter`, `/forgot-password`
-- Role dashboards: `/dashboard`, `/admin/dashboard`, `/recruiter/dashboard`, `/mentor/dashboard`
+Upscale is a full-stack career acceleration platform built with Next.js that helps job seekers discover learning resources, generate tailored roadmaps, track progress, and move quickly from learning to landing a role. Recruiters and mentors get dedicated dashboards, while an integrated payment system unlocks premium features for power users.
 
 ---
 
-## Architecture & Tech Stack
+## Table of Contents
 
-- Next.js 14 (App Router, Server/Client Components, Route Handlers)
-- TypeScript across app, API routes, scripts and models
-- Tailwind CSS with custom gradients and component library
-- NextAuth v5 credentials provider + middleware-based route protection
-- MongoDB + Mongoose models for users, jobs, mentors, roadmap, community, notifications and resources
-- Google Gemini SDK for AI roadmap generation, plus fetch-based integrations (findwork.dev, YouTube, Udemy)
-- Supporting libs: framer-motion, lucide-react, chart.js/react-chartjs-2, bcryptjs, jose/jsonwebtoken, tailwind-merge
+- [Project Overview](#project-overview)
+- [Tech Stack](#tech-stack)
+- [Installation & Setup](#installation--setup)
+- [Usage Guide](#usage-guide)
+- [API Documentation](#api-documentation)
+- [Known Issues & Future Improvements](#known-issues--future-improvements)
+- [Contribution Guidelines](#contribution-guidelines)
+- [License](#license)
 
 ---
 
-## Getting Started
+## Project Overview
+
+Upscale provides an end-to-end experience for aspiring professionals:
+
+- *Personalised onboarding* that enforces completion of critical profile data before unlocking premium features.
+- *Roadmap generation* powered by Google Gemini AI that blends paid Udemy content, curated YouTube playlists, and Microsoft Learn modules.
+- *Interactive learning pages* with code challenges, YouTube player progress tracking, bookmarking, and history.
+- *Smart job discovery* combining our recruiter postings with the Findwork API, scored against a user’s profile.
+- *Subscription tiers* (Basic, Pro, Ultimate) with payment processing and usage limits managed per plan.
+- *Role-based portals* for recruiters, mentors, admins, and job seekers.
+
+---
+
+## Tech Stack
+
+| Layer              | Technologies |
+|--------------------|--------------|
+| Frontend           | Next.js 13 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons |
+| Backend / API      | Next.js API Routes, NextAuth.js, Google Gemini AI SDK |
+| Database           | MongoDB Atlas, Mongoose ODM |
+| Authentication     | NextAuth (Credentials + Session) |
+| External Services  | RapidAPI (Findwork, Paid Udemy Courses), YouTube Data API v3, Microsoft Learn Catalog |
+| Tooling            | ESLint, Prettier, react-hot-toast |
+
+---
+
+## Installation & Setup
 
 ### Prerequisites
+- *Node.js* v18 or higher
+- *npm* (or yarn/pnpm) and *Git*
+- *MongoDB Atlas* connection string
+- API keys for all external services (RapidAPI, Google, Gemini, etc.)
 
-- Node.js 18+
-- npm 9+ (or `pnpm`/`yarn` equivalent)
-- MongoDB connection string (local or Atlas)
-- API keys as needed (Gemini, OpenAI, payment gateways)
+### 1. Clone the repository
+bash
+git clone https://github.com/your-org/upscale.git
+cd upscale
 
-### Environment Variables
 
-Create `.env.local` from `env.template` and fill the required secrets:
-
-| Purpose | Keys |
-| - | - |
-| Core runtime | `MONGODB_URI`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` |
-| AI providers | `GEMINI_API_KEY`, `OPENAI_API_KEY` |
-| Payments | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `BKASH_API_KEY`, `NAGAD_API_KEY` |
-| Email (optional) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` |
-| Storage (optional) | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_S3_BUCKET` |
-| Feature flags | `ENABLE_AI_FEATURES`, `ENABLE_MENTOR_BOOKING`, `ENABLE_PAYMENTS` |
-
-### Install & Run
-
-```bash
+### 2. Install dependencies
+bash
 npm install
-npm run dev      # http://localhost:3000
-npm run build    # production build (uses Mongo connection)
-npm start        # serve production build
-```
 
-Database helpers:
 
-- Seed featured jobs: `npm run seed:jobs`
-- Create admin/recruiter accounts: `npm run create:admin`
+### 3. Configure environment variables
+Create a .env.local file in the project root:
+bash
+cp .env.example .env.local
 
-> The seed scripts rely on `.env.local`; run them once per environment.
+
+Populate the file with your own values:
+
+NODE_ENV=development
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret
+MONGODB_URI=your_mongodb_connection
+
+# Authentication providers
+GEMINI_API_KEY=your_gemini_api_key
+YOUTUBE_API_KEY=your_youtube_key
+
+# RapidAPI keys
+RAPIDAPI_KEY=your_global_rapidapi_key
+PAID_UDEMY_API_HOST=paid-udemy-course-for-free.p.rapidapi.com
+PAID_UDEMY_API_KEY=your_specific_paid_udemy_key
+FINDWORK_API_TOKEN=your_findwork_api_token
+
+# Optional email / storage settings
+EMAIL_FROM=noreply@upscale.com
+
+
+
+> *Tip:* Keep different .env.local files per environment. Never commit secrets.
+
+### 4. Run the development server
+bash
+npm run dev
+
+The app is now available at *http://localhost:3000*.
 
 ---
 
 ## Usage Guide
 
-- **Public marketing**: Explore hero, pricing, testimonials, FAQ and CTA sections to understand the product.
-- **Registration**: `user` and `recruiter` flows collect minimal info and immediately provision MongoDB records.
-- **Login**: Credentials-based sign-in; verified recruiter enforcement happens during authorize callback.
-- **Forgot password**: Temporary manual flow that logs requests and instructs users to contact support (`/forgot-password`).
-- **Dashboard (`/dashboard`)**: Personalized cards for profile completion, job matches, roadmap progress, mentor sessions and subscription status.
-- **Admin suite**: User management, mentor approvals, job moderation and analytics.
-- **Recruiter workspace**: Manage postings, view analytics, inspect pipeline stats, create new jobs.
-- **Mentor workspace**: Track sessions, availability, earnings, students and payout configuration.
-- **Resources & AI tools**: CV analyser, interview prep, learning roadmap, bookmarking/history, interactive code practice.
+### 1. Landing & Registration
+- Navigate to / to view the marketing landing page.
+- Choose a plan in *Pricing*. Signed-in users are routed to /dashboard/payment with the correct plan preselected; guests are taken to login.
+- Complete registration for job seeker, recruiter, or mentor roles.
 
-Navigation is powered by `DynamicDashboardNav`, which adapts menu items to the authenticated role while keeping `/dashboard` canonical for learners.
+### 2. Completing the Profile
+- Basic users are redirected to /dashboard/profile/complete until required information is provided.
+- Progress indicators update in real time and the dashboard visualises completion status.
 
----
+### 3. Exploring the Dashboard
+- Access personalised stats, quick actions, and “Top Job Matches”.
+- A persistent profile completion card highlights missing data and the user’s current tier.
 
-## API Reference (Route Handlers)
+### 4. Learning Resources (/dashboard/resources)
+- Tabs for *Udemy, **YouTube, **Microsoft Learn, **Suggested, **Bookmarks, and **History*.
+- External APIs load lazily (Udemy coupons, curated YouTube playlists, Microsoft Learn catalog) and fall back to cached data during outages or rate limits.
+- Track progress with the custom YouTube player, bookmark courses, and resume from history.
 
-Paths live under `app/api`. All routes expect authenticated JWT sessions unless marked public.
+### 5. Job Board (/dashboard/jobs)
+- Combines recruiter-approved posts with Findwork listings.
+- Filters by job type, remote status, location, and career track. Results are sorted using profile match scoring.
 
-### Auth & Profile
+### 6. Subscription & Payments
+- Use /dashboard/payment to upgrade plans (Pro/Ultimate). Auto-renew can be managed in *Settings → Billing*.
+- Usage limits are enforced at the API level (/api/subscription, /api/roadmap/generate, etc.).
 
-| Method | Path | Description | Auth |
-| - | - | - | - |
-| POST | `/api/auth/register` | Create learner account | Public |
-| POST | `/api/auth/register-recruiter` | Recruiter onboarding (awaits admin approval) | Public |
-| GET  | `/api/user/profile` | Current user profile (sans password) | Session |
-| PATCH | `/api/user/profile` | Update profile fields | Session |
-| GET  | `/api/user/profile/completion` | Calculates completion score and flags | Session |
-| GET/PUT | `/api/settings/profile` | Profile read/update with password change guard | Session |
-| POST | `/api/upload/avatar` | Upload avatar (<=5 MB images) to `public/uploads` | Session |
-
-### Dashboard & Learner
-
-| Method | Path | Description |
-| - | - | - |
-| GET | `/api/jobs` & `/api/jobs/[id]` | Internal recruiter jobs CRUD |
-| GET | `/api/jobs/findwork` | Proxy to findwork.dev (server runtime) |
-| GET | `/api/jobs/unified` | Merges internal + external jobs for matching |
-| GET | `/api/jobs/match` | Personalized matches based on skills/track |
-| POST | `/api/roadmap/generate` | Gemini-backed roadmap generation |
-| GET | `/api/roadmap` | List user roadmaps |
-| POST | `/api/roadmap/[id]/exercises/[exerciseId]/complete` | Mark exercise complete, update progress |
-| POST | `/api/cv/analyze` | AI CV analysis |
-| POST | `/api/interview/start` | Kick off mock interview |
-
-### Community & Notifications
-
-| Method | Path | Description |
-| - | - | - |
-| GET/POST | `/api/community/questions` | Create & paginate questions |
-| PATCH/DELETE | `/api/community/questions/[id]` | Upvote, accept answer, delete |
-| POST/PATCH/DELETE | `/api/community/questions/[id]/answers` | Answer lifecycle |
-| GET | `/api/notifications` | Fetch notifications (sorted unread first) |
-
-### Mentors & Recruiters
-
-| Path | Capabilities |
-| - | - |
-| `/api/mentors`, `/api/mentors/[id]`, `/api/mentors/book` | Mentor discovery, detail, booking |
-| `/api/mentors/sessions`, `/api/mentors/sessions/[id]` | Session management |
-| `/api/mentor/schedule`, `/api/mentor/stats`, `/api/mentor/earnings`, `/api/mentor/payout` | Mentor dashboards |
-| `/api/recruiter/my-jobs`, `/api/recruiter/jobs/[id]`, `/api/recruiter/jobs/new` | Recruiter job CRUD |
-| `/api/recruiter/stats`, `/api/recruiter/job-analytics` | Funnel and job analytics |
-
-### Admin
-
-| Path | Capabilities |
-| - | - |
-| `/api/admin/users` | Pagination, update roles, delete users |
-| `/api/admin/mentors`, `/api/admin/mentors/[id]` | List/approve mentors |
-| `/api/admin/recruiters` | Verify recruiters |
-| `/api/admin/jobs`, `/api/admin/stats`, `/api/admin/analytics` | Platform metrics and moderation |
-
-> Most route handlers read cookies/headers. When deploying to edge runtimes, set `export const runtime = "nodejs"` or `export const dynamic = "force-dynamic"` to avoid static export warnings.
+> Screenshots: Place PNGs or GIFs in public/docs/ and reference them, e.g.:
+> markdown
+> ![Dashboard](public/docs/dashboard.png)
+> 
 
 ---
 
-## Data & File Handling
+## API Documentation
 
-- **MongoDB**: Connection pooling with cached client (`lib/mongodb.ts`), executed per route.
-- **Models**: Normalized Mongoose schemas with indexes for query-heavy collections (users, jobs, mentors, questions, roadmaps, notifications).
-- **Roadmaps**: Persist exercises, progress and suggested courses (`models/Roadmap.ts`). Exercise completion endpoint updates per-stage progress and stores last submission for audit trails.
-- **Usage limits**: Tier-aware guard rails use `TIER_LIMITS` map with strongly typed features (`lib/usageLimits.ts`).
-- **Uploads**: Avatar upload validates size/type, creates directories on demand and stores under `public/uploads`. For cloud deployment, swap out local write with S3 or similar.
+### Authentication & Profile
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| /api/auth/[...nextauth] | POST | NextAuth credential login & session handling |
+| /api/auth/register | POST | Create a new job seeker account |
+| /api/auth/register-recruiter | POST | Create a recruiter account |
+| /api/user/profile | GET | Fetch current user profile |
+| /api/user/profile | PATCH | Update core profile fields, experience, projects, etc. |
+| /api/user/profile/completion | GET | Retrieve recalculated profile completion metrics |
+
+### Settings
+| Endpoint | Method | Notes |
+|----------|--------|-------|
+| /api/settings/profile | GET / PUT | Fetch & update account profile and password |
+| /api/settings/preferences | GET / PUT | Manage account, notification, privacy, and billing preferences |
+
+### Subscriptions & Billing
+| Endpoint | Method | Notes |
+|----------|--------|-------|
+| /api/subscription | GET | Get current plan & usage limits |
+| /api/subscription | POST | Upgrade or change subscription tier |
+| /api/subscription | PUT | Cancel plan or toggle auto-renew |
+
+### Roadmaps & Learning
+| Endpoint | Method | Notes |
+|----------|--------|-------|
+| /api/roadmap/generate | POST | Generate AI-assisted roadmap (usage-limited) |
+| /api/roadmap/[id] | GET | Fetch specific roadmap |
+| /api/resources/udemy | GET | Fetch Udemy coupons via RapidAPI (with fallback) |
+| /api/resources/youtube | GET | Fetch curated YouTube content (FreeCodeCamp, JavaScript Mastery) |
+| /api/resources/microsoft | GET | Fetch Microsoft Learn catalog |
+| /api/resources/suggest | GET | Roadmap-aware course suggestions |
+| /api/resources/bookmarks | GET / POST | Manage course bookmarks |
+| /api/resources/history | GET | Retrieve watch history |
+| /api/resources/progress | GET / POST | Persist course progress |
+
+### Jobs & Recruiters
+| Endpoint | Method | Notes |
+|----------|--------|-------|
+| /api/jobs/unified | GET | Unified job feed (recruiter + Findwork) |
+| /api/jobs/match | GET | Get top scored jobs for dashboard widgets |
+| /api/recruiter/my-jobs | GET | Recruiter job management |
+
+> For complete request/response samples, check the corresponding files in app/api/**/route.ts.
 
 ---
 
-## Quality & Tooling
+## Known Issues & Future Improvements
 
-- Type-safe across app, API and scripts (`npx tsc --noEmit`).
-- Next.js build (`npm run build`) validates routes; expect warnings for dynamic APIs until `dynamic` or `runtime` hints are added.
-- No ESLint config was generated yet. Run `npx next lint` to scaffold and enforce lint rules.
-- Manual QA steps executed: type-check, production build, static analysis of routing, review of navigation component, verification of admin/dashboard flows, confirmation of upload validation.
-
----
-
-## Known Issues & Follow-Up Work
-
-- Dynamic route warnings during `next build` because several APIs read `headers`/`request.url`. Add `export const dynamic = "force-dynamic"` or migrate to RSC-friendly data loaders.
-- Password reset flow is manual-only; implement tokenized email workflow before production launch.
-- Payment integration uses mock values; connect to live bKash/Nagad/Stripe gateways and harden webhook handlers.
-- Avatar uploads rely on local filesystem; replace with object storage (S3, Cloudinary) for stateless deployments.
-- No automated tests yet. Add unit/integration coverage for API routes (community, roadmap, admin) and component-level testing via Playwright/Testing Library.
+- *External API rate limits:* RapidAPI and YouTube enforce quotas. We currently fall back to cached data when hitting limits; adding persistent caching (Redis) would improve resilience.
+- *Payment flow:* The payment experience is simulated. Integrating an actual PSP (Stripe, SSLCOMMERZ, etc.) is planned.
+- *Automated testing:* End-to-end and integration tests are limited. Adding Playwright/Cypress coverage is a priority.
+- *Accessibility & localisation:* Additional a11y audits and multi-language support would expand reach.
+- *Realtime notifications:* WebSockets (or Pusher) could enhance recruiter ↔ candidate messaging.
 
 ---
 
-## Contributing
+## Contribution Guidelines
 
-- Fork the repository
-- Create a feature branch (`git checkout -b feature/<name>`)
-- Keep TypeScript + build passing
-- Open a PR describing scope, testing and screenshots where relevant
+1. *Fork* the repository and create a local branch.
+2. Run npm install and ensure npm run lint passes.
+3. Make changes (include tests where possible).
+4. Submit a PR with:
+   - A descriptive title
+   - Summary of changes
+   - Screenshots or curl samples (when applicable)
+5. One reviewer approval is required before merging.
+
+Please follow conventional commits (feat:, fix:, etc.) and keep pull requests focused.
 
 ---
 
 ## License
 
-Copyright © Upscale. All rights reserved. Redistribution or commercial use without written permission is prohibited.
+This project is released under the *MIT License*. You are free to use, modify, and distribute it as long as the license terms are respected.
 
+---
+
+Built with ❤️ by the Upscale team — accelerating careers one roadmap at a time.

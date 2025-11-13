@@ -21,6 +21,36 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [accountForm, setAccountForm] = useState({
+    backupEmail: "",
+    twoFactorEnabled: false,
+    loginAlerts: true,
+    currentPassword: "",
+    newPassword: "",
+  });
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    emailUpdates: true,
+    productUpdates: true,
+    jobAlerts: true,
+    mentorReminders: true,
+  });
+  const [privacyPrefs, setPrivacyPrefs] = useState({
+    profileVisibility: "public",
+    showSkills: true,
+    showProjects: true,
+    showActivity: false,
+    allowMessages: true,
+  });
+  const [billingPrefs, setBillingPrefs] = useState({
+    defaultPaymentMethod: "card",
+    sendInvoices: true,
+    taxId: "",
+    autoRenew: false,
+  });
+  const [savingAccount, setSavingAccount] = useState(false);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
+  const [savingBilling, setSavingBilling] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -43,7 +73,38 @@ export default function SettingsPage() {
           experienceLevel: data.user.experienceLevel || "",
           skills: data.user.skills || [],
           targetRoles: data.user.targetRoles || [],
+          phone: data.user.phone || "",
         });
+
+        const preferences = data.user.preferences || {};
+        setAccountForm((prev) => ({
+          ...prev,
+          backupEmail: preferences.account?.backupEmail || "",
+          twoFactorEnabled: preferences.account?.twoFactorEnabled ?? false,
+          loginAlerts: preferences.account?.loginAlerts ?? true,
+          currentPassword: "",
+          newPassword: "",
+        }));
+        setNotificationPrefs({
+          emailUpdates: preferences.notifications?.emailUpdates ?? true,
+          productUpdates: preferences.notifications?.productUpdates ?? true,
+          jobAlerts: preferences.notifications?.jobAlerts ?? true,
+          mentorReminders: preferences.notifications?.mentorReminders ?? true,
+        });
+        setPrivacyPrefs({
+          profileVisibility: preferences.privacy?.profileVisibility || "public",
+          showSkills: preferences.privacy?.showSkills ?? true,
+          showProjects: preferences.privacy?.showProjects ?? true,
+          showActivity: preferences.privacy?.showActivity ?? false,
+          allowMessages: preferences.privacy?.allowMessages ?? true,
+        });
+        setBillingPrefs((prev) => ({
+          ...prev,
+          defaultPaymentMethod: preferences.billing?.defaultPaymentMethod || "card",
+          sendInvoices: preferences.billing?.sendInvoices ?? true,
+          taxId: preferences.billing?.taxId || "",
+          autoRenew: data.user.subscription?.autoRenew ?? false,
+        }));
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -76,6 +137,193 @@ export default function SettingsPage() {
       setSaving(false);
     }
   };
+
+  const saveAccountSettings = async () => {
+    try {
+      setSavingAccount(true);
+
+      if (accountForm.newPassword && !accountForm.currentPassword) {
+        toast.error("Please enter your current password to set a new password.");
+        setSavingAccount(false);
+        return;
+      }
+
+      if (accountForm.newPassword && accountForm.newPassword.length < 6) {
+        toast.error("New password must be at least 6 characters long.");
+        setSavingAccount(false);
+        return;
+      }
+
+      if (accountForm.newPassword) {
+        const passwordRes = await fetch("/api/settings/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentPassword: accountForm.currentPassword,
+            newPassword: accountForm.newPassword,
+          }),
+        });
+
+        const passwordData = await passwordRes.json();
+        if (!passwordRes.ok) {
+          toast.error(passwordData.error || "Failed to update password");
+          setSavingAccount(false);
+          return;
+        }
+      }
+
+      const prefRes = await fetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "account",
+          data: {
+            backupEmail: accountForm.backupEmail,
+            twoFactorEnabled: accountForm.twoFactorEnabled,
+            loginAlerts: accountForm.loginAlerts,
+          },
+        }),
+      });
+
+      const prefData = await prefRes.json();
+      if (!prefRes.ok) {
+        toast.error(prefData.error || "Failed to update account settings");
+        setSavingAccount(false);
+        return;
+      }
+
+      toast.success("Account settings updated");
+      setAccountForm((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+      }));
+      await fetchProfile();
+    } catch (error) {
+      console.error("Error updating account settings:", error);
+      toast.error("Failed to update account settings");
+    } finally {
+      setSavingAccount(false);
+    }
+  };
+
+  const saveNotificationSettings = async () => {
+    try {
+      setSavingNotifications(true);
+      const res = await fetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "notifications",
+          data: notificationPrefs,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to update notification settings");
+        setSavingNotifications(false);
+        return;
+      }
+
+      toast.success("Notification preferences saved");
+      await fetchProfile();
+    } catch (error) {
+      console.error("Error updating notifications:", error);
+      toast.error("Failed to update notifications");
+    } finally {
+      setSavingNotifications(false);
+    }
+  };
+
+  const savePrivacySettings = async () => {
+    try {
+      setSavingPrivacy(true);
+      const res = await fetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "privacy",
+          data: privacyPrefs,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to update privacy settings");
+        setSavingPrivacy(false);
+        return;
+      }
+
+      toast.success("Privacy settings updated");
+      await fetchProfile();
+    } catch (error) {
+      console.error("Error updating privacy settings:", error);
+      toast.error("Failed to update privacy settings");
+    } finally {
+      setSavingPrivacy(false);
+    }
+  };
+
+  const saveBillingSettings = async () => {
+    try {
+      setSavingBilling(true);
+
+      const prefsResponse = await fetch("/api/settings/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "billing",
+          data: {
+            defaultPaymentMethod: billingPrefs.defaultPaymentMethod,
+            sendInvoices: billingPrefs.sendInvoices,
+            taxId: billingPrefs.taxId,
+          },
+        }),
+      });
+
+      const prefsData = await prefsResponse.json();
+      if (!prefsResponse.ok) {
+        toast.error(prefsData.error || "Failed to update billing preferences");
+        setSavingBilling(false);
+        return;
+      }
+
+      const currentAuto = profile?.subscription?.autoRenew ?? false;
+      if (profile?.subscription && billingPrefs.autoRenew !== currentAuto) {
+        const autoRes = await fetch("/api/subscription", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "updateAutoRenew", autoRenew: billingPrefs.autoRenew }),
+        });
+
+        const autoData = await autoRes.json();
+        if (!autoRes.ok) {
+          toast.error(autoData.error || "Failed to update auto-renew");
+          setSavingBilling(false);
+          return;
+        }
+      } else if (!profile?.subscription && billingPrefs.autoRenew) {
+        toast.info("Upgrade to a paid plan to enable auto-renew.");
+        setBillingPrefs((prev) => ({ ...prev, autoRenew: false }));
+      }
+
+      toast.success("Billing preferences saved");
+      await fetchProfile();
+    } catch (error) {
+      console.error("Error updating billing settings:", error);
+      toast.error("Failed to update billing settings");
+    } finally {
+      setSavingBilling(false);
+    }
+  };
+
+  const currentPlan = profile?.subscription?.tier || "Basic";
+  const canManageAutoRenew = Boolean(
+    profile?.subscription &&
+    profile.subscription.status === "active" &&
+    profile.subscription.tier !== "basic"
+  );
 
   if (loading) {
     return (
@@ -172,6 +420,20 @@ export default function SettingsPage() {
                         setFormData({ ...formData, country: e.target.value })
                       }
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                      placeholder="e.g., +8801XXXXXXXXX"
                     />
                   </div>
                   <div>
@@ -298,13 +560,448 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeTab !== "profile" && activeTab !== "subscription" && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🚧</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Coming Soon</h3>
+            {activeTab === "account" && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">Account Security</h2>
                 <p className="text-gray-600">
-                  {tabs.find((t) => t.id === activeTab)?.label} settings will be available soon
+                  Manage your login credentials, recovery options, and security alerts.
                 </p>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Recovery Email
+                    </label>
+                    <input
+                      type="email"
+                      value={accountForm.backupEmail}
+                      onChange={(e) => setAccountForm({ ...accountForm, backupEmail: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                      placeholder="Add a backup email address"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      We use this email if you ever lose access to your account.
+                    </p>
+                  </div>
+
+                  <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-gray-900">Two-factor authentication</div>
+                      <p className="text-sm text-gray-600">
+                        Add an extra layer of security to your login sessions.
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 accent-primary-600"
+                      checked={accountForm.twoFactorEnabled}
+                      onChange={(e) =>
+                        setAccountForm({ ...accountForm, twoFactorEnabled: e.target.checked })
+                      }
+                    />
+                  </div>
+
+                  <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-gray-900">Login alerts</div>
+                      <p className="text-sm text-gray-600">
+                        Receive email alerts whenever a new device signs in.
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 accent-primary-600"
+                      checked={accountForm.loginAlerts}
+                      onChange={(e) =>
+                        setAccountForm({ ...accountForm, loginAlerts: e.target.checked })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      value={accountForm.currentPassword}
+                      onChange={(e) =>
+                        setAccountForm({ ...accountForm, currentPassword: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      value={accountForm.newPassword}
+                      onChange={(e) =>
+                        setAccountForm({ ...accountForm, newPassword: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                      placeholder="Minimum 6 characters"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={saveAccountSettings}
+                  disabled={savingAccount}
+                  className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-semibold disabled:opacity-50"
+                >
+                  {savingAccount ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Account Settings"
+                  )}
+                </button>
+              </div>
+            )}
+
+            {activeTab === "notifications" && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">Notification Preferences</h2>
+                <p className="text-gray-600">Choose how you’d like us to keep you updated.</p>
+
+                <div className="space-y-4">
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 accent-primary-600"
+                      checked={notificationPrefs.jobAlerts}
+                      onChange={(e) =>
+                        setNotificationPrefs({ ...notificationPrefs, jobAlerts: e.target.checked })
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-900">Job alerts</div>
+                      <p className="text-sm text-gray-600">
+                        Get curated job recommendations based on your profile each week.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 accent-primary-600"
+                      checked={notificationPrefs.mentorReminders}
+                      onChange={(e) =>
+                        setNotificationPrefs({
+                          ...notificationPrefs,
+                          mentorReminders: e.target.checked,
+                        })
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-900">Mentor session reminders</div>
+                      <p className="text-sm text-gray-600">
+                        Receive reminders before your scheduled mentor sessions.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 accent-primary-600"
+                      checked={notificationPrefs.emailUpdates}
+                      onChange={(e) =>
+                        setNotificationPrefs({
+                          ...notificationPrefs,
+                          emailUpdates: e.target.checked,
+                        })
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-900">Email updates</div>
+                      <p className="text-sm text-gray-600">
+                        Important platform announcements and feature releases.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 accent-primary-600"
+                      checked={notificationPrefs.productUpdates}
+                      onChange={(e) =>
+                        setNotificationPrefs({
+                          ...notificationPrefs,
+                          productUpdates: e.target.checked,
+                        })
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-900">Product tips & resources</div>
+                      <p className="text-sm text-gray-600">
+                        Occasional tips to help you get the most from Upscale.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                <button
+                  onClick={saveNotificationSettings}
+                  disabled={savingNotifications}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold disabled:opacity-50"
+                >
+                  {savingNotifications ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Notification Preferences"
+                  )}
+                </button>
+              </div>
+            )}
+
+            {activeTab === "privacy" && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">Privacy Controls</h2>
+                <p className="text-gray-600">
+                  Control who can see your profile, projects, and activity across Upscale.
+                </p>
+
+                <div className="space-y-4">
+                  {[
+                    {
+                      value: "public",
+                      title: "Public",
+                      description: "Visible to employers, mentors, and the Upscale community.",
+                    },
+                    {
+                      value: "community",
+                      title: "Community only",
+                      description: "Visible to verified Upscale members and mentors.",
+                    },
+                    {
+                      value: "private",
+                      title: "Private",
+                      description: "Only visible to you and invited collaborators.",
+                    },
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition ${
+                        privacyPrefs.profileVisibility === option.value
+                          ? "border-primary-500 bg-primary-50"
+                          : "border-gray-200 hover:border-primary-200"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="profileVisibility"
+                        value={option.value}
+                        checked={privacyPrefs.profileVisibility === option.value}
+                        onChange={(e) =>
+                          setPrivacyPrefs({ ...privacyPrefs, profileVisibility: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                      <div>
+                        <div className="font-semibold text-gray-900">{option.title}</div>
+                        <p className="text-sm text-gray-600">{option.description}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 accent-primary-600"
+                      checked={privacyPrefs.showSkills}
+                      onChange={(e) =>
+                        setPrivacyPrefs({ ...privacyPrefs, showSkills: e.target.checked })
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-900">Display skills on profile</div>
+                      <p className="text-sm text-gray-600">
+                        Highlight your core skills to recruiters and mentors.
+                      </p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 accent-primary-600"
+                      checked={privacyPrefs.showProjects}
+                      onChange={(e) =>
+                        setPrivacyPrefs({ ...privacyPrefs, showProjects: e.target.checked })
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-900">Show portfolio projects</div>
+                      <p className="text-sm text-gray-600">
+                        Allow others to view your featured case studies and builds.
+                      </p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 accent-primary-600"
+                      checked={privacyPrefs.showActivity}
+                      onChange={(e) =>
+                        setPrivacyPrefs({ ...privacyPrefs, showActivity: e.target.checked })
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-900">Share learning activity</div>
+                      <p className="text-sm text-gray-600">
+                        Display streaks and roadmap progress on your public profile.
+                      </p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 accent-primary-600"
+                      checked={privacyPrefs.allowMessages}
+                      onChange={(e) =>
+                        setPrivacyPrefs({ ...privacyPrefs, allowMessages: e.target.checked })
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold text-gray-900">Allow direct messages</div>
+                      <p className="text-sm text-gray-600">
+                        Mentors and recruiters can send you direct messages.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                <button
+                  onClick={savePrivacySettings}
+                  disabled={savingPrivacy}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold disabled:opacity-50"
+                >
+                  {savingPrivacy ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Privacy Settings"
+                  )}
+                </button>
+              </div>
+            )}
+
+            {activeTab === "billing" && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">Billing Preferences</h2>
+                <p className="text-gray-600">
+                  Update billing defaults, invoicing preferences, and auto-renewal settings.
+                </p>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Default payment method
+                    </label>
+                    <select
+                      value={billingPrefs.defaultPaymentMethod}
+                      onChange={(e) =>
+                        setBillingPrefs({ ...billingPrefs, defaultPaymentMethod: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                    >
+                      <option value="card">Debit / Credit Card</option>
+                      <option value="bkash">bKash</option>
+                      <option value="nagad">Nagad</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Tax ID / VAT (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={billingPrefs.taxId}
+                      onChange={(e) =>
+                        setBillingPrefs({ ...billingPrefs, taxId: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                      placeholder="Enter business tax details"
+                    />
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl">
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 accent-primary-600"
+                    checked={billingPrefs.sendInvoices}
+                    onChange={(e) =>
+                      setBillingPrefs({ ...billingPrefs, sendInvoices: e.target.checked })
+                    }
+                  />
+                  <div>
+                    <div className="font-semibold text-gray-900">Email monthly invoices</div>
+                    <p className="text-sm text-gray-600">
+                      Receive a PDF receipt straight to your inbox each billing cycle.
+                    </p>
+                  </div>
+                </label>
+
+                <div className={`p-4 border rounded-xl ${canManageAutoRenew ? "border-primary-200 bg-primary-50/40" : "border-gray-200 bg-gray-50"}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-gray-900">Auto-renew subscription</div>
+                      <p className="text-sm text-gray-600">
+                        {canManageAutoRenew
+                          ? "Keep your " + currentPlan + " plan active without interruption."
+                          : "Upgrade to a paid plan to manage auto-renewal."}
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 accent-primary-600"
+                      checked={billingPrefs.autoRenew}
+                      disabled={!canManageAutoRenew}
+                      onChange={(e) =>
+                        setBillingPrefs({ ...billingPrefs, autoRenew: e.target.checked })
+                      }
+                    />
+                  </div>
+                  {profile?.subscription && (
+                    <p className="text-xs text-gray-500 mt-3">
+                      Current plan: <span className="font-semibold text-gray-800">{currentPlan.toUpperCase()}</span> •
+                      Renews on {profile.subscription.endDate ? new Date(profile.subscription.endDate).toLocaleDateString() : "—"}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  onClick={saveBillingSettings}
+                  disabled={savingBilling}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold disabled:opacity-50"
+                >
+                  {savingBilling ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Billing Preferences"
+                  )}
+                </button>
               </div>
             )}
           </div>

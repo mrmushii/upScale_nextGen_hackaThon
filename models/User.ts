@@ -65,6 +65,31 @@ export interface IUser {
     mentorSessions: number;
     resetDate: Date;
   };
+  preferences?: {
+    account?: {
+      twoFactorEnabled: boolean;
+      loginAlerts: boolean;
+      backupEmail?: string;
+    };
+    notifications?: {
+      emailUpdates: boolean;
+      productUpdates: boolean;
+      jobAlerts: boolean;
+      mentorReminders: boolean;
+    };
+    privacy?: {
+      profileVisibility: "public" | "community" | "private";
+      showSkills: boolean;
+      showProjects: boolean;
+      showActivity: boolean;
+      allowMessages: boolean;
+    };
+    billing?: {
+      defaultPaymentMethod: "card" | "bkash" | "nagad" | string;
+      sendInvoices: boolean;
+      taxId?: string;
+    };
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -272,6 +297,35 @@ const UserSchema = new Schema<IUser>(
           date.setMonth(date.getMonth() + 1);
           return date;
         },
+      },
+    },
+    preferences: {
+      account: {
+        twoFactorEnabled: { type: Boolean, default: false },
+        loginAlerts: { type: Boolean, default: true },
+        backupEmail: { type: String, default: "" },
+      },
+      notifications: {
+        emailUpdates: { type: Boolean, default: true },
+        productUpdates: { type: Boolean, default: true },
+        jobAlerts: { type: Boolean, default: true },
+        mentorReminders: { type: Boolean, default: true },
+      },
+      privacy: {
+        profileVisibility: {
+          type: String,
+          enum: ["public", "community", "private"],
+          default: "public",
+        },
+        showSkills: { type: Boolean, default: true },
+        showProjects: { type: Boolean, default: true },
+        showActivity: { type: Boolean, default: false },
+        allowMessages: { type: Boolean, default: true },
+      },
+      billing: {
+        defaultPaymentMethod: { type: String, default: "card" },
+        sendInvoices: { type: Boolean, default: true },
+        taxId: { type: String, default: "" },
       },
     },
   },

@@ -1,7 +1,8 @@
 "use client";
 
 import { Check, Sparkles, Zap, Crown } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const plans = [
   {
@@ -76,6 +77,18 @@ const plans = [
 ];
 
 export default function Pricing() {
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const handleSelectPlan = (planName: string) => {
+    const planParam = planName.toLowerCase();
+    if (session?.user) {
+      router.push(`/dashboard/payment?plan=${planParam}`);
+    } else {
+      router.push(`/login?redirect=/dashboard/payment?plan=${planParam}`);
+    }
+  };
+
   return (
     <section id="pricing" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -148,12 +161,12 @@ export default function Pricing() {
               </div>
 
               {/* CTA Button */}
-              <Link
-                href="/register"
-                className={`block text-center w-full py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${plan.buttonStyle} mb-8`}
+              <button
+                onClick={() => handleSelectPlan(plan.name)}
+                className={`w-full py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${plan.buttonStyle} mb-8`}
               >
                 {plan.buttonText}
-              </Link>
+              </button>
 
               {/* Features */}
               <div className="space-y-4">
