@@ -19,9 +19,24 @@ import {
   History,
   Map,
   Link as LinkIcon,
+  School,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import YouTubePlayer from "@/components/resources/YouTubePlayer";
+
+type ActiveTab =
+  | "all"
+  | "udemy"
+  | "youtube"
+  | "microsoft"
+  | "suggested"
+  | "bookmarks"
+  | "history";
+
+const UDEMY_TABS: ActiveTab[] = ["all", "udemy", "bookmarks"];
+const YOUTUBE_TABS: ActiveTab[] = ["all", "youtube", "bookmarks", "history"];
+const MICROSOFT_TABS: ActiveTab[] = ["all", "microsoft", "bookmarks"];
 
 interface UdemyCourse {
   id: string;
@@ -54,21 +69,50 @@ interface YouTubeCourse {
   url: string;
 }
 
+interface MicrosoftCourse {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  duration?: string;
+  products?: string[];
+  roles?: string[];
+  levels?: string[];
+  type?: string;
+  thumbnail?: string;
+}
+
 export default function ResourcesPage() {
-  const [activeTab, setActiveTab] = useState<"all" | "udemy" | "youtube" | "suggested" | "bookmarks" | "history">("all");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("all");
   const [udemyCourses, setUdemyCourses] = useState<UdemyCourse[]>([]);
   const [youtubeCourses, setYoutubeCourses] = useState<YouTubeCourse[]>([]);
+  const [microsoftCourses, setMicrosoftCourses] = useState<MicrosoftCourse[]>([]);
   const [suggestedCourses, setSuggestedCourses] = useState<any>(null);
   const [selectedVideo, setSelectedVideo] = useState<YouTubeCourse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingUdemy, setLoadingUdemy] = useState(false);
+  const [loadingYoutube, setLoadingYoutube] = useState(false);
+  const [loadingMicrosoft, setLoadingMicrosoft] = useState(false);
+  const [loadingSuggested, setLoadingSuggested] = useState(false);
+  const [udemyLoaded, setUdemyLoaded] = useState(false);
+  const [youtubeLoaded, setYoutubeLoaded] = useState(false);
+  const [microsoftLoaded, setMicrosoftLoaded] = useState(false);
+  const [suggestedLoaded, setSuggestedLoaded] = useState(false);
+  const [udemyMessage, setUdemyMessage] = useState<string | null>(null);
+  const [youtubeMessage, setYoutubeMessage] = useState<string | null>(null);
+  const [microsoftMessage, setMicrosoftMessage] = useState<string | null>(null);
+  const [suggestedMessage, setSuggestedMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [bookmarks, setBookmarks] = useState<Record<string, boolean>>({});
   const [watchHistory, setWatchHistory] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [roadmap, setRoadmap] = useState<any>(null);
 
+  const needsUdemy = UDEMY_TABS.includes(activeTab);
+  const needsYoutube = YOUTUBE_TABS.includes(activeTab);
+  const needsMicrosoft = MICROSOFT_TABS.includes(activeTab);
+  const needsSuggested = activeTab === "suggested";
+
   useEffect(() => {
-    fetchAllCourses();
     fetchProgress();
     fetchBookmarks();
     fetchHistory();
@@ -77,48 +121,127 @@ export default function ResourcesPage() {
     // Check for tab parameter in URL
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get("tab");
-    if (tab && ["all", "udemy", "youtube", "suggested", "bookmarks", "history"].includes(tab)) {
+    if (
+      tab &&
+      ["all", "udemy", "youtube", "microsoft", "suggested", "bookmarks", "history"].includes(tab)
+    ) {
       setActiveTab(tab as any);
     }
   }, []);
 
-  const fetchAllCourses = async () => {
+  useEffect(() => {
+    if (UDEMY_TABS.includes(activeTab)) {
+      void loadUdemyCourses();
+    }
+
+    if (YOUTUBE_TABS.includes(activeTab)) {
+      void loadYoutubeCourses();
+    }
+
+    if (MICROSOFT_TABS.includes(activeTab)) {
+      void loadMicrosoftCourses();
+    }
+
+    if (activeTab === "suggested") {
+      void loadSuggestedCourses();
+    }
+  }, [activeTab]);
+
+  const loadUdemyCourses = async (force = false) => {
+    if (udemyLoaded && !force) return;
+    setLoadingUdemy(true);
     try {
-      setLoading(true);
-      const [udemyRes, youtubeRes, suggestedRes] = await Promise.all([
-        fetch("/api/resources/udemy"),
-        fetch("/api/resources/youtube"),
-        fetch("/api/resources/suggest"),
-      ]);
-
-      if (udemyRes.ok) {
-        const udemyData = await udemyRes.json();
-        setUdemyCourses(udemyData.courses || []);
-      }
-
-      if (youtubeRes.ok) {
-        const youtubeData = await youtubeRes.json();
-        setYoutubeCourses(youtubeData.courses || []);
-      }
-
-      // Only fetch suggestions if profile is complete (this requires completion)
-      try {
-        const suggestedRes = await fetch("/api/resources/suggest");
-        if (suggestedRes.ok) {
-          const suggestedData = await suggestedRes.json();
-          setSuggestedCourses(suggestedData.suggestions || null);
-        } else if (suggestedRes.status === 403) {
-          // Profile incomplete - suggestions not available
-          setSuggestedCourses(null);
-        }
-      } catch (error) {
-        // Silently fail if profile incomplete - suggestions tab will show message
-        console.log("Suggestions not available - profile may be incomplete");
+      const res = await fetch("/api/resources/udemy");
+      if (res.ok) {
+        const data = await res.json();
+        setUdemyCourses(data.courses || []);
+        setUdemyMessage(data.message || null);
+        setUdemyLoaded(true);
+      } else {
+        setUdemyMessage("Unable to load Udemy courses right now.");
       }
     } catch (error) {
-      console.error("Error fetching courses:", error);
+      console.error("Error loading Udemy courses:", error);
+      setUdemyMessage("Unable to load Udemy courses right now. Showing any cached results.");
     } finally {
-      setLoading(false);
+      setLoadingUdemy(false);
+    }
+  };
+
+  const loadYoutubeCourses = async (force = false) => {
+    if (youtubeLoaded && !force) return;
+    setLoadingYoutube(true);
+    try {
+      const res = await fetch("/api/resources/youtube");
+      if (res.ok) {
+        const data = await res.json();
+        setYoutubeCourses(data.courses || []);
+        if (data.message) {
+          setYoutubeMessage(data.message);
+        } else if (data.metadata?.fallbackChannels?.length) {
+          setYoutubeMessage(
+            `Showing cached videos for: ${data.metadata.fallbackChannels.join(", ")}`
+          );
+        } else {
+          setYoutubeMessage(null);
+        }
+        setYoutubeLoaded(true);
+      } else {
+        setYoutubeMessage("Unable to load YouTube courses right now.");
+      }
+    } catch (error) {
+      console.error("Error loading YouTube courses:", error);
+      setYoutubeMessage("Unable to load YouTube courses right now. Showing any cached results.");
+    } finally {
+      setLoadingYoutube(false);
+    }
+  };
+
+  const loadMicrosoftCourses = async (force = false) => {
+    if (microsoftLoaded && !force) return;
+    setLoadingMicrosoft(true);
+    try {
+      const res = await fetch("/api/resources/microsoft");
+      if (res.ok) {
+        const data = await res.json();
+        setMicrosoftCourses(data.courses || []);
+        setMicrosoftMessage(data.message || null);
+        setMicrosoftLoaded(true);
+      } else {
+        setMicrosoftMessage("Unable to load Microsoft Learn catalog right now.");
+      }
+    } catch (error) {
+      console.error("Error loading Microsoft courses:", error);
+      setMicrosoftMessage(
+        "Unable to load Microsoft Learn catalog right now. Showing any cached results."
+      );
+    } finally {
+      setLoadingMicrosoft(false);
+    }
+  };
+
+  const loadSuggestedCourses = async (force = false) => {
+    if (suggestedLoaded && !force) return;
+    setLoadingSuggested(true);
+    try {
+      const res = await fetch("/api/resources/suggest");
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestedCourses(data.suggestions || null);
+        setSuggestedMessage(data.message || data.suggestions?.message || null);
+        setSuggestedLoaded(true);
+      } else if (res.status === 403) {
+        setSuggestedCourses(null);
+        setSuggestedMessage("Complete your profile to unlock personalized suggestions.");
+        setSuggestedLoaded(true);
+      } else {
+        setSuggestedMessage("Unable to load personalized suggestions right now.");
+      }
+    } catch (error) {
+      console.error("Error loading suggested courses:", error);
+      setSuggestedMessage("Unable to load personalized suggestions right now.");
+    } finally {
+      setLoadingSuggested(false);
     }
   };
 
@@ -180,6 +303,25 @@ export default function ResourcesPage() {
     }
   };
 
+  const handleRefresh = () => {
+    if (needsUdemy) {
+      setUdemyLoaded(false);
+      void loadUdemyCourses(true);
+    }
+    if (needsYoutube) {
+      setYoutubeLoaded(false);
+      void loadYoutubeCourses(true);
+    }
+    if (needsMicrosoft) {
+      setMicrosoftLoaded(false);
+      void loadMicrosoftCourses(true);
+    }
+    if (needsSuggested) {
+      setSuggestedLoaded(false);
+      void loadSuggestedCourses(true);
+    }
+  };
+
   const handleVideoSelect = (course: YouTubeCourse) => {
     setSelectedVideo(course);
   };
@@ -221,7 +363,10 @@ export default function ResourcesPage() {
     }
   };
 
-  const toggleBookmark = async (course: UdemyCourse | YouTubeCourse, courseType: "udemy" | "youtube") => {
+  const toggleBookmark = async (
+    course: UdemyCourse | YouTubeCourse | MicrosoftCourse,
+    courseType: "udemy" | "youtube" | "microsoft"
+  ) => {
     const isBookmarked = bookmarks[course.id];
     
     try {
@@ -232,9 +377,18 @@ export default function ResourcesPage() {
           courseId: course.id,
           courseType,
           courseTitle: course.title,
-          courseThumbnail: course.thumbnail,
+          courseThumbnail:
+            (course as any).thumbnail ||
+            (courseType === "microsoft"
+              ? "https://learn.microsoft.com/favicon.ico"
+              : undefined),
           videoId: courseType === "youtube" ? (course as YouTubeCourse).videoId : undefined,
-          url: courseType === "udemy" ? (course as UdemyCourse).url : (course as YouTubeCourse).url,
+          url:
+            courseType === "udemy"
+              ? (course as UdemyCourse).url
+              : courseType === "youtube"
+              ? (course as YouTubeCourse).url
+              : (course as MicrosoftCourse).url,
           action: isBookmarked ? "remove" : "add",
         }),
       });
@@ -258,35 +412,58 @@ export default function ResourcesPage() {
         course.title?.toLowerCase().includes(lowerQuery) ||
         course.description?.toLowerCase().includes(lowerQuery) ||
         course.instructor?.toLowerCase().includes(lowerQuery) ||
-        course.channel?.toLowerCase().includes(lowerQuery)
+        course.channel?.toLowerCase().includes(lowerQuery) ||
+        (Array.isArray(course.roles) &&
+          course.roles.some((role: string) => role.toLowerCase().includes(lowerQuery))) ||
+        (Array.isArray(course.products) &&
+          course.products.some((product: string) => product.toLowerCase().includes(lowerQuery)))
     );
   };
 
   const getDisplayCourses = () => {
     if (activeTab === "udemy") {
-      return { udemy: filterCourses(udemyCourses, searchQuery), youtube: [] };
+      return {
+        udemy: filterCourses(udemyCourses, searchQuery),
+        youtube: [],
+        microsoft: [],
+      };
     }
     if (activeTab === "youtube") {
-      return { udemy: [], youtube: filterCourses(youtubeCourses, searchQuery) };
+      return {
+        udemy: [],
+        youtube: filterCourses(youtubeCourses, searchQuery),
+        microsoft: [],
+      };
+    }
+    if (activeTab === "microsoft") {
+      return {
+        udemy: [],
+        youtube: [],
+        microsoft: filterCourses(microsoftCourses, searchQuery),
+      };
     }
     if (activeTab === "suggested") {
       return {
         udemy: filterCourses(suggestedCourses?.udemyCourses || [], searchQuery),
         youtube: filterCourses(suggestedCourses?.youtubeCourses || [], searchQuery),
+        microsoft: filterCourses(suggestedCourses?.microsoftCourses || [], searchQuery),
       };
     }
     if (activeTab === "bookmarks") {
       const bookmarkedUdemy = udemyCourses.filter((c) => bookmarks[c.id]);
       const bookmarkedYoutube = youtubeCourses.filter((c) => bookmarks[c.id]);
+      const bookmarkedMicrosoft = microsoftCourses.filter((c) => bookmarks[c.id]);
       return {
         udemy: filterCourses(bookmarkedUdemy, searchQuery),
         youtube: filterCourses(bookmarkedYoutube, searchQuery),
+        microsoft: filterCourses(bookmarkedMicrosoft, searchQuery),
       };
     }
     if (activeTab === "history") {
       // Convert history to course format
       const historyUdemy: UdemyCourse[] = [];
       const historyYoutube: YouTubeCourse[] = [];
+      const historyMicrosoft: MicrosoftCourse[] = [];
       
       watchHistory.forEach((h) => {
         if (h.courseType === "udemy") {
@@ -303,6 +480,19 @@ export default function ResourcesPage() {
             level: "All Levels",
             duration: "N/A",
             language: "English",
+          });
+        } else if (h.courseType === "microsoft") {
+          historyMicrosoft.push({
+            id: h.courseId,
+            title: h.courseTitle,
+            description: "",
+            url: h.url || "#",
+            duration: h.duration || undefined,
+            products: h.products || [],
+            roles: h.roles || [],
+            levels: h.levels || [],
+            type: h.type || "Module",
+            thumbnail: h.courseThumbnail || "https://learn.microsoft.com/favicon.ico",
           });
         } else {
           historyYoutube.push({
@@ -325,11 +515,13 @@ export default function ResourcesPage() {
       return {
         udemy: filterCourses(historyUdemy, searchQuery),
         youtube: filterCourses(historyYoutube, searchQuery),
+        microsoft: filterCourses(historyMicrosoft, searchQuery),
       };
     }
     return {
       udemy: filterCourses(udemyCourses, searchQuery),
       youtube: filterCourses(youtubeCourses, searchQuery),
+      microsoft: filterCourses(microsoftCourses, searchQuery),
     };
   };
 
@@ -343,18 +535,26 @@ export default function ResourcesPage() {
     return `${minutes}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const displayCourses = getDisplayCourses();
+  const isLoading =
+    (needsUdemy && !udemyLoaded && loadingUdemy) ||
+    (needsYoutube && !youtubeLoaded && loadingYoutube) ||
+    (needsMicrosoft && !microsoftLoaded && loadingMicrosoft) ||
+    (needsSuggested && !suggestedLoaded && loadingSuggested);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-primary-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading courses...</p>
-        </div>
-      </div>
-    );
-  }
+  const canShowEmptyState =
+    !isLoading &&
+    (!needsUdemy || udemyLoaded) &&
+    (!needsYoutube || youtubeLoaded) &&
+    (!needsMicrosoft || microsoftLoaded) &&
+    (!needsSuggested || suggestedLoaded);
+
+  const infoMessages: string[] = [];
+  if (udemyMessage && needsUdemy) infoMessages.push(udemyMessage);
+  if (youtubeMessage && needsYoutube) infoMessages.push(youtubeMessage);
+  if (microsoftMessage && needsMicrosoft) infoMessages.push(microsoftMessage);
+  if (suggestedMessage && needsSuggested) infoMessages.push(suggestedMessage);
+
+  const displayCourses = getDisplayCourses();
 
   return (
     <div className="space-y-8">
@@ -396,17 +596,37 @@ export default function ResourcesPage() {
         </div>
       )}
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-        <input
-          type="text"
-          placeholder="Search courses by title, description, instructor, or channel..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none transition"
-        />
+      {/* Search & actions */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search courses by title, description, instructor, or channel..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none transition"
+          />
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl border border-gray-200 hover:bg-gray-200 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+          Refresh
+        </button>
       </div>
+
+      {infoMessages.length > 0 && (
+        <div className="bg-yellow-50 border-2 border-yellow-200 text-yellow-800 rounded-xl p-4">
+          {infoMessages.map((msg, index) => (
+            <p key={index} className="text-sm">
+              {msg}
+            </p>
+          ))}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
@@ -415,6 +635,7 @@ export default function ResourcesPage() {
           { id: "suggested", label: "Suggested", icon: TrendingUp },
           { id: "udemy", label: "Udemy", icon: GraduationCap },
           { id: "youtube", label: "YouTube", icon: Youtube },
+          { id: "microsoft", label: "Microsoft Learn", icon: School },
           { id: "bookmarks", label: "Bookmarks", icon: BookmarkCheck },
           { id: "history", label: "History", icon: History },
         ].map((tab) => (
@@ -703,8 +924,116 @@ export default function ResourcesPage() {
         </div>
       )}
 
+      {/* Microsoft Learn Courses */}
+      {displayCourses.microsoft.length > 0 && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <School className="text-blue-600" size={28} />
+            Microsoft Learn
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayCourses.microsoft.map((course: MicrosoftCourse) => {
+              const courseProgress = progress[course.id];
+              return (
+                <div
+                  key={course.id}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition"
+                >
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b border-blue-200 relative">
+                    <button
+                      onClick={() => toggleBookmark(course, "microsoft")}
+                      className="absolute top-4 right-4 p-2 bg-white/70 hover:bg-white rounded-lg transition"
+                    >
+                      {bookmarks[course.id] ? (
+                        <BookmarkCheck size={20} className="text-blue-600" />
+                      ) : (
+                        <Bookmark size={20} className="text-blue-600" />
+                      )}
+                    </button>
+                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 pr-10">{course.title}</h3>
+                    <p className="text-sm text-gray-700 mb-4 line-clamp-3 pr-2">
+                      {course.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-xs text-blue-700">
+                      {course.roles?.slice(0, 2).map((role) => (
+                        <span
+                          key={role}
+                          className="bg-white border border-blue-200 px-2 py-1 rounded-full"
+                        >
+                          {role}
+                        </span>
+                      ))}
+                      {course.products?.slice(0, 2).map((product) => (
+                        <span
+                          key={product}
+                          className="bg-white border border-blue-200 px-2 py-1 rounded-full"
+                        >
+                          {product}
+                        </span>
+                      ))}
+                      {course.levels?.slice(0, 1).map((level) => (
+                        <span
+                          key={level}
+                          className="bg-blue-600 text-white px-2 py-1 rounded-full"
+                        >
+                          {level}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      {course.duration && (
+                        <span className="flex items-center gap-1">
+                          <Clock size={16} />
+                          {course.duration}
+                        </span>
+                      )}
+                      {course.type && (
+                        <span className="flex items-center gap-1">
+                          <BookOpen size={16} />
+                          {course.type}
+                        </span>
+                      )}
+                    </div>
+
+                    {courseProgress && (
+                      <div>
+                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                          <span>Progress</span>
+                          <span>{Math.round(courseProgress.progress)}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-gray-200 rounded-full">
+                          <div
+                            className="h-full bg-blue-600 rounded-full transition-all"
+                            style={{ width: `${courseProgress.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <a
+                      href={course.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                    >
+                      View on Microsoft Learn
+                      <ExternalLink size={18} />
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Empty State */}
-      {displayCourses.udemy.length === 0 && displayCourses.youtube.length === 0 && (
+      {canShowEmptyState &&
+        displayCourses.udemy.length === 0 &&
+        displayCourses.youtube.length === 0 &&
+        displayCourses.microsoft.length === 0 && (
         <div className="bg-white rounded-xl p-12 text-center shadow-lg">
           <BookOpen size={64} className="mx-auto text-gray-400 mb-6" />
           <h3 className="text-2xl font-bold text-gray-900 mb-4">No Courses Found</h3>
@@ -715,6 +1044,8 @@ export default function ResourcesPage() {
               ? "You haven't bookmarked any courses yet."
               : activeTab === "history"
               ? "You haven't watched any courses yet."
+              : activeTab === "microsoft"
+              ? "No Microsoft Learn courses matched your search."
               : searchQuery
               ? "No courses match your search query."
               : "Try adjusting your preferences or check back later for new courses."}

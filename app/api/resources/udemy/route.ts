@@ -80,16 +80,12 @@ async function fetchUdemyCoursesFromRapidAPI(
   searchQuery: string
 ): Promise<any[]> {
   try {
-    // RapidAPI Udemy API endpoint - search courses
-    // Note: The exact endpoint may vary based on which Udemy API you subscribe to on RapidAPI
-    // Common endpoints:
-    // - /courses/search
-    // - /courses
-    // - /search
-    
-    const url = `https://${apiHost}/courses/search?q=${encodeURIComponent(searchQuery)}&page=1&page_size=20`;
-    
-    const response = await fetch(url, {
+    const baseUrl = `https://${apiHost}`;
+    const hasSearch = searchQuery.trim().length > 0;
+    const encodedQuery = encodeURIComponent(searchQuery.trim());
+    const path = hasSearch ? `/search?s=${encodedQuery}` : `/?page=0`;
+
+    const response = await fetch(`${baseUrl}${path}`, {
       method: "GET",
       headers: {
         "X-RapidAPI-Key": apiKey,
@@ -99,95 +95,63 @@ async function fetchUdemyCoursesFromRapidAPI(
     });
 
     if (!response.ok) {
+      if (response.status === 404 || response.status === 429) {
+        console.warn(
+          `RapidAPI Udemy endpoint returned ${response.status} for query "${searchQuery}". Falling back to mock data.`
+        );
+        return [];
+      }
       throw new Error(`RapidAPI error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    const results = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
 
-    // Transform RapidAPI response to our format
-    // The response structure may vary - adjust based on actual API response
-    if (data.results && Array.isArray(data.results)) {
-      return data.results.map((course: any) => ({
-        id: course.id?.toString() || `udemy-${course.title?.replace(/\s+/g, "-").toLowerCase()}`,
-        title: course.title || course.headline || "Untitled Course",
-        instructor: course.instructors?.[0]?.display_name || 
-                   course.instructor_name || 
-                   course.visible_instructors?.[0]?.display_name || 
-                   "Unknown Instructor",
-        rating: parseFloat(course.rating?.toFixed(1) || course.avg_rating?.toFixed(1) || "0") || 0,
-        students: course.num_subscribers || course.num_students || 0,
-        price: formatPrice(course.price || course.price_detail?.amount || "0"),
-        originalPrice: formatPrice(course.price_detail?.list_price || course.original_price || null),
-        thumbnail: course.image_480x270 || 
-                  course.image_750x422 || 
-                  course.image_125_H || 
-                  "https://via.placeholder.com/480x270?text=Course",
-        url: course.url || 
-             `https://www.udemy.com/course/${course.id}/` || 
-             course.link || 
-             "#",
-        description: course.headline || 
-                    course.description || 
-                    course.title || 
-                    "No description available",
-        level: course.content_info || 
-              course.level || 
-              "All Levels",
-        duration: formatDuration(course.content_length_video || course.estimated_content_length || 0),
-        language: course.locale?.title || 
-                 course.locale?.locale || 
-                 "English",
-      }));
+    if (results.length === 0) {
+      return [];
     }
 
-    // Alternative response format handling
-    if (data.courses && Array.isArray(data.courses)) {
-      return data.courses.map((course: any) => transformCourseData(course));
-    }
-
-    // If response is directly an array
-    if (Array.isArray(data)) {
-      return data.map((course: any) => transformCourseData(course));
-    }
-
-    return [];
+    return results.map((course: any) => mapFreeUdemyCourse(course));
   } catch (error: any) {
-    console.error("Error fetching from RapidAPI:", error);
+    console.warn("Error fetching from RapidAPI:", error?.message || error);
     throw error;
   }
 }
 
 function transformCourseData(course: any): any {
+  return mapFreeUdemyCourse(course);
+}
+
+function mapFreeUdemyCourse(course: any): any {
+  const fallbackId = course.id?.toString() || course.sku?.toString();
+  const thumbnail =
+    course.pic ||
+    course.image_480x270 ||
+    course.image_750x422 ||
+    "https://via.placeholder.com/480x270?text=Udemy";
+
+  const rawDuration = Number(course.duration);
+  const durationHours = Number.isFinite(rawDuration) && rawDuration > 0 ? rawDuration : undefined;
+  const durationText = durationHours
+    ? `${durationHours} hour${durationHours > 1 ? "s" : ""}`
+    : course.content_length_video
+    ? formatDuration(course.content_length_video)
+    : "N/A";
+
   return {
-    id: course.id?.toString() || `udemy-${Date.now()}`,
+    id: fallbackId || `udemy-${Date.now()}`,
     title: course.title || course.headline || "Untitled Course",
-    instructor: course.instructors?.[0]?.display_name || 
-               course.instructor_name || 
-               course.visible_instructors?.[0]?.display_name || 
-               "Unknown Instructor",
-    rating: parseFloat(course.rating?.toFixed(1) || course.avg_rating?.toFixed(1) || "0") || 0,
-    students: course.num_subscribers || course.num_students || 0,
-    price: formatPrice(course.price || course.price_detail?.amount || "0"),
-    originalPrice: formatPrice(course.price_detail?.list_price || course.original_price || null),
-    thumbnail: course.image_480x270 || 
-              course.image_750x422 || 
-              course.image_125_H || 
-              "https://via.placeholder.com/480x270?text=Course",
-    url: course.url || 
-         `https://www.udemy.com/course/${course.id}/` || 
-         course.link || 
-         "#",
-    description: course.headline || 
-                course.description || 
-                course.title || 
-                "No description available",
-    level: course.content_info || 
-          course.level || 
-          "All Levels",
-    duration: formatDuration(course.content_length_video || course.estimated_content_length || 0),
-    language: course.locale?.title || 
-             course.locale?.locale || 
-             "English",
+    instructor: course.instructor_name || "Udemy Instructor",
+    rating: Number(course.rating) || 0,
+    students: Number(course.num_subscribers || course.num_students || 0),
+    price: "Free with coupon",
+    originalPrice: formatPrice(course.org_price || course.price || course.price_detail?.amount || "0"),
+    thumbnail,
+    url: course.coupon || course.url || course.link || "#",
+    description: course.desc_text || course.description || course.title || "No description available",
+    level: course.category || course.level || "All Levels",
+    duration: durationText,
+    language: course.language || "English",
   };
 }
 

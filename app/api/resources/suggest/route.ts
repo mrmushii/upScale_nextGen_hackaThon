@@ -50,10 +50,11 @@ export async function GET(request: NextRequest) {
     const stageName = currentStage?.name || roadmap.stages[0]?.name || "";
 
     // Build suggestions based on roadmap stage
-    const suggestions = {
+    const suggestions: any = {
       stageName,
       udemyCourses: [],
       youtubeCourses: [],
+      microsoftCourses: [],
       message: `Based on your current roadmap stage: "${stageName}"`,
     };
 
@@ -91,6 +92,24 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       console.error("Error fetching YouTube courses:", error);
+    }
+
+    // Fetch Microsoft Learn courses related to current stage
+    try {
+      const microsoftResponse = await fetch(
+        `${request.nextUrl.origin}/api/resources/microsoft`,
+        {
+          headers: {
+            Cookie: request.headers.get("cookie") || "",
+          },
+        }
+      );
+      if (microsoftResponse.ok) {
+        const microsoftData = await microsoftResponse.json();
+        suggestions.microsoftCourses = (microsoftData.courses || []).slice(0, 5);
+      }
+    } catch (error) {
+      console.error("Error fetching Microsoft Learn courses:", error);
     }
 
     return NextResponse.json({ suggestions });

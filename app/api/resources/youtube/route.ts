@@ -60,7 +60,25 @@ export async function GET(request: NextRequest) {
       })),
     ];
 
-    return NextResponse.json({ courses });
+    const fallbackChannels = [];
+    if (freeCodeCampVideos.some((video) => String(video.id).startsWith("mock-"))) {
+      fallbackChannels.push("FreeCodeCamp");
+    }
+    if (jsMasteryVideos.some((video) => String(video.id).startsWith("mock-"))) {
+      fallbackChannels.push("JavaScriptMastery");
+    }
+
+    return NextResponse.json({
+      courses,
+      metadata: {
+        fallbackChannels,
+        query,
+      },
+      message:
+        fallbackChannels.length > 0
+          ? `Showing cached videos for: ${fallbackChannels.join(", ")}.`
+          : undefined,
+    });
   } catch (error: any) {
     console.error("Error fetching YouTube courses:", error);
     return NextResponse.json(
@@ -81,7 +99,13 @@ async function fetchYouTubeVideos(
 
     const searchResponse = await fetch(searchUrl);
     if (!searchResponse.ok) {
-      throw new Error(`YouTube API error: ${searchResponse.statusText}`);
+      if (searchResponse.status === 403) {
+        console.warn(
+          `YouTube API access issue (status 403) for channel ${channelId}. Falling back to mock data.`
+        );
+        return getMockYouTubeVideos(channelId);
+      }
+      throw new Error(`YouTube API error: ${searchResponse.status} ${searchResponse.statusText}`);
     }
 
     const searchData = await searchResponse.json();
@@ -98,7 +122,13 @@ async function fetchYouTubeVideos(
 
     const detailsResponse = await fetch(detailsUrl);
     if (!detailsResponse.ok) {
-      throw new Error(`YouTube API error: ${detailsResponse.statusText}`);
+      if (detailsResponse.status === 403) {
+        console.warn(
+          `YouTube API details access issue (status 403) for channel ${channelId}. Falling back to mock data.`
+        );
+        return getMockYouTubeVideos(channelId);
+      }
+      throw new Error(`YouTube API error: ${detailsResponse.status} ${detailsResponse.statusText}`);
     }
 
     const detailsData = await detailsResponse.json();
@@ -122,7 +152,7 @@ async function fetchYouTubeVideos(
       };
     });
   } catch (error: any) {
-    console.error(`Error fetching videos from channel ${channelId}:`, error);
+    console.warn(`Error fetching videos from channel ${channelId}:`, error?.message || error);
     // Return mock data if API fails
     return getMockYouTubeVideos(channelId);
   }
