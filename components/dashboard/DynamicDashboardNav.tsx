@@ -23,6 +23,7 @@ import {
   PlusCircle,
   BarChart3,
 } from "lucide-react";
+import NotificationDropdown from "./NotificationDropdown";
 
 export default function DynamicDashboardNav() {
   const { data: session } = useSession();
@@ -122,7 +123,7 @@ export default function DynamicDashboardNav() {
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 fixed left-0 top-0 h-screen">
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
-          <Link href={`/${userRole}/dashboard`}>
+          <Link href="/">
             <img 
               src="/logo.png" 
               alt="Upscale Logo" 
@@ -166,7 +167,7 @@ export default function DynamicDashboardNav() {
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-40">
         <div className="flex items-center justify-between p-4">
-          <Link href={`/${userRole}/dashboard`}>
+          <Link href="/">
             <img 
               src="/logo.png" 
               alt="Upscale Logo" 
@@ -175,9 +176,7 @@ export default function DynamicDashboardNav() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-              <Bell size={20} className="text-gray-600" />
-            </button>
+            <NotificationDropdown />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 hover:bg-gray-100 rounded-lg transition"
@@ -243,14 +242,11 @@ export default function DynamicDashboardNav() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4 ml-4">
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition">
-              <Bell size={20} className="text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <NotificationDropdown />
 
             {/* Profile */}
             <Link
-              href={`/${userRole}/settings`}
+              href={userRole === "user" ? "/dashboard/profile" : `/${userRole}/settings`}
               className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 rounded-xl transition"
             >
               <div className={`w-8 h-8 bg-gradient-to-r ${getRoleColor()} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
