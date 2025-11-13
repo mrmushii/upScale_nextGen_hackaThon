@@ -44,6 +44,7 @@ export async function PATCH(request: NextRequest) {
       "targetRoles",
       "preferredTrack",
       "educationLevel",
+      "educationDepartment",
       "experienceLevel",
       "city",
       "country",
@@ -59,6 +60,10 @@ export async function PATCH(request: NextRequest) {
       "availability",
       "salaryExpectation",
       "workAuthorization",
+      "experience",
+      "projects",
+      "careerInterests",
+      "cvText",
     ];
 
     const updateData: any = {};
@@ -74,6 +79,20 @@ export async function PATCH(request: NextRequest) {
             }
           }
           // If empty, don't include it in updateData
+        } else if (field === "experience" && Array.isArray(body[field])) {
+          // Convert experience dates
+          updateData[field] = body[field].map((exp: any) => ({
+            ...exp,
+            startDate: exp.startDate ? new Date(exp.startDate) : undefined,
+            endDate: exp.endDate ? new Date(exp.endDate) : undefined,
+          }));
+        } else if (field === "projects" && Array.isArray(body[field])) {
+          // Convert project dates
+          updateData[field] = body[field].map((project: any) => ({
+            ...project,
+            startDate: project.startDate ? new Date(project.startDate) : undefined,
+            endDate: project.endDate ? new Date(project.endDate) : undefined,
+          }));
         } else {
           // For other fields, include empty strings (they can be cleared)
           updateData[field] = body[field];

@@ -12,6 +12,8 @@ import {
   Sparkles,
   Clock,
   Award,
+  User,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -61,12 +63,7 @@ export default function DashboardPage() {
         if (completionRes.ok) {
           const completionData = await completionRes.json();
           setProfileCompletionData(completionData.completion);
-          
-          // Redirect to profile completion if incomplete
-          if (!completionData.completion.isComplete) {
-            router.push("/dashboard/profile/complete");
-            return;
-          }
+          // Don't redirect - let users see the dashboard with the completion card
         }
 
         // Fetch job matches
@@ -105,7 +102,10 @@ export default function DashboardPage() {
     );
   }
 
-  const profileCompletion = calculateProfileCompletion(profile);
+  // Use proper completion data from API, fallback to old calculation
+  const completionPercentage = profileCompletionData?.percentage || profile?.profileCompletionPercentage || calculateProfileCompletion(profile);
+  const isProfileComplete = profileCompletionData?.isComplete || profile?.profileCompleted || false;
+  const missingFields = profileCompletionData?.missingFields || [];
   const currentRoadmap = roadmaps[0];
 
   const stats = [
@@ -151,58 +151,112 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Profile Completion Banner */}
-      {profileCompletion < 100 && (
-        <div className="bg-gradient-to-r from-primary-600 to-coral-600 rounded-3xl p-6 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative z-10">
-            <div className="flex items-start justify-between flex-wrap gap-4">
-              <div>
-                <h3 className="text-xl font-bold mb-2">Complete Your Profile</h3>
-                <p className="text-white/90 mb-4">
-                  {profileCompletion}% complete - Add more details to get better matches
-                </p>
-                <Link
-                  href="/dashboard/settings"
-                  className="inline-flex items-center gap-2 bg-white text-primary-600 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition"
-                >
-                  Complete Profile
-                  <ArrowRight size={16} />
-                </Link>
+      {/* Profile Completion Card - Always visible for better UX */}
+      <div className={`rounded-3xl p-6 shadow-lg relative overflow-hidden ${
+        isProfileComplete 
+          ? "bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-200" 
+          : "bg-gradient-to-r from-primary-600 to-coral-600 text-white"
+      }`}>
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-10 rounded-full -mr-20 -mt-20"></div>
+        <div className="relative z-10">
+          <div className="flex items-start justify-between flex-wrap gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                {isProfileComplete ? (
+                  <CheckCircle2 size={28} className="text-green-600" />
+                ) : (
+                  <AlertCircle size={28} className="text-white" />
+                )}
+                <h3 className={`text-2xl font-bold ${isProfileComplete ? "text-gray-900" : "text-white"}`}>
+                  {isProfileComplete ? "Profile Complete! 🎉" : "Complete Your Profile"}
+                </h3>
               </div>
-              <div className="w-20 h-20">
-                <svg className="transform -rotate-90 w-20 h-20">
+              {isProfileComplete ? (
+                <p className="text-gray-700 mb-4">
+                  Your profile is 100% complete! You can now generate roadmaps and apply to jobs.
+                </p>
+              ) : (
+                <>
+                  <p className="text-white/90 mb-2 text-lg">
+                    {completionPercentage}% complete - Complete your profile to unlock all features
+                  </p>
+                  {missingFields.length > 0 && (
+                    <p className="text-white/80 text-sm mb-4">
+                      Missing: {missingFields.slice(0, 3).join(", ")}
+                      {missingFields.length > 3 && ` +${missingFields.length - 3} more`}
+                    </p>
+                  )}
+                </>
+              )}
+              <Link
+                href="/dashboard/profile/complete"
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition ${
+                  isProfileComplete
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-white text-primary-600 hover:bg-gray-100"
+                }`}
+              >
+                {isProfileComplete ? "Update Profile" : "Complete Profile"}
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+            <div className="flex items-center gap-6">
+              {/* Circular Progress */}
+              <div className="relative w-24 h-24">
+                <svg className="transform -rotate-90 w-24 h-24">
                   <circle
-                    cx="40"
-                    cy="40"
-                    r="32"
-                    stroke="white"
-                    strokeOpacity="0.2"
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke={isProfileComplete ? "#10b981" : "rgba(255,255,255,0.2)"}
                     strokeWidth="8"
                     fill="transparent"
                   />
                   <circle
-                    cx="40"
-                    cy="40"
-                    r="32"
-                    stroke="white"
+                    cx="48"
+                    cy="48"
+                    r="40"
+                    stroke={isProfileComplete ? "#10b981" : "white"}
                     strokeWidth="8"
                     fill="transparent"
-                    strokeDasharray={`${2 * Math.PI * 32}`}
+                    strokeDasharray={`${2 * Math.PI * 40}`}
                     strokeDashoffset={`${
-                      2 * Math.PI * 32 * (1 - profileCompletion / 100)
+                      2 * Math.PI * 40 * (1 - completionPercentage / 100)
                     }`}
                     strokeLinecap="round"
+                    className="transition-all duration-500"
                   />
                 </svg>
-                <div className="text-center -mt-16 text-white font-bold">
-                  {profileCompletion}%
+                <div className={`absolute inset-0 flex items-center justify-center text-2xl font-bold ${
+                  isProfileComplete ? "text-green-600" : "text-white"
+                }`}>
+                  {completionPercentage}%
                 </div>
+              </div>
+              {/* Progress Bar */}
+              <div className="hidden md:block w-32">
+                <div className={`h-3 rounded-full overflow-hidden ${
+                  isProfileComplete ? "bg-green-100" : "bg-white/20"
+                }`}>
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      isProfileComplete
+                        ? "bg-green-600"
+                        : "bg-white"
+                    }`}
+                    style={{ width: `${completionPercentage}%` }}
+                  />
+                </div>
+                <p className={`text-xs mt-2 text-center ${
+                  isProfileComplete ? "text-gray-600" : "text-white/80"
+                }`}>
+                  {isProfileComplete ? "All set!" : `${completionPercentage}% done`}
+                </p>
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -429,7 +483,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">Update Profile</div>
-                    <div className="text-sm text-gray-600">{profileCompletion}% complete</div>
+                    <div className="text-sm text-gray-600">{completionPercentage}% complete</div>
                   </div>
                 </div>
               </Link>

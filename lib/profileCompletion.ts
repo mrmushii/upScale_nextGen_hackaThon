@@ -30,6 +30,9 @@ export function checkProfileCompletion(user: IUser | null): ProfileCompletionChe
     { key: "city", label: "City", value: user.city },
   ];
 
+  // Note: educationDepartment, experience, projects, careerInterests, and cvText are optional
+  // They enhance the profile but are not required for completion
+
   // Optional fields (can be filled later, but improve profile completeness)
   const optionalFields = [
     { key: "phone", label: "Phone Number", value: user.phone },

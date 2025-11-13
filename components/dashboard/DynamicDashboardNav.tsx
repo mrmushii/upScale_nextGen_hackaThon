@@ -89,6 +89,7 @@ export default function DynamicDashboardNav() {
     } else {
       return [
         ...baseItems,
+        { icon: User, label: "Profile", href: "/dashboard/profile", roles: ["user"] },
         { icon: Briefcase, label: "Jobs", href: "/dashboard/jobs", roles: ["user"] },
         { icon: Map, label: "Roadmap", href: "/dashboard/roadmap", roles: ["user"] },
         { icon: BookOpen, label: "Resources", href: "/dashboard/resources", roles: ["user"] },

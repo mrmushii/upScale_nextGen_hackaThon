@@ -6,10 +6,28 @@ export interface IUser {
   password: string;
   role: "user" | "admin" | "recruiter" | "mentor";
   educationLevel: string;
+  educationDepartment?: string;
   experienceLevel: string;
   preferredTrack: string;
   targetRoles: string[];
   skills: string[];
+  experience?: Array<{
+    title: string;
+    company?: string;
+    description: string;
+    startDate?: Date;
+    endDate?: Date;
+    current?: boolean;
+  }>;
+  projects?: Array<{
+    title: string;
+    description: string;
+    technologies?: string[];
+    url?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }>;
+  careerInterests?: string[];
   cvText?: string;
   country: string;
   city: string;
@@ -80,6 +98,9 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: true,
     },
+    educationDepartment: {
+      type: String,
+    },
     experienceLevel: {
       type: String,
       required: true,
@@ -93,6 +114,36 @@ const UserSchema = new Schema<IUser>(
       default: [],
     },
     skills: {
+      type: [String],
+      default: [],
+    },
+    experience: {
+      type: [
+        {
+          title: String,
+          company: String,
+          description: String,
+          startDate: Date,
+          endDate: Date,
+          current: { type: Boolean, default: false },
+        },
+      ],
+      default: [],
+    },
+    projects: {
+      type: [
+        {
+          title: String,
+          description: String,
+          technologies: [String],
+          url: String,
+          startDate: Date,
+          endDate: Date,
+        },
+      ],
+      default: [],
+    },
+    careerInterests: {
       type: [String],
       default: [],
     },
