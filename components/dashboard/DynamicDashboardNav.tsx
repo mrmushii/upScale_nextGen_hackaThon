@@ -88,6 +88,7 @@ export default function DynamicDashboardNav() {
         { icon: Map, label: "Roadmap", href: "/dashboard/roadmap", roles: ["user"] },
         { icon: FileText, label: "Portfolio", href: "/dashboard/portfolio", roles: ["user"] },
         { icon: Users, label: "Mentors", href: "/dashboard/mentors", roles: ["user"] },
+        { icon: Calendar, label: "My Sessions", href: "/dashboard/mentors/my-sessions", roles: ["user"] },
         { icon: MessageSquare, label: "Community", href: "/dashboard/community", roles: ["user"] },
         { icon: ClipboardList, label: "Applications", href: "/dashboard/applications", roles: ["user"] },
         { icon: Settings, label: "Settings", href: "/dashboard/settings", roles: ["user"] },

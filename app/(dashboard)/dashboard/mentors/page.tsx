@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, Star, Calendar, DollarSign, Award, Filter } from "lucide-react";
+import Link from "next/link";
 
 export default function MentorsPage() {
   const [mentors, setMentors] = useState<any[]>([]);
@@ -151,10 +152,13 @@ export default function MentorsPage() {
                   <DollarSign size={18} />
                   <span className="font-bold">৳{mentor.hourlyRate}/hour</span>
                 </div>
-                <button className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold flex items-center gap-2">
+                <Link
+                  href={`/dashboard/mentors/${mentor._id}/book`}
+                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold flex items-center gap-2"
+                >
                   <Calendar size={18} />
                   Book Session
-                </button>
+                </Link>
               </div>
             </div>
           ))}
