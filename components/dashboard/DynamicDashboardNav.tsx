@@ -133,7 +133,7 @@ export default function DynamicDashboardNav() {
             <img 
               src="/logo.png" 
               alt="Upscale Logo" 
-              className="h-10 mb-2"
+              className="h-16 mb-2"
             />
           </Link>
           <div className="text-xs font-semibold text-gray-500 uppercase">

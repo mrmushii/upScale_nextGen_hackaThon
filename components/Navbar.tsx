@@ -62,6 +62,21 @@ export default function Navbar() {
     return "/dashboard";
   };
 
+  const getSettingsUrl = () => {
+    if (!session?.user) return "/login";
+    const role = (session.user as any)?.role || profile?.role || "user";
+    switch (role) {
+      case "admin":
+        return "/admin/settings";
+      case "recruiter":
+        return "/recruiter/settings";
+      case "mentor":
+        return "/mentor/settings";
+      default:
+        return "/dashboard/settings";
+    }
+  };
+
   const getRoleColor = () => {
     const role = (session?.user as any)?.role || profile?.role || "user";
     switch (role) {
@@ -84,10 +99,10 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/">
-              <img 
-                src="/logo.png" 
-                alt="Upscale Logo" 
-                className="h-10"
+              <img
+                src="/logo.png"
+                alt="Upscale Logo"
+                className="h-12 md:h-20 w-auto"
               />
             </Link>
           </div>
@@ -164,7 +179,7 @@ export default function Navbar() {
                         Dashboard
                       </Link>
                       <Link
-                        href={`/${(session.user as any)?.role || profile?.role || "user"}/settings`}
+                        href={getSettingsUrl()}
                         onClick={() => setShowUserMenu(false)}
                         className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
                       >
@@ -254,6 +269,13 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     Dashboard
+                  </Link>
+                  <Link
+                    href={getSettingsUrl()}
+                    className="block w-full text-center py-2 text-gray-700 hover:text-primary-600 transition font-semibold"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Settings
                   </Link>
                   <button
                     onClick={() => {
