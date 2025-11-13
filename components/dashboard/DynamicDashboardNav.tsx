@@ -22,6 +22,7 @@ import {
   Calendar,
   PlusCircle,
   BarChart3,
+  BookOpen,
 } from "lucide-react";
 import NotificationDropdown from "./NotificationDropdown";
 
@@ -90,6 +91,7 @@ export default function DynamicDashboardNav() {
         ...baseItems,
         { icon: Briefcase, label: "Jobs", href: "/dashboard/jobs", roles: ["user"] },
         { icon: Map, label: "Roadmap", href: "/dashboard/roadmap", roles: ["user"] },
+        { icon: BookOpen, label: "Resources", href: "/dashboard/resources", roles: ["user"] },
         { icon: FileText, label: "Portfolio", href: "/dashboard/portfolio", roles: ["user"] },
         { icon: Users, label: "Mentors", href: "/dashboard/mentors", roles: ["user"] },
         { icon: Calendar, label: "My Sessions", href: "/dashboard/mentors/my-sessions", roles: ["user"] },

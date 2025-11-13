@@ -53,9 +53,10 @@ For each stage, provide:
    - Complete solution code
    - 2-3 helpful hints
    - Test cases to validate
-3. 3-4 free learning resources
+3. 3-4 free learning resources (suggest FreeCodeCamp and JavaScriptMastery YouTube courses when relevant)
 4. 2-3 capstone projects
 5. Realistic time estimate
+6. Suggested courses (both free YouTube courses and paid Udemy courses related to the stage)
 
 JSON Structure:
 {
@@ -77,6 +78,10 @@ JSON Structure:
       ],
       "resources": ["resource 1", "resource 2"],
       "projects": ["project 1", "project 2"],
+      "suggestedCourses": {
+        "youtube": ["FreeCodeCamp JavaScript Course", "JavaScriptMastery React Tutorial"],
+        "udemy": ["Complete JavaScript Course", "React Bootcamp"]
+      },
       "estimatedWeeks": number,
       "completed": false,
       "completedExercises": 0
@@ -91,6 +96,8 @@ IMPORTANT:
 - Make exercises progressively harder
 - Include comments in code explaining concepts
 - Make code copy-paste ready for testing
+- Suggest relevant courses from FreeCodeCamp and JavaScriptMastery for YouTube
+- Suggest relevant Udemy courses that match the stage content
 
 Return ONLY valid JSON, no markdown or extra text.`;
 
@@ -450,6 +457,7 @@ console.log(doubled, evens, sum);`,
 }
 
 export { type Exercise, type RoadmapStage };
+
 
 
 
