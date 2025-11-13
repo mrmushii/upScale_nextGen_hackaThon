@@ -85,23 +85,29 @@ export async function PATCH(
       });
 
       // Accept new answer
-      const answer = question.answers.id(answerId);
-      if (answer) {
-        answer.isAccepted = true;
+      const acceptedIndex = question.answers.findIndex(
+        (answer) => answer._id?.toString() === answerId
+      );
+      if (acceptedIndex !== -1) {
+        question.answers[acceptedIndex].isAccepted = true;
         question.isAnswered = true;
-        question.acceptedAnswerId = answerId;
+        question.acceptedAnswerId = question.answers[acceptedIndex]._id;
 
         // Notify answer author
         await Notification.create({
-          userId: answer.userId,
+          userId: question.answers[acceptedIndex].userId,
           type: "success",
           title: "Answer Accepted",
           message: `Your answer to "${question.title}" was accepted!`,
           link: `/dashboard/community/${question._id}`,
         });
+      } else {
+        question.isAnswered = false;
+        question.acceptedAnswerId = undefined;
       }
     }
 
+    question.markModified("answers");
     await question.save();
     await question.populate("userId", "fullName email avatar role");
     await question.populate("answers.userId", "fullName email avatar role");

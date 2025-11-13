@@ -1,284 +1,182 @@
-# Upscale - Career Readiness Ecosystem
+# Upscale – Next-Gen Career Platform
 
-A modern, AI-powered SaaS platform connecting youth skills to real opportunities with personalized career roadmaps, expert mentorship, and transparent job matching.
+Upscale is a full-stack career-readiness platform for Bangladeshi youth. It blends AI-assisted learning with human mentorship, tailored job discovery, portfolio tooling and recruiter dashboards so each persona can move from fragmented learning to verifiable employment pathways.
 
-## 🎯 Mission
-
-Transform fragmented learning into clear, evidence-backed career roadmaps. Connect job seekers with real opportunities through AI-powered guidance, hands-on practice, and professional mentorship.
-
-## ✨ Features
-
-### Core Platform Features
-- **AI-Powered Skill Gap Analysis**: Intelligent radar system mapping current skills against target roles
-- **Personalized Career Roadmaps**: Step-by-step learning paths tailored to individual goals
-- **Expert 1-on-1 Mentorship**: Direct sessions with industry professionals
-- **AI Mock Interviews**: Practice with feedback on technical and behavioral questions
-- **Smart CV Analyzer**: AI-driven resume analysis with improvement suggestions
-- **Portfolio Builder**: Professional portfolio creation with project showcases
-- **Transparent Job Matching**: Clear explanations for every job recommendation
-- **Community Q&A**: Peer learning and mentor-led discussions
-- **Application Tracker**: Centralized tracking for all job applications
-
-### Pricing Tiers
-
-#### 🆓 Basic (Free)
-- One-time evaluation interview
-- Generate one career roadmap
-- One-time CV analyzer (no feedback)
-- Basic job matching
-- Community access
-- Basic portfolio builder
-
-#### 🚀 Pro (৳999/month)
-- 10 evaluation interviews/month
-- 5 career roadmaps/month
-- AI mock interviews with feedback
-- AI resume checker with feedback
-- Advanced portfolio builder
-- AI-powered job matching
-- 1 mentor session included
-- Application tracker
-- Priority support
-
-#### 👑 Ultimate (৳2,499/month)
-- **Unlimited** evaluation interviews
-- **Unlimited** career roadmaps
-- **Unlimited** AI mock interviews
-- Advanced AI resume optimization
-- Premium portfolio templates
-- Priority AI job matching
-- **Unlimited** mentor sessions
-- Dedicated career advisor
-- Interview guarantee program
-- Exclusive job opportunities
-- Early access to new features
-
-## 🛠️ Tech Stack
-
-- **Frontend**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: MongoDB with Mongoose ODM
-- **Icons**: Lucide React
-- **Animations**: Custom CSS animations + Framer Motion ready
-- **Deployment**: Vercel (Frontend), MongoDB Atlas (Database), Railway/Render (Backend when implemented)
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+ installed
-- npm or yarn package manager
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd Upscale
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-### Build for Production
-
-```bash
-npm run build
-npm start
-```
-
-## 📁 Project Structure
-
-```
-Upscale/
-├── app/
-│   ├── layout.tsx          # Root layout with metadata
-│   ├── page.tsx            # Main landing page
-│   ├── globals.css         # Global styles & Tailwind
-│   └── api/                # API routes
-│       └── test/           # MongoDB connection test
-├── components/
-│   ├── Navbar.tsx          # Navigation header
-│   ├── Hero.tsx            # Hero section
-│   ├── WhyStandOut.tsx     # Key differentiators
-│   ├── Features.tsx        # Feature showcase
-│   ├── HowItWorks.tsx      # Process steps
-│   ├── Statistics.tsx      # Platform statistics
-│   ├── Steps.tsx           # Getting started steps
-│   ├── Pricing.tsx         # 3-tier pricing section
-│   ├── Testimonials.tsx    # User testimonials
-│   ├── FAQ.tsx             # Frequently asked questions
-│   ├── CTA.tsx             # Call-to-action section
-│   ├── Footer.tsx          # Footer with links
-│   └── ai/                 # AI feature placeholders
-│       ├── MockInterview.tsx
-│       ├── CVAnalyzer.tsx
-│       ├── JobMatching.tsx
-│       └── CareerRoadmap.tsx
-├── models/                 # Mongoose schemas
-│   ├── User.ts            # User model
-│   ├── Job.ts             # Job model
-│   ├── Roadmap.ts         # Roadmap model
-│   ├── Mentor.ts          # Mentor model
-│   ├── Application.ts     # Application model
-│   └── index.ts           # Export all models
-├── lib/
-│   ├── mongodb.ts         # MongoDB connection
-│   ├── constants.ts       # App constants
-│   └── utils.ts           # Utility functions
-├── types/                 # TypeScript definitions
-├── public/                # Static assets
-├── tailwind.config.ts     # Tailwind configuration
-├── tsconfig.json          # TypeScript configuration
-└── package.json           # Dependencies
-
-```
-
-## 🎨 Design System
-
-### Color Palette
-- **Primary**: Pink/Rose tones (#f43f5e, #fecdd3, #fff1f2)
-- **Coral Accent**: Coral/Red tones (#ff4444, #ffa3a3)
-- **Neutral**: Grays for text and backgrounds
-
-### Gradients
-- `gradient-hero`: Pink to coral gradient for hero sections
-- `gradient-primary`: Soft pink gradient for backgrounds
-- Custom gradient utilities for CTAs and accents
-
-### Animations
-- Fade in/out effects
-- Slide transitions
-- Float animations for decorative elements
-- Hover transforms and scale effects
-
-## 🔮 AI Features (Placeholders)
-
-The following AI features have placeholder components ready for integration:
-
-1. **AI Mock Interview** (`/components/ai/MockInterview.tsx`)
-   - Video/text interview modes
-   - Real-time feedback system
-   - Response evaluation
-
-2. **CV Analyzer** (`/components/ai/CVAnalyzer.tsx`)
-   - Resume upload interface
-   - ATS compatibility check
-   - Keyword optimization
-
-3. **Job Matching** (`/components/ai/JobMatching.tsx`)
-   - Smart matching algorithm
-   - Transparent explanations
-   - Career growth alignment
-
-4. **Career Roadmap** (`/components/ai/CareerRoadmap.tsx`)
-   - Personalized learning paths
-   - Skill progression tracking
-   - Resource recommendations
-
-## 📋 Implementation Roadmap
-
-### Phase 1 - Foundation (Current)
-- ✅ Landing page with all sections
-- ✅ 3-tier pricing model
-- ✅ AI feature placeholders
-- ✅ Responsive design
-- ✅ Animations and gradients
-
-### Phase 2 - Backend & Auth
-- [ ] User authentication system
-- [ ] Database schema setup (MongoDB + Mongoose)
-- [ ] API routes for user management
-- [ ] Payment integration (bKash/Nagad/Stripe)
-
-### Phase 3 - Core Features
-- [ ] Profile creation & skill management
-- [ ] Career roadmap generation
-- [ ] Job listing & matching system
-- [ ] Application tracker
-- [ ] Portfolio builder
-
-### Phase 4 - Mentorship
-- [ ] Mentor profiles & vetting
-- [ ] Booking system with calendar
-- [ ] Payment escrow for sessions
-- [ ] Session notes & summaries
-
-### Phase 5 - AI Integration
-- [ ] CV parsing & skill extraction
-- [ ] Semantic job matching with embeddings
-- [ ] AI mock interview system
-- [ ] Adaptive learning recommendations
-- [ ] Resume optimization AI
-
-## 🌐 Deployment
-
-### Vercel (Recommended for Frontend)
-1. Push your code to GitHub
-2. Import project to Vercel
-3. Deploy automatically
-
-### Environment Variables (When Backend is Ready)
-
-Create a `.env.local` file:
-
-```env
-# MongoDB
-MONGODB_URI=mongodb://localhost:27017/upscale
-# Or for MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/upscale
-
-# NextAuth
-NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=http://localhost:3000
-
-# Payment Gateways
-STRIPE_SECRET_KEY=sk_test_...
-BKASH_API_KEY=your-bkash-key
-NAGAD_API_KEY=your-nagad-key
-
-# OpenAI (for AI features)
-OPENAI_API_KEY=sk-...
-```
-
-See [MONGODB_SETUP.md](./MONGODB_SETUP.md) for detailed database setup instructions.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is proprietary and confidential.
-
-## 📧 Contact
-
-- **Email**: support@upscale.com
-- **Phone**: +880 1234-567890
-- **Location**: Dhaka, Bangladesh
-
-## 🙏 Acknowledgments
-
-- Design inspiration from modern SaaS platforms
-- Bangladesh tech community for feedback
-- All contributors and early adopters
+- Landing experience: `/` (marketing site, pricing, testimonials, CTA)
+- Auth flows: `/login`, `/register`, `/register-recruiter`, `/forgot-password`
+- Role dashboards: `/dashboard`, `/admin/dashboard`, `/recruiter/dashboard`, `/mentor/dashboard`
 
 ---
 
-**Built with ❤️ for the career success of Bangladesh's youth**
+## Architecture & Tech Stack
+
+- Next.js 14 (App Router, Server/Client Components, Route Handlers)
+- TypeScript across app, API routes, scripts and models
+- Tailwind CSS with custom gradients and component library
+- NextAuth v5 credentials provider + middleware-based route protection
+- MongoDB + Mongoose models for users, jobs, mentors, roadmap, community, notifications and resources
+- Google Gemini SDK for AI roadmap generation, plus fetch-based integrations (findwork.dev, YouTube, Udemy)
+- Supporting libs: framer-motion, lucide-react, chart.js/react-chartjs-2, bcryptjs, jose/jsonwebtoken, tailwind-merge
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm 9+ (or `pnpm`/`yarn` equivalent)
+- MongoDB connection string (local or Atlas)
+- API keys as needed (Gemini, OpenAI, payment gateways)
+
+### Environment Variables
+
+Create `.env.local` from `env.template` and fill the required secrets:
+
+| Purpose | Keys |
+| - | - |
+| Core runtime | `MONGODB_URI`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` |
+| AI providers | `GEMINI_API_KEY`, `OPENAI_API_KEY` |
+| Payments | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `BKASH_API_KEY`, `NAGAD_API_KEY` |
+| Email (optional) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` |
+| Storage (optional) | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_S3_BUCKET` |
+| Feature flags | `ENABLE_AI_FEATURES`, `ENABLE_MENTOR_BOOKING`, `ENABLE_PAYMENTS` |
+
+### Install & Run
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build (uses Mongo connection)
+npm start        # serve production build
+```
+
+Database helpers:
+
+- Seed featured jobs: `npm run seed:jobs`
+- Create admin/recruiter accounts: `npm run create:admin`
+
+> The seed scripts rely on `.env.local`; run them once per environment.
+
+---
+
+## Usage Guide
+
+- **Public marketing**: Explore hero, pricing, testimonials, FAQ and CTA sections to understand the product.
+- **Registration**: `user` and `recruiter` flows collect minimal info and immediately provision MongoDB records.
+- **Login**: Credentials-based sign-in; verified recruiter enforcement happens during authorize callback.
+- **Forgot password**: Temporary manual flow that logs requests and instructs users to contact support (`/forgot-password`).
+- **Dashboard (`/dashboard`)**: Personalized cards for profile completion, job matches, roadmap progress, mentor sessions and subscription status.
+- **Admin suite**: User management, mentor approvals, job moderation and analytics.
+- **Recruiter workspace**: Manage postings, view analytics, inspect pipeline stats, create new jobs.
+- **Mentor workspace**: Track sessions, availability, earnings, students and payout configuration.
+- **Resources & AI tools**: CV analyser, interview prep, learning roadmap, bookmarking/history, interactive code practice.
+
+Navigation is powered by `DynamicDashboardNav`, which adapts menu items to the authenticated role while keeping `/dashboard` canonical for learners.
+
+---
+
+## API Reference (Route Handlers)
+
+Paths live under `app/api`. All routes expect authenticated JWT sessions unless marked public.
+
+### Auth & Profile
+
+| Method | Path | Description | Auth |
+| - | - | - | - |
+| POST | `/api/auth/register` | Create learner account | Public |
+| POST | `/api/auth/register-recruiter` | Recruiter onboarding (awaits admin approval) | Public |
+| GET  | `/api/user/profile` | Current user profile (sans password) | Session |
+| PATCH | `/api/user/profile` | Update profile fields | Session |
+| GET  | `/api/user/profile/completion` | Calculates completion score and flags | Session |
+| GET/PUT | `/api/settings/profile` | Profile read/update with password change guard | Session |
+| POST | `/api/upload/avatar` | Upload avatar (<=5 MB images) to `public/uploads` | Session |
+
+### Dashboard & Learner
+
+| Method | Path | Description |
+| - | - | - |
+| GET | `/api/jobs` & `/api/jobs/[id]` | Internal recruiter jobs CRUD |
+| GET | `/api/jobs/findwork` | Proxy to findwork.dev (server runtime) |
+| GET | `/api/jobs/unified` | Merges internal + external jobs for matching |
+| GET | `/api/jobs/match` | Personalized matches based on skills/track |
+| POST | `/api/roadmap/generate` | Gemini-backed roadmap generation |
+| GET | `/api/roadmap` | List user roadmaps |
+| POST | `/api/roadmap/[id]/exercises/[exerciseId]/complete` | Mark exercise complete, update progress |
+| POST | `/api/cv/analyze` | AI CV analysis |
+| POST | `/api/interview/start` | Kick off mock interview |
+
+### Community & Notifications
+
+| Method | Path | Description |
+| - | - | - |
+| GET/POST | `/api/community/questions` | Create & paginate questions |
+| PATCH/DELETE | `/api/community/questions/[id]` | Upvote, accept answer, delete |
+| POST/PATCH/DELETE | `/api/community/questions/[id]/answers` | Answer lifecycle |
+| GET | `/api/notifications` | Fetch notifications (sorted unread first) |
+
+### Mentors & Recruiters
+
+| Path | Capabilities |
+| - | - |
+| `/api/mentors`, `/api/mentors/[id]`, `/api/mentors/book` | Mentor discovery, detail, booking |
+| `/api/mentors/sessions`, `/api/mentors/sessions/[id]` | Session management |
+| `/api/mentor/schedule`, `/api/mentor/stats`, `/api/mentor/earnings`, `/api/mentor/payout` | Mentor dashboards |
+| `/api/recruiter/my-jobs`, `/api/recruiter/jobs/[id]`, `/api/recruiter/jobs/new` | Recruiter job CRUD |
+| `/api/recruiter/stats`, `/api/recruiter/job-analytics` | Funnel and job analytics |
+
+### Admin
+
+| Path | Capabilities |
+| - | - |
+| `/api/admin/users` | Pagination, update roles, delete users |
+| `/api/admin/mentors`, `/api/admin/mentors/[id]` | List/approve mentors |
+| `/api/admin/recruiters` | Verify recruiters |
+| `/api/admin/jobs`, `/api/admin/stats`, `/api/admin/analytics` | Platform metrics and moderation |
+
+> Most route handlers read cookies/headers. When deploying to edge runtimes, set `export const runtime = "nodejs"` or `export const dynamic = "force-dynamic"` to avoid static export warnings.
+
+---
+
+## Data & File Handling
+
+- **MongoDB**: Connection pooling with cached client (`lib/mongodb.ts`), executed per route.
+- **Models**: Normalized Mongoose schemas with indexes for query-heavy collections (users, jobs, mentors, questions, roadmaps, notifications).
+- **Roadmaps**: Persist exercises, progress and suggested courses (`models/Roadmap.ts`). Exercise completion endpoint updates per-stage progress and stores last submission for audit trails.
+- **Usage limits**: Tier-aware guard rails use `TIER_LIMITS` map with strongly typed features (`lib/usageLimits.ts`).
+- **Uploads**: Avatar upload validates size/type, creates directories on demand and stores under `public/uploads`. For cloud deployment, swap out local write with S3 or similar.
+
+---
+
+## Quality & Tooling
+
+- Type-safe across app, API and scripts (`npx tsc --noEmit`).
+- Next.js build (`npm run build`) validates routes; expect warnings for dynamic APIs until `dynamic` or `runtime` hints are added.
+- No ESLint config was generated yet. Run `npx next lint` to scaffold and enforce lint rules.
+- Manual QA steps executed: type-check, production build, static analysis of routing, review of navigation component, verification of admin/dashboard flows, confirmation of upload validation.
+
+---
+
+## Known Issues & Follow-Up Work
+
+- Dynamic route warnings during `next build` because several APIs read `headers`/`request.url`. Add `export const dynamic = "force-dynamic"` or migrate to RSC-friendly data loaders.
+- Password reset flow is manual-only; implement tokenized email workflow before production launch.
+- Payment integration uses mock values; connect to live bKash/Nagad/Stripe gateways and harden webhook handlers.
+- Avatar uploads rely on local filesystem; replace with object storage (S3, Cloudinary) for stateless deployments.
+- No automated tests yet. Add unit/integration coverage for API routes (community, roadmap, admin) and component-level testing via Playwright/Testing Library.
+
+---
+
+## Contributing
+
+- Fork the repository
+- Create a feature branch (`git checkout -b feature/<name>`)
+- Keep TypeScript + build passing
+- Open a PR describing scope, testing and screenshots where relevant
+
+---
+
+## License
+
+Copyright © Upscale. All rights reserved. Redistribution or commercial use without written permission is prohibited.
 

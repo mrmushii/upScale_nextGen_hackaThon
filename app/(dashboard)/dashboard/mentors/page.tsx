@@ -111,7 +111,9 @@ export default function MentorsPage() {
                       </p>
                     </div>
                     {mentor.verified && (
-                      <Award size={20} className="text-blue-600" title="Verified" />
+                      <span className="text-blue-600" aria-label="Verified mentor badge">
+                        <Award size={20} />
+                      </span>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm">

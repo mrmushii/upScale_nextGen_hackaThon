@@ -59,12 +59,30 @@ export interface Resource {
 }
 
 // Roadmap Types
+export interface RoadmapExercise {
+  title: string;
+  description: string;
+  code: string;
+  solution: string;
+  hints: string[];
+  testCases: Array<{ input: string; expected: string }>;
+  completed: boolean;
+  lastSubmission?: string;
+}
+
 export interface RoadmapStage {
   name: string;
   goals: string[];
-  resources: Resource[];
+  exercises: RoadmapExercise[];
+  resources: string[];
   projects: string[];
   estimatedWeeks: number;
+  completed: boolean;
+  completedExercises: number;
+  suggestedCourses?: {
+    youtube: string[];
+    udemy: string[];
+  };
 }
 
 export interface Roadmap {

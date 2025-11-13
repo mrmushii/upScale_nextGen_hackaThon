@@ -68,8 +68,6 @@ const PortfolioSchema = new Schema<IPortfolio>(
   }
 );
 
-// Index for efficient queries
-PortfolioSchema.index({ userId: 1 });
 PortfolioSchema.index({ publicUrl: 1 });
 
 const Portfolio: Model<IPortfolio> =

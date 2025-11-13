@@ -143,7 +143,7 @@ export default function DynamicDashboardNav() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          {navItems.map((item) => (
+        {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}

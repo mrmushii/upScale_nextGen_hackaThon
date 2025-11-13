@@ -33,15 +33,18 @@ export async function POST(
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
 
-    // Add answer
+    const timestamp = new Date();
     question.answers.push({
       userId,
       content,
       upvotes: 0,
       upvotedBy: [],
       isAccepted: false,
-    });
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    } as any);
 
+    question.markModified("answers");
     await question.save();
     await question.populate("userId", "fullName email avatar role");
     await question.populate("answers.userId", "fullName email avatar role");
@@ -91,10 +94,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
 
-    const answer = question.answers.id(answerId);
-    if (!answer) {
+    const answerIndex = question.answers.findIndex(
+      (ans) => ans._id?.toString() === answerId
+    );
+    if (answerIndex === -1) {
       return NextResponse.json({ error: "Answer not found" }, { status: 404 });
     }
+    const answer = question.answers[answerIndex];
 
     if (action === "upvote") {
       const hasUpvoted = answer.upvotedBy.some(
@@ -107,11 +113,15 @@ export async function PATCH(
         );
         answer.upvotes = Math.max(0, answer.upvotes - 1);
       } else {
-        answer.upvotedBy.push(userId);
+        answer.upvotedBy.push(userId as any);
         answer.upvotes += 1;
       }
+
+      answer.updatedAt = new Date();
     }
 
+    question.answers[answerIndex] = answer;
+    question.markModified("answers");
     await question.save();
     await question.populate("userId", "fullName email avatar role");
     await question.populate("answers.userId", "fullName email avatar role");
@@ -155,10 +165,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
 
-    const answer = question.answers.id(answerId);
-    if (!answer) {
+    const answerIndex = question.answers.findIndex(
+      (ans) => ans._id?.toString() === answerId
+    );
+    if (answerIndex === -1) {
       return NextResponse.json({ error: "Answer not found" }, { status: 404 });
     }
+    const answer = question.answers[answerIndex];
 
     // Only answer owner or admin can delete
     const userRole = (session.user as any)?.role;
@@ -169,7 +182,15 @@ export async function DELETE(
       );
     }
 
-    answer.deleteOne();
+    question.answers = question.answers.filter(
+      (ans) => ans._id?.toString() !== answerId
+    );
+    question.isAnswered = question.answers.some((ans) => ans.isAccepted);
+    if (!question.isAnswered) {
+      question.acceptedAnswerId = undefined;
+    }
+
+    question.markModified("answers");
     await question.save();
     await question.populate("userId", "fullName email avatar role");
     await question.populate("answers.userId", "fullName email avatar role");
