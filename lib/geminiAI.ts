@@ -13,7 +13,8 @@ export async function generateRoadmapWithGemini(
   }
 ): Promise<any> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Use gemini-2.5-flash for faster responses
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `Create a detailed 3-stage career roadmap for someone who wants to become a ${userProfile.targetRole}.
 

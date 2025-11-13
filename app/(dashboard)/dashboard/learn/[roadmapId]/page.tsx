@@ -11,10 +11,6 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchRoadmap();
-  }, [params.roadmapId]);
-
   const fetchRoadmap = async () => {
     try {
       const response = await fetch(`/api/roadmap/${params.roadmapId}`);
@@ -28,6 +24,23 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
       setLoading(false);
     }
   };
+
+  // All hooks must be at the top, before any conditional returns
+  useEffect(() => {
+    fetchRoadmap();
+  }, [params.roadmapId]);
+
+  // Debug logging - must be before conditional returns
+  useEffect(() => {
+    if (roadmap) {
+      const currentStage = roadmap.stages?.[currentStageIndex];
+      const currentExercise = currentStage?.exercises?.[currentExerciseIndex];
+      console.log("Roadmap loaded:", roadmap);
+      console.log("Current stage:", currentStage);
+      console.log("Current exercise:", currentExercise);
+      console.log("Exercises array:", currentStage?.exercises);
+    }
+  }, [roadmap, currentStageIndex, currentExerciseIndex]);
 
   const handleExerciseComplete = async () => {
     try {
@@ -48,8 +61,8 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
         fetchRoadmap();
         
         // Move to next exercise
-        const currentStage = roadmap.stages[currentStageIndex];
-        if (currentExerciseIndex < (currentStage.exercises?.length || 0) - 1) {
+        const currentStage = roadmap?.stages?.[currentStageIndex];
+        if (currentExerciseIndex < (currentStage?.exercises?.length || 0) - 1) {
           setCurrentExerciseIndex(currentExerciseIndex + 1);
         }
       }
@@ -58,6 +71,7 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
     }
   };
 
+  // Now we can have conditional returns after all hooks
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -77,9 +91,9 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
     );
   }
 
-  const currentStage = roadmap.stages[currentStageIndex];
-  const currentExercise = currentStage.exercises?.[currentExerciseIndex];
-  const isStageUnlocked = currentStageIndex === 0 || roadmap.stages[currentStageIndex - 1]?.completed;
+  const currentStage = roadmap.stages?.[currentStageIndex];
+  const currentExercise = currentStage?.exercises?.[currentExerciseIndex];
+  const isStageUnlocked = currentStageIndex === 0 || roadmap.stages?.[currentStageIndex - 1]?.completed;
 
   return (
     <div className="space-y-8">
@@ -183,7 +197,7 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
               </div>
 
               {/* Exercise Tabs */}
-              {currentStage.exercises && currentStage.exercises.length > 0 && (
+              {currentStage.exercises && currentStage.exercises.length > 0 ? (
                 <>
                   <div className="flex gap-2 overflow-x-auto pb-2">
                     {currentStage.exercises.map((ex: any, index: number) => (
@@ -203,14 +217,48 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
                   </div>
 
                   {/* Code Editor */}
-                  {currentExercise && (
-                    <CodeEditor
-                      exercise={currentExercise}
-                      onComplete={handleExerciseComplete}
-                      isCompleted={currentExercise.completed || false}
-                    />
+                  {currentExercise ? (
+                    currentExercise.title && currentExercise.code ? (
+                      <CodeEditor
+                        exercise={{
+                          title: currentExercise.title || "Untitled Exercise",
+                          description: currentExercise.description || "Complete this exercise",
+                          code: currentExercise.code || "// Write your code here",
+                          solution: currentExercise.solution || currentExercise.code || "",
+                          hints: currentExercise.hints || [],
+                          testCases: currentExercise.testCases || [],
+                          completed: currentExercise.completed || false,
+                        }}
+                        onComplete={handleExerciseComplete}
+                        isCompleted={currentExercise.completed || false}
+                      />
+                    ) : (
+                      <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6">
+                        <h4 className="font-bold text-gray-900 mb-2">⚠️ Exercise Data Incomplete</h4>
+                        <p className="text-gray-700 text-sm">
+                          This exercise is missing required data. Please check the roadmap structure.
+                        </p>
+                        <pre className="mt-4 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs">
+                          {JSON.stringify(currentExercise, null, 2)}
+                        </pre>
+                      </div>
+                    )
+                  ) : (
+                    <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-6 text-center">
+                      <p className="text-gray-600">No exercise selected</p>
+                    </div>
                   )}
                 </>
+              ) : (
+                <div className="bg-white rounded-3xl p-6 shadow-lg">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">No Exercises Available</h3>
+                  <p className="text-gray-600 mb-4">
+                    This stage doesn't have any exercises yet. Exercises will be added as you progress.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Stage exercises: {JSON.stringify(currentStage.exercises)}
+                  </p>
+                </div>
               )}
 
               {/* Resources */}

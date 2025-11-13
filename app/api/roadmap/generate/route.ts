@@ -121,9 +121,26 @@ export async function POST(request: NextRequest) {
     const currentUsage = user.usageLimits?.careerRoadmaps || 0;
     const limit = TIER_LIMITS[tier].careerRoadmaps;
 
-    if (currentUsage >= limit) {
+    console.log("Usage check:", {
+      tier,
+      currentUsage,
+      limit,
+      canGenerate: currentUsage < limit,
+    });
+
+    if (currentUsage >= limit && limit !== Infinity) {
+      // Check if user has existing roadmaps they can delete
+      const existingRoadmaps = await Roadmap.countDocuments({ userId: user._id });
+      
       return NextResponse.json(
-        { error: "Usage limit reached. Please upgrade your plan." },
+        {
+          error: "Usage limit reached. Please upgrade your plan or delete an existing roadmap.",
+          current: currentUsage,
+          limit,
+          tier,
+          existingRoadmaps,
+          message: `You've used ${currentUsage} of ${limit} roadmaps allowed on the ${tier} plan.`,
+        },
         { status: 403 }
       );
     }
@@ -139,7 +156,16 @@ export async function POST(request: NextRequest) {
 
     // Try Gemini AI with interactive exercises first
     let stages;
+    let geminiUsed = false;
     try {
+      console.log("Attempting to generate roadmap with Gemini AI...");
+      console.log("User profile:", {
+        skills: user.skills,
+        preferredTrack: user.preferredTrack,
+        experienceLevel: user.experienceLevel,
+        targetRole,
+      });
+
       stages = await generateInteractiveRoadmap({
         skills: user.skills || [],
         preferredTrack: user.preferredTrack,
@@ -149,10 +175,23 @@ export async function POST(request: NextRequest) {
       
       // If Gemini fails or returns null/empty, use fallback
       if (!stages || stages.length === 0) {
+        console.warn("Gemini returned null or empty stages");
         throw new Error("Gemini returned null or empty");
       }
-    } catch (geminiError) {
-      console.log("Gemini AI unavailable, using template-based generation with exercises");
+      
+      geminiUsed = true;
+      console.log("✅ Successfully generated roadmap using Gemini AI");
+      console.log("Stages generated:", stages.length);
+    } catch (geminiError: any) {
+      console.log("⚠️ Gemini AI unavailable, using template-based generation with exercises");
+      console.log("Gemini error:", geminiError.message);
+      console.log("Error status:", geminiError.status);
+      
+      // Check if it's a temporary error (503, 429)
+      if (geminiError.status === 503 || geminiError.status === 429) {
+        console.log("⚠️ Temporary Gemini API issue (overloaded/rate limited). Using fallback.");
+      }
+      
       // Fallback includes interactive exercises
       stages = generatePersonalizedRoadmap(
         {
@@ -163,6 +202,7 @@ export async function POST(request: NextRequest) {
         },
         targetRole
       );
+      console.log("✅ Using fallback template-based roadmap with exercises");
     }
 
     const progress = calculateRoadmapProgress(stages);

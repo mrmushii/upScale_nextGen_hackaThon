@@ -24,6 +24,41 @@ interface RoadmapStage {
   completedExercises: number;
 }
 
+// Retry function with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if it's a retryable error (503, 429, or network errors)
+      const isRetryable = 
+        error.status === 503 || 
+        error.status === 429 || 
+        error.message?.includes("overloaded") ||
+        error.message?.includes("rate limit");
+      
+      if (!isRetryable || attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = initialDelay * Math.pow(2, attempt);
+      console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+
 export async function generateInteractiveRoadmap(
   userProfile: {
     skills: string[];
@@ -33,9 +68,16 @@ export async function generateInteractiveRoadmap(
   }
 ): Promise<RoadmapStage[]> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Try different models in order of preference
+    const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+    let lastError: any = null;
 
-    const prompt = `Create an interactive, hands-on learning roadmap for someone who wants to become a ${userProfile.targetRole}.
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`Trying model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+
+        const prompt = `Create an interactive, hands-on learning roadmap for someone who wants to become a ${userProfile.targetRole}.
 
 Current Profile:
 - Current Skills: ${userProfile.skills.join(", ") || "Beginner"}
@@ -101,21 +143,65 @@ IMPORTANT:
 
 Return ONLY valid JSON, no markdown or extra text.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+        console.log("Calling Gemini API for roadmap generation...");
+        const startTime = Date.now();
+        
+        // Use retry logic for 503/429 errors
+        const result = await retryWithBackoff(async () => {
+          return await model.generateContent(prompt);
+        });
+        
+        const response = await result.response;
+        const text = response.text();
 
-    // Extract JSON
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("No JSON in response");
+        const endTime = Date.now();
+        console.log(`✅ Gemini API (${modelName}) response received in ${endTime - startTime}ms`);
+        console.log("Gemini response length:", text.length, "characters");
+        console.log("Gemini response preview:", text.substring(0, 200) + "...");
+
+        // Extract JSON
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          console.error("No JSON found in Gemini response. Full response:", text);
+          throw new Error("No JSON in response");
+        }
+
+        try {
+          const roadmapData = JSON.parse(jsonMatch[0]);
+          console.log("Successfully parsed Gemini response. Stages count:", roadmapData.stages?.length || 0);
+          return roadmapData.stages;
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError);
+          console.error("JSON match:", jsonMatch[0].substring(0, 500));
+          throw new Error("Failed to parse JSON from Gemini response");
+        }
+      } catch (modelError: any) {
+        console.warn(`Model ${modelName} failed:`, modelError.message);
+        lastError = modelError;
+        
+        // If it's a 503 or overloaded error, try next model
+        if (modelError.status === 503 || modelError.message?.includes("overloaded")) {
+          continue; // Try next model
+        }
+        
+        // For other errors, throw immediately
+        throw modelError;
+      }
     }
-
-    const roadmapData = JSON.parse(jsonMatch[0]);
-    return roadmapData.stages;
-  } catch (error) {
-    console.error("Gemini AI error:", error);
+    
+    // If all models failed, throw the last error
+    throw lastError || new Error("All Gemini models failed");
+  } catch (error: any) {
+    console.error("Gemini AI error (all models failed):", error);
+    console.error("Error details:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      status: error.status,
+    });
+    
     // Return fallback with interactive exercises
+    console.log("Falling back to template-based roadmap with exercises");
     return getFallbackInteractiveRoadmap(userProfile.preferredTrack);
   }
 }

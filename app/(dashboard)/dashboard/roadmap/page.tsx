@@ -56,7 +56,11 @@ export default function RoadmapPage() {
 
       if (!response.ok) {
         if (response.status === 403) {
-          setError(data.error + " You can view your existing roadmap below.");
+          const errorMsg = data.message || data.error || "Usage limit reached";
+          const details = data.current !== undefined 
+            ? ` (Used ${data.current}/${data.limit} on ${data.tier} plan)`
+            : "";
+          setError(errorMsg + details + ". You can view your existing roadmap below.");
         } else {
           setError(data.error || "Failed to generate roadmap");
         }
@@ -150,16 +154,24 @@ export default function RoadmapPage() {
             </div>
           </div>
 
-          {/* Start Interactive Learning Button */}
-          <div className="text-center">
-            <Link
-              href={`/dashboard/learn/${currentRoadmap._id}`}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl hover:from-green-700 hover:to-teal-700 transition font-bold shadow-lg text-lg"
-            >
-              🎯 Start Interactive Learning
-            </Link>
-            <p className="text-sm text-gray-600 mt-2">
-              Practice with hands-on coding exercises • Complete challenges • Unlock stages progressively
+          {/* Action Buttons */}
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <Link
+                href={`/dashboard/learn/${currentRoadmap._id}`}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl hover:from-green-700 hover:to-teal-700 transition font-bold shadow-lg text-lg"
+              >
+                🎯 Start Interactive Learning
+              </Link>
+              <Link
+                href="/dashboard/resources?tab=suggested"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-600 to-coral-600 text-white rounded-xl hover:from-primary-700 hover:to-coral-700 transition font-bold shadow-lg text-lg"
+              >
+                📚 View Suggested Courses
+              </Link>
+            </div>
+            <p className="text-sm text-gray-600">
+              Practice with hands-on coding exercises • Complete challenges • Unlock stages progressively • Access recommended courses
             </p>
           </div>
 
