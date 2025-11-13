@@ -121,10 +121,14 @@ export default function DynamicDashboardNav() {
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 fixed left-0 top-0 h-screen">
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
-          <Link href={`/${userRole}/dashboard`} className="text-2xl font-bold text-primary-600">
-            Upscale
+          <Link href={`/${userRole}/dashboard`}>
+            <img 
+              src="/logo.png" 
+              alt="Upscale Logo" 
+              className="h-10 mb-2"
+            />
           </Link>
-          <div className="mt-2 text-xs font-semibold text-gray-500 uppercase">
+          <div className="text-xs font-semibold text-gray-500 uppercase">
             {userRole === "admin" ? "Admin Panel" : userRole === "recruiter" ? "Recruiter Portal" : userRole === "mentor" ? "Mentor Dashboard" : "Career Platform"}
           </div>
         </div>
@@ -161,8 +165,12 @@ export default function DynamicDashboardNav() {
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-40">
         <div className="flex items-center justify-between p-4">
-          <Link href={`/${userRole}/dashboard`} className="text-xl font-bold text-primary-600">
-            Upscale
+          <Link href={`/${userRole}/dashboard`}>
+            <img 
+              src="/logo.png" 
+              alt="Upscale Logo" 
+              className="h-8"
+            />
           </Link>
 
           <div className="flex items-center gap-2">

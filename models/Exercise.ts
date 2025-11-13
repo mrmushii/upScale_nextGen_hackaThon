@@ -68,3 +68,4 @@ const Exercise: Model<IExercise> = models.Exercise || model<IExercise>("Exercise
 export default Exercise;
 
 
+

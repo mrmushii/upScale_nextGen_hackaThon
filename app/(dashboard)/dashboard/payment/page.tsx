@@ -37,6 +37,16 @@ export default function PaymentPage() {
         <p className="text-gray-600 mt-2">Choose your subscription and payment method</p>
       </div>
 
+      {/* Payment Partners Section */}
+      <div className="bg-gradient-to-r from-primary-50 to-coral-50 rounded-3xl p-6">
+        <p className="text-sm text-gray-600 text-center mb-4 font-semibold">Trusted Payment Partners</p>
+        <div className="flex items-center justify-center gap-8 flex-wrap">
+          <img src="/BKash-Logo.wine.svg" alt="bKash" className="h-8 grayscale hover:grayscale-0 transition opacity-60 hover:opacity-100" />
+          <img src="/Nagad-logo.svg" alt="Nagad" className="h-8 grayscale hover:grayscale-0 transition opacity-60 hover:opacity-100" />
+          <img src="/512px-Visa_Inc._logo.svg.png" alt="Visa" className="h-7 grayscale hover:grayscale-0 transition opacity-60 hover:opacity-100" />
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Plan Selection */}
         <div className="lg:col-span-2 space-y-6">
@@ -79,44 +89,47 @@ export default function PaymentPage() {
             <div className="grid md:grid-cols-3 gap-4 mb-6">
               <button
                 onClick={() => setPaymentMethod("bkash")}
-                className={`p-6 rounded-2xl border-2 transition ${
+                className={`p-6 rounded-2xl border-2 transition flex items-center justify-center ${
                   paymentMethod === "bkash"
                     ? "border-pink-500 bg-pink-50"
                     : "border-gray-200 hover:border-pink-300"
                 }`}
               >
-                <div className="text-center">
-                  <div className="text-4xl mb-2">📱</div>
-                  <div className="font-bold text-gray-900">bKash</div>
-                </div>
+                <img 
+                  src="/BKash-Logo.wine.svg" 
+                  alt="bKash" 
+                  className="h-12"
+                />
               </button>
 
               <button
                 onClick={() => setPaymentMethod("nagad")}
-                className={`p-6 rounded-2xl border-2 transition ${
+                className={`p-6 rounded-2xl border-2 transition flex items-center justify-center ${
                   paymentMethod === "nagad"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 hover:border-orange-300"
                 }`}
               >
-                <div className="text-center">
-                  <div className="text-4xl mb-2">💳</div>
-                  <div className="font-bold text-gray-900">Nagad</div>
-                </div>
+                <img 
+                  src="/Nagad-logo.svg" 
+                  alt="Nagad" 
+                  className="h-12"
+                />
               </button>
 
               <button
                 onClick={() => setPaymentMethod("card")}
-                className={`p-6 rounded-2xl border-2 transition ${
+                className={`p-6 rounded-2xl border-2 transition flex items-center justify-center ${
                   paymentMethod === "card"
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <div className="text-center">
-                  <div className="text-4xl mb-2">💳</div>
-                  <div className="font-bold text-gray-900">Card</div>
-                </div>
+                <img 
+                  src="/512px-Visa_Inc._logo.svg.png" 
+                  alt="Visa Card" 
+                  className="h-10"
+                />
               </button>
             </div>
 

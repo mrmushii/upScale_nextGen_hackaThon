@@ -178,3 +178,4 @@ export default function CodeEditor({ exercise, onComplete, isCompleted }: CodeEd
 }
 
 
+

@@ -6,6 +6,7 @@ import Pricing from "@/components/Pricing";
 import Statistics from "@/components/Statistics";
 import Steps from "@/components/Steps";
 import Testimonials from "@/components/Testimonials";
+import PaymentPartners from "@/components/PaymentPartners";
 import FAQ from "@/components/FAQ";
 import CTA from "@/components/CTA";
 import Navbar from "@/components/Navbar";
@@ -23,6 +24,7 @@ export default function Home() {
       <Steps />
       <Pricing />
       <Testimonials />
+      <PaymentPartners />
       <FAQ />
       <CTA />
       <Footer />
