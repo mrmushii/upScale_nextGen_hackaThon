@@ -18,6 +18,17 @@ export interface IMentor {
   languages: string[];
   yearsOfExperience: number;
   status: "active" | "inactive" | "pending";
+  payoutConfig?: {
+    enabled: boolean;
+    paymentMethod: "bKash" | "Nagad" | "Bank" | "Rocket";
+    accountNumber: string;
+    accountName?: string;
+    bankName?: string;
+    branchName?: string;
+    payoutDay: number; // Day of month (1-31) for automatic payout
+    lastPayoutDate?: Date;
+    nextPayoutDate?: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,6 +102,40 @@ const MentorSchema = new Schema<IMentor>(
       type: String,
       enum: ["active", "inactive", "pending"],
       default: "pending",
+    },
+    payoutConfig: {
+      enabled: {
+        type: Boolean,
+        default: false,
+      },
+      paymentMethod: {
+        type: String,
+        enum: ["bKash", "Nagad", "Bank", "Rocket"],
+      },
+      accountNumber: {
+        type: String,
+      },
+      accountName: {
+        type: String,
+      },
+      bankName: {
+        type: String,
+      },
+      branchName: {
+        type: String,
+      },
+      payoutDay: {
+        type: Number,
+        min: 1,
+        max: 31,
+        default: 1, // Default to 1st of month
+      },
+      lastPayoutDate: {
+        type: Date,
+      },
+      nextPayoutDate: {
+        type: Date,
+      },
     },
   },
   {
