@@ -29,9 +29,32 @@ export async function GET(
       );
     }
 
+    // Get missing and existing skills
     const missingSkills = favoriteJob.skillGaps?.missingSkills || [];
+    const existingSkills = favoriteJob.skillGaps?.existingSkills || [];
     
-    if (missingSkills.length === 0) {
+    // Normalize skill names for comparison (same as skill gap analysis)
+    const normalizeSkill = (skill: string): string => {
+      return skill
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s]/g, "")
+        .replace(/\s+/g, " ");
+    };
+    
+    // Validate: ensure missingSkills doesn't contain any existing skills
+    // This fixes the bug where existing skills might be incorrectly in missingSkills
+    const normalizedExistingSkills = new Set(
+      existingSkills.map((skill: string) => normalizeSkill(skill))
+    );
+    
+    // Filter out any skills from missingSkills that are actually in existingSkills
+    const validatedMissingSkills = missingSkills.filter((skill: string) => {
+      const normalizedSkill = normalizeSkill(skill);
+      return !normalizedExistingSkills.has(normalizedSkill);
+    });
+    
+    if (validatedMissingSkills.length === 0) {
       return NextResponse.json({
         suggestions: {
           udemy: [],
@@ -50,7 +73,8 @@ export async function GET(
     };
 
     // Get top 3-5 missing skills for course suggestions
-    const topMissingSkills = missingSkills.slice(0, 5);
+    // Use validatedMissingSkills to ensure we only suggest courses for truly missing skills
+    const topMissingSkills = validatedMissingSkills.slice(0, 5);
 
     // Fetch Udemy courses
     try {
@@ -126,7 +150,7 @@ export async function GET(
 
     return NextResponse.json({
       suggestions,
-      missingSkills: topMissingSkills,
+      missingSkills: topMissingSkills, // Return only validated missing skills
       matchPercentage: favoriteJob.skillGaps?.matchPercentage || 0,
     });
   } catch (error: any) {
