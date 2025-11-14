@@ -1,57 +1,8 @@
 // PDF parsing utility - Server-side only
 // Uses pdf-parse for text extraction
-import { join } from "path";
-import { writeFile, mkdir, readFile } from "fs/promises";
 
 // Required for Next.js App Router - pdf-parse does not work in Edge runtime
 export const runtime = "nodejs";
-
-// Import pdf-parse - must use require() for CommonJS modules in Next.js
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfModule = require("pdf-parse");
-
-// Extract the actual callable function from the module
-// Based on debug logs: module is an object, not a function, and has no .default
-// In Next.js with webpack externalization, CommonJS modules can be objects
-// but still be callable. We create a wrapper that handles this.
-const pdf: (buffer: Buffer) => Promise<any> = (() => {
-  // If module is directly a function, use it
-  if (typeof pdfModule === "function") {
-    return pdfModule;
-  }
-  
-  // If there's a default export that's a function, use it
-  if (pdfModule.default && typeof pdfModule.default === "function") {
-    return pdfModule.default;
-  }
-  
-  // If module is an object, it might still be callable (CommonJS interop)
-  // Create a wrapper that tries to call it
-  return async (buffer: Buffer) => {
-    // Try calling the module directly - CommonJS modules can be callable objects
-    try {
-      // In some cases, the module.exports itself is callable even if typeof is 'object'
-      if (typeof pdfModule === "function") {
-        return await pdfModule(buffer);
-      }
-      // Try as a callable object (some webpack wrappers allow this)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (pdfModule as any)(buffer);
-      return result;
-    } catch (callError: any) {
-      // If direct call fails, try to find the function in the object
-      // Check common property names
-      const functionKeys = ["default", "pdfParse", "PDFParse", "parse"];
-      for (const key of functionKeys) {
-        const func = (pdfModule as any)[key];
-        if (func && typeof func === "function") {
-          return await func(buffer);
-        }
-      }
-      throw new Error(`Cannot call pdf-parse module. Error: ${callError.message}`);
-    }
-  };
-})();
 
 export interface PdfParseResult {
   text: string;
@@ -99,20 +50,48 @@ export async function extractTextFromPdf(buffer: Buffer): Promise<PdfParseResult
       };
     }
 
-    // Parse PDF - 'pdf' is now available from the top-level require
-    // Verify it's a function before calling
-    if (typeof pdf !== "function") {
-      // Try to extract the function from the module structure
-      console.error("pdf-parse module structure:", {
-        type: typeof pdfModule,
-        isFunction: typeof pdfModule === "function",
-        keys: Object.keys(pdfModule || {}),
-        pdfType: typeof pdf,
-      });
-      throw new Error(`pdf-parse is not a function. Got type: ${typeof pdf}`);
-    }
+    // Dynamically import pdf-parse at runtime to avoid webpack issues
+    // This ensures it's loaded as a CommonJS module, not bundled
+    let pdfParse: (buffer: Buffer) => Promise<any>;
     
-    const data: { text: string; [key: string]: any } = await pdf(buffer);
+    try {
+      // Try dynamic import first (works in Node.js 14+)
+      const pdfModule = await import("pdf-parse");
+      pdfParse = pdfModule.default || pdfModule;
+      
+      // If it's still not a function, try to extract it
+      if (typeof pdfParse !== "function") {
+        // Try require as fallback
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const pdfRequire = require("pdf-parse");
+        if (typeof pdfRequire === "function") {
+          pdfParse = pdfRequire;
+        } else if (pdfRequire.default && typeof pdfRequire.default === "function") {
+          pdfParse = pdfRequire.default;
+        } else {
+          throw new Error("pdf-parse module is not a function");
+        }
+      }
+    } catch (importError: any) {
+      // Fallback to require if import fails
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfRequire = require("pdf-parse");
+      if (typeof pdfRequire === "function") {
+        pdfParse = pdfRequire;
+      } else if (pdfRequire.default && typeof pdfRequire.default === "function") {
+        pdfParse = pdfRequire.default;
+      } else {
+        throw new Error(`Failed to load pdf-parse: ${importError.message}`);
+      }
+    }
+
+    // Ensure we have a function
+    if (typeof pdfParse !== "function") {
+      throw new Error("pdf-parse is not a callable function");
+    }
+
+    // Parse PDF - call the function with the buffer
+    const data: { text: string; [key: string]: any } = await pdfParse(buffer);
 
     // Extract text
     const text = data.text || "";
@@ -142,6 +121,11 @@ export async function extractTextFromPdf(buffer: Buffer): Promise<PdfParseResult
     };
   } catch (error: any) {
     console.error("PDF parsing error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      name: error.name,
+      type: typeof error,
+    });
     
     // Provide specific error messages
     let errorMessage = "Failed to parse PDF";
@@ -152,6 +136,10 @@ export async function extractTextFromPdf(buffer: Buffer): Promise<PdfParseResult
       errorMessage = "PDF file is corrupted or invalid. Please upload a valid PDF file.";
     } else if (error.message?.includes("memory") || error.message?.includes("too large")) {
       errorMessage = "PDF file is too large to process. Please use a smaller file (max 20MB).";
+    } else if (error.message?.includes("Class constructors cannot be invoked without 'new'")) {
+      errorMessage = "PDF parsing module error. Please restart the development server and try again.";
+    } else if (error.message?.includes("not a callable function")) {
+      errorMessage = "PDF parsing module configuration error. Please contact support.";
     } else {
       errorMessage = error.message || "Failed to parse PDF";
     }

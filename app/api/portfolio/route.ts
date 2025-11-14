@@ -38,15 +38,15 @@ export async function GET(request: NextRequest) {
     if (!portfolio) {
       const defaultSections = [
         {
-          id: "about",
+          id: `about-${Date.now()}`,
           type: "about" as const,
           title: "About Me",
-          content: { text: "" },
+          content: { text: "", image: null },
           order: 1,
           visible: true,
         },
         {
-          id: "skills",
+          id: `skills-${Date.now()}`,
           type: "skills" as const,
           title: "Skills",
           content: { items: [] },
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
           visible: true,
         },
         {
-          id: "projects",
+          id: `projects-${Date.now()}`,
           type: "projects" as const,
           title: "Projects",
           content: { items: [] },
@@ -62,10 +62,10 @@ export async function GET(request: NextRequest) {
           visible: true,
         },
         {
-          id: "contact",
+          id: `contact-${Date.now()}`,
           type: "contact" as const,
           title: "Contact",
-          content: { email: "", phone: "", social: {} },
+          content: { email: "", phone: "", location: "", social: {} },
           order: 4,
           visible: true,
         },

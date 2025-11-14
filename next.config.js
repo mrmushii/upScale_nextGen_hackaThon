@@ -5,11 +5,20 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Externalize pdf-parse for server-side only
+      // Use a function to properly handle the externalization
       config.externals = config.externals || [];
-      config.externals.push({
-        'pdf-parse': 'commonjs pdf-parse',
-        'pdfjs-dist': 'commonjs pdfjs-dist',
-      });
+      
+      // Add pdf-parse as external - this prevents webpack from bundling it
+      const originalExternals = config.externals;
+      config.externals = [
+        ...(Array.isArray(originalExternals) ? originalExternals : [originalExternals]),
+        ({ request }, callback) => {
+          if (request === 'pdf-parse' || request === 'pdfjs-dist') {
+            return callback(null, `commonjs ${request}`);
+          }
+          callback();
+        },
+      ];
     }
     return config;
   },

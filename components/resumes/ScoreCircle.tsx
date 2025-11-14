@@ -1,8 +1,14 @@
 "use client";
 
-export default function ScoreCircle({ score = 0 }: { score: number }) {
-  const radius = 40;
-  const stroke = 8;
+export default function ScoreCircle({ 
+  score = 0, 
+  size = "normal" 
+}: { 
+  score: number; 
+  size?: "normal" | "large";
+}) {
+  const radius = size === "large" ? 60 : 40;
+  const stroke = size === "large" ? 10 : 8;
   const normalizedRadius = radius - stroke / 2;
   const circumference = 2 * Math.PI * normalizedRadius;
   const progress = score / 100;
@@ -15,8 +21,11 @@ export default function ScoreCircle({ score = 0 }: { score: number }) {
     return "#ef4444"; // red
   };
 
+  const sizeClass = size === "large" ? "w-[150px] h-[150px]" : "w-[100px] h-[100px]";
+  const textSize = size === "large" ? "text-2xl" : "text-sm";
+
   return (
-    <div className="relative w-[100px] h-[100px]">
+    <div className={`relative ${sizeClass}`}>
       <svg
         height="100%"
         width="100%"
@@ -49,8 +58,8 @@ export default function ScoreCircle({ score = 0 }: { score: number }) {
 
       {/* Score text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-semibold text-sm text-gray-900">{score}</span>
-        <span className="text-xs text-gray-500">/100</span>
+        <span className={`font-semibold ${textSize} text-gray-900`}>{score}</span>
+        <span className={`${size === "large" ? "text-sm" : "text-xs"} text-gray-500`}>/100</span>
       </div>
     </div>
   );

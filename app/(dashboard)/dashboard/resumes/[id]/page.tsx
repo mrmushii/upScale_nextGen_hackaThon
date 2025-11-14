@@ -5,9 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import ScoreGauge from "@/components/resumes/ScoreGauge";
-import ATSFeedback from "@/components/resumes/ATSFeedback";
-import FeedbackAccordion from "@/components/resumes/FeedbackAccordion";
+import ResumeAnalysis from "@/components/resumes/ResumeAnalysis";
 
 export default function ResumeDetailPage() {
   const params = useParams();
@@ -126,62 +124,7 @@ export default function ResumeDetailPage() {
 
       {hasAnalysis ? (
         /* Analysis Results */
-        <div className="space-y-6">
-          {/* Overall Score */}
-          <div className="bg-white rounded-xl border border-gray-200 p-8">
-            <div className="flex items-center gap-8">
-              <ScoreGauge score={resume.analysisResult.overallScore} />
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Your Resume Score
-                </h2>
-                <p className="text-gray-600">
-                  This score is calculated based on ATS compatibility, tone & style,
-                  content quality, structure, and skills alignment.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* ATS Feedback */}
-          {resume.analysisResult.ATS && (
-            <ATSFeedback
-              score={resume.analysisResult.ATS.score}
-              suggestions={resume.analysisResult.ATS.tips}
-            />
-          )}
-
-          {/* Detailed Feedback */}
-          <div className="bg-white rounded-xl border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Detailed Feedback
-            </h2>
-            <FeedbackAccordion
-              categories={[
-                {
-                  title: "Tone & Style",
-                  score: resume.analysisResult.toneAndStyle?.score || 0,
-                  tips: resume.analysisResult.toneAndStyle?.tips || [],
-                },
-                {
-                  title: "Content",
-                  score: resume.analysisResult.content?.score || 0,
-                  tips: resume.analysisResult.content?.tips || [],
-                },
-                {
-                  title: "Structure",
-                  score: resume.analysisResult.structure?.score || 0,
-                  tips: resume.analysisResult.structure?.tips || [],
-                },
-                {
-                  title: "Skills",
-                  score: resume.analysisResult.skills?.score || 0,
-                  tips: resume.analysisResult.skills?.tips || [],
-                },
-              ]}
-            />
-          </div>
-        </div>
+        <ResumeAnalysis analysis={resume.analysisResult} />
       ) : (
         /* Analyze Form */
         <div className="bg-white rounded-xl border border-gray-200 p-8">
