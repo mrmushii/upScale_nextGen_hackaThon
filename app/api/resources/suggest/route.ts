@@ -60,8 +60,10 @@ export async function GET(request: NextRequest) {
 
     // Fetch Udemy courses related to current stage
     try {
+      // Use stage name and roadmap target role for better course matching
+      const searchQuery = `${stageName} ${roadmap.targetRole || ""}`.trim();
       const udemyResponse = await fetch(
-        `${request.nextUrl.origin}/api/resources/udemy`,
+        `${request.nextUrl.origin}/api/resources/udemy?search=${encodeURIComponent(searchQuery)}&pageSize=5`,
         {
           headers: {
             Cookie: request.headers.get("cookie") || "",

@@ -20,11 +20,13 @@ import {
   Save,
   Edit2,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { CAREER_TRACKS, EXPERIENCE_LEVELS, EDUCATION_LEVELS } from "@/lib/constants";
 import toast from "react-hot-toast";
+import SkillExtractionPanel from "@/components/skills/SkillExtractionPanel";
 
 export default function UserProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -41,6 +43,7 @@ export default function UserProfilePage() {
     experienceLevel: "",
     preferredTrack: "",
     skills: [] as string[],
+    tools: [] as string[],
     targetRoles: [] as string[],
     careerInterests: [] as string[],
     experience: [] as any[],
@@ -51,6 +54,7 @@ export default function UserProfilePage() {
   });
 
   const [skillInput, setSkillInput] = useState("");
+  const [toolInput, setToolInput] = useState("");
   const [targetRoleInput, setTargetRoleInput] = useState("");
   const [careerInterestInput, setCareerInterestInput] = useState("");
   const [showAddExperience, setShowAddExperience] = useState(false);
@@ -112,6 +116,7 @@ export default function UserProfilePage() {
           experienceLevel: data.user.experienceLevel || "",
           preferredTrack: data.user.preferredTrack || "",
           skills: data.user.skills || [],
+          tools: data.user.tools || [],
           targetRoles: data.user.targetRoles || [],
           careerInterests: data.user.careerInterests || [],
           experience: (data.user.experience || []).map((exp: any) => ({
@@ -170,10 +175,27 @@ export default function UserProfilePage() {
     }
   };
 
+  const addTool = () => {
+    if (toolInput.trim() && !formData.tools.includes(toolInput.trim())) {
+      setFormData({
+        ...formData,
+        tools: [...formData.tools, toolInput.trim()],
+      });
+      setToolInput("");
+    }
+  };
+
   const removeSkill = (skill: string) => {
     setFormData({
       ...formData,
       skills: formData.skills.filter((s: string) => s !== skill),
+    });
+  };
+
+  const removeTool = (tool: string) => {
+    setFormData({
+      ...formData,
+      tools: formData.tools.filter((t: string) => t !== tool),
     });
   };
 
@@ -227,10 +249,12 @@ export default function UserProfilePage() {
       setNewExperience({
         title: "",
         company: "",
+        location: "",
         description: "",
         startDate: "",
         endDate: "",
         current: false,
+        technologies: [],
       });
       setShowAddExperience(false);
     }
@@ -261,8 +285,10 @@ export default function UserProfilePage() {
         description: "",
         technologies: [],
         url: "",
+        githubUrl: "",
         startDate: "",
         endDate: "",
+        highlights: [],
       });
       setShowAddProject(false);
     }
@@ -694,6 +720,67 @@ export default function UserProfilePage() {
                   ))
                 ) : (
                   <p className="text-gray-500">No skills added yet</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Tools & Technologies */}
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Code size={24} className="text-primary-600" />
+              Tools & Technologies
+            </h3>
+            {editing ? (
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={toolInput}
+                    onChange={(e) => setToolInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addTool();
+                      }
+                    }}
+                    className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                    placeholder="Add a tool (e.g., React, AWS, TensorFlow)"
+                  />
+                  <button
+                    onClick={addTool}
+                    className="px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold"
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.tools.map((tool: string, index: number) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-medium"
+                    >
+                      {tool}
+                      <button onClick={() => removeTool(tool)} className="hover:text-gray-600">
+                        <X size={16} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-3">
+                {profile.tools && profile.tools.length > 0 ? (
+                  profile.tools.map((tool: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-medium"
+                    >
+                      {tool}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No tools added yet</p>
                 )}
               </div>
             )}
@@ -1297,8 +1384,10 @@ export default function UserProfilePage() {
                               description: "",
                               technologies: [],
                               url: "",
+                              githubUrl: "",
                               startDate: "",
                               endDate: "",
+                              highlights: [],
                             });
                           }}
                           className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-semibold"
@@ -1368,32 +1457,30 @@ export default function UserProfilePage() {
             )}
           </div>
 
-          {/* CV Text */}
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FileText size={24} className="text-primary-600" />
-              CV / Resume Text
-            </h3>
-            {editing ? (
-              <textarea
-                value={formData.cvText}
-                onChange={(e) => setFormData({ ...formData, cvText: e.target.value })}
-                rows={10}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none font-mono text-sm"
-                placeholder="Paste your CV or resume text here for later analysis..."
+          {/* Smart Skill Extraction */}
+          {editing && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Sparkles size={24} className="text-primary-600" />
+                Smart Skill Extraction
+              </h3>
+              <SkillExtractionPanel
+                context="profile"
+                existingSkills={formData.skills}
+                existingTools={formData.tools}
+                existingRoles={formData.targetRoles}
+                onApply={async (update) => {
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    skills: update.skills,
+                    tools: update.tools,
+                    targetRoles: update.roles,
+                  }));
+                  toast.success("Skills extracted and applied! Review and save your profile to persist changes.");
+                }}
               />
-            ) : (
-              <div className="p-4 bg-gray-50 rounded-xl">
-                {profile.cvText ? (
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">
-                    {profile.cvText}
-                  </pre>
-                ) : (
-                  <p className="text-gray-500">No CV text added yet</p>
-                )}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

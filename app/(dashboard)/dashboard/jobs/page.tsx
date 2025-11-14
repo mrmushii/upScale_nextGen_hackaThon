@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -25,10 +26,78 @@ export default function JobsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [favoriteJobIds, setFavoriteJobIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchUserProfile();
+    fetchFavoriteJobs();
   }, []);
+
+  const fetchFavoriteJobs = async () => {
+    try {
+      const response = await fetch("/api/jobs/favorites");
+      if (response.ok) {
+        const data = await response.json();
+        const favoriteIds = new Set(
+          (data.favoriteJobs || []).map((job: any) => job.jobId.toString())
+        );
+        setFavoriteJobIds(favoriteIds);
+      }
+    } catch (error) {
+      console.error("Error fetching favorite jobs:", error);
+    }
+  };
+
+  const toggleFavorite = async (job: any) => {
+    const jobId = (job.id || job._id).toString();
+    const isFavorite = favoriteJobIds.has(jobId);
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        const response = await fetch(`/api/jobs/favorites?jobId=${jobId}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          setFavoriteJobIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(jobId);
+            return newSet;
+          });
+          toast.success("Removed from favorites");
+        } else {
+          toast.error("Failed to remove from favorites");
+        }
+      } else {
+        // Add to favorites
+        const response = await fetch("/api/jobs/favorites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jobId: jobId,
+            jobTitle: job.title,
+            company: job.company || "Unknown Company",
+            jobData: job,
+          }),
+        });
+
+        if (response.ok) {
+          setFavoriteJobIds((prev) => new Set([...prev, jobId]));
+          toast.success("Added to favorites! Check skill gaps in Favorites section.");
+        } else {
+          const errorData = await response.json();
+          if (response.status === 409) {
+            toast.error("Job already in favorites");
+          } else {
+            toast.error(errorData.error || "Failed to add to favorites");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Failed to update favorites");
+    }
+  };
 
   useEffect(() => {
     fetchJobs(1);
@@ -119,8 +188,9 @@ export default function JobsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Job Board</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Job Board</h1>
         <p className="text-gray-600 mt-2">
           {pagination ? `Found ${pagination.total || filteredJobs.length} jobs` : `Found ${filteredJobs.length} jobs`} 
           {pagination?.sources && ` (${pagination.sources.recruiter || 0} verified, ${pagination.sources.findwork || 0} external)`}
@@ -130,6 +200,14 @@ export default function JobsPage() {
             </span>
           )}
         </p>
+        </div>
+        <Link
+          href="/dashboard/jobs/favorites"
+          className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-semibold"
+        >
+          <Heart size={20} className="fill-current" />
+          My Favorites ({favoriteJobIds.size})
+        </Link>
       </div>
 
       {/* Search and Filters */}
@@ -353,8 +431,27 @@ export default function JobsPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition">
-                      <Heart size={20} />
+                    <button
+                      onClick={() => toggleFavorite(job)}
+                      className={`p-2 rounded-lg transition ${
+                        favoriteJobIds.has((job.id || job._id).toString())
+                          ? "bg-red-100 text-red-600 hover:bg-red-200"
+                          : "bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600"
+                      }`}
+                      title={
+                        favoriteJobIds.has((job.id || job._id).toString())
+                          ? "Remove from favorites"
+                          : "Add to favorites"
+                      }
+                    >
+                      <Heart
+                        size={20}
+                        className={
+                          favoriteJobIds.has((job.id || job._id).toString())
+                            ? "fill-current"
+                            : ""
+                        }
+                      />
                     </button>
                     <Link
                       href={`/dashboard/jobs/${job.id || job._id}`}

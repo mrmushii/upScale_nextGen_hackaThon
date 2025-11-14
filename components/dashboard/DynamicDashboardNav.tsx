@@ -24,12 +24,12 @@ import {
   BarChart3,
   BookOpen,
   Sparkles,
-  FileCheck,
   Bot,
   FileText as FileTextIcon,
   ChevronDown,
   ChevronRight,
   Folder,
+  Heart,
 } from "lucide-react";
 import NotificationDropdown from "./NotificationDropdown";
 import { usePathname } from "next/navigation";
@@ -93,8 +93,8 @@ export default function DynamicDashboardNav() {
   useEffect(() => {
     if (userRole === "user" && pathname) {
       const sections = {
-        career: ["/dashboard/profile", "/dashboard/jobs", "/dashboard/roadmap", "/dashboard/resources"],
-        documents: ["/dashboard/resumes", "/dashboard/cv", "/dashboard/portfolio"],
+        career: ["/dashboard/profile", "/dashboard/jobs", "/dashboard/jobs/favorites", "/dashboard/roadmap", "/dashboard/resources"],
+        documents: ["/dashboard/cv", "/dashboard/portfolio"],
         ai: ["/dashboard/careerbot", "/dashboard/interviews"],
         support: ["/dashboard/mentors", "/dashboard/community"],
       };
@@ -116,7 +116,7 @@ export default function DynamicDashboardNav() {
   const dashboardHref = userRole === "user" ? "/dashboard" : `/${userRole}/dashboard`;
 
   // Different navigation items based on role
-  const getNavItems = () => {
+  const getNavItems = (): Array<{ icon: any; label: string; href: string; roles: string[] }> | null => {
     const baseItems = [
       { icon: LayoutDashboard, label: "Dashboard", href: dashboardHref, roles: ["user", "admin", "recruiter", "mentor"] },
     ];
@@ -148,8 +148,8 @@ export default function DynamicDashboardNav() {
         { icon: Settings, label: "Settings", href: "/mentor/settings", roles: ["mentor"] },
       ];
     } else {
-      // Return grouped structure for users
-      return "grouped";
+      // Users use grouped navigation, return null for flat nav
+      return null;
     }
   };
 
@@ -168,6 +168,7 @@ export default function DynamicDashboardNav() {
         items: [
           { icon: User, label: "Profile", href: "/dashboard/profile" },
           { icon: Briefcase, label: "Jobs", href: "/dashboard/jobs" },
+          { icon: Heart, label: "Favorite Jobs", href: "/dashboard/jobs/favorites" },
           { icon: Map, label: "Roadmap", href: "/dashboard/roadmap" },
           { icon: BookOpen, label: "Resources", href: "/dashboard/resources" },
         ],
@@ -178,7 +179,6 @@ export default function DynamicDashboardNav() {
         icon: Folder,
         defaultExpanded: expandedSections.documents,
         items: [
-          { icon: FileCheck, label: "Resumes", href: "/dashboard/resumes" },
           { icon: FileTextIcon, label: "My CV", href: "/dashboard/cv" },
           { icon: FileText, label: "Portfolio", href: "/dashboard/portfolio" },
         ],
@@ -346,7 +346,7 @@ export default function DynamicDashboardNav() {
             </>
           ) : (
             // Non-user roles (admin, recruiter, mentor) - flat navigation
-            navItems.map((item) => (
+            navItems && navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -472,7 +472,7 @@ export default function DynamicDashboardNav() {
                   </div>
                 </>
               ) : (
-                navItems.map((item) => (
+                navItems && navItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}

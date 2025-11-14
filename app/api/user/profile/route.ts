@@ -41,6 +41,7 @@ export async function PATCH(request: NextRequest) {
     const allowedFields = [
       "fullName",
       "skills",
+      "tools",
       "targetRoles",
       "preferredTrack",
       "educationLevel",

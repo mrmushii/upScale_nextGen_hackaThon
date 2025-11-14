@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Lock, CheckCircle2, Trophy, Target } from "lucide-react";
+import { ArrowLeft, Lock, CheckCircle2, Trophy, Target, GraduationCap, ExternalLink, Star, Users, Clock } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import CodeEditor from "@/components/learning/CodeEditor";
 
 export default function InteractiveLearningPage({ params }: { params: { roadmapId: string } }) {
@@ -10,6 +11,8 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [suggestedCourses, setSuggestedCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
   const fetchRoadmap = async () => {
     try {
@@ -41,6 +44,33 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
       console.log("Exercises array:", currentStage?.exercises);
     }
   }, [roadmap, currentStageIndex, currentExerciseIndex]);
+
+  // Fetch suggested courses for current stage
+  useEffect(() => {
+    if (roadmap && roadmap.stages?.[currentStageIndex]) {
+      fetchSuggestedCourses();
+    }
+  }, [roadmap, currentStageIndex]);
+
+  const fetchSuggestedCourses = async () => {
+    if (!roadmap?.stages?.[currentStageIndex]) return;
+    
+    setLoadingCourses(true);
+    try {
+      const stage = roadmap.stages[currentStageIndex];
+      const searchQuery = `${stage.name} ${roadmap.targetRole || ""}`.trim();
+      
+      const response = await fetch(`/api/resources/udemy?search=${encodeURIComponent(searchQuery)}&pageSize=3`);
+      if (response.ok) {
+        const data = await response.json();
+        setSuggestedCourses(data.courses || []);
+      }
+    } catch (error) {
+      console.error("Error fetching suggested courses:", error);
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
 
   const handleExerciseComplete = async () => {
     try {
@@ -258,6 +288,123 @@ export default function InteractiveLearningPage({ params }: { params: { roadmapI
                   <p className="text-sm text-gray-500">
                     Stage exercises: {JSON.stringify(currentStage.exercises)}
                   </p>
+                </div>
+              )}
+
+              {/* Suggested Courses */}
+              {currentStage.suggestedCourses?.udemy && currentStage.suggestedCourses.udemy.length > 0 && (
+                <div className="bg-white rounded-3xl p-6 shadow-lg">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <GraduationCap className="text-primary-600" size={24} />
+                    Suggested Udemy Courses
+                  </h3>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {currentStage.suggestedCourses.udemy.map((courseTitle: string, index: number) => {
+                      // Try to find matching course from API results
+                      const matchingCourse = suggestedCourses.find((c: any) => 
+                        c.title.toLowerCase().includes(courseTitle.toLowerCase()) ||
+                        courseTitle.toLowerCase().includes(c.title.toLowerCase())
+                      );
+                      
+                      if (matchingCourse) {
+                        return (
+                          <Link
+                            key={index}
+                            href={`/dashboard/resources/udemy/${matchingCourse.id}`}
+                            className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-primary-500 hover:shadow-lg transition"
+                          >
+                            <div className="relative w-full h-32">
+                              <Image
+                                src={matchingCourse.thumbnail || "/placeholder-course.png"}
+                                alt={matchingCourse.title}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 100vw, 33vw"
+                              />
+                            </div>
+                            <div className="p-4">
+                              <h4 className="font-bold text-gray-900 text-sm line-clamp-2 mb-2">
+                                {matchingCourse.title}
+                              </h4>
+                              <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                                <span>{matchingCourse.rating.toFixed(1)}</span>
+                                <span>•</span>
+                                <Users size={12} />
+                                <span>{matchingCourse.students.toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-bold text-primary-600">{matchingCourse.price}</span>
+                                <ExternalLink size={14} className="text-gray-400" />
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      }
+                      
+                      // Fallback: show course title as text
+                      return (
+                        <div key={index} className="p-4 bg-primary-50 rounded-xl border-2 border-primary-200">
+                          <h4 className="font-semibold text-gray-900 text-sm mb-2">{courseTitle}</h4>
+                          <Link
+                            href={`/dashboard/resources?tab=udemy&search=${encodeURIComponent(courseTitle)}`}
+                            className="text-xs text-primary-600 hover:underline"
+                          >
+                            Find this course →
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* API Suggested Courses (if no roadmap suggestions) */}
+              {suggestedCourses.length > 0 && (!currentStage.suggestedCourses?.udemy || currentStage.suggestedCourses.udemy.length === 0) && (
+                <div className="bg-white rounded-3xl p-6 shadow-lg">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <GraduationCap className="text-primary-600" size={24} />
+                    Recommended Courses for {currentStage.name}
+                  </h3>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {suggestedCourses.map((course: any) => (
+                      <Link
+                        key={course.id}
+                        href={`/dashboard/resources/udemy/${course.id}`}
+                        className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-primary-500 hover:shadow-lg transition"
+                      >
+                        <div className="relative w-full h-32">
+                          <Image
+                            src={course.thumbnail || "/placeholder-course.png"}
+                            alt={course.title}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-bold text-gray-900 text-sm line-clamp-2 mb-2">
+                            {course.title}
+                          </h4>
+                          <p className="text-xs text-gray-600 mb-2 line-clamp-1">{course.instructor}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                            <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                            <span>{course.rating.toFixed(1)}</span>
+                            <span>•</span>
+                            <Users size={12} />
+                            <span>{course.students.toLocaleString()}</span>
+                            <span>•</span>
+                            <Clock size={12} />
+                            <span>{course.duration}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-primary-600">{course.price}</span>
+                            <ExternalLink size={14} className="text-gray-400" />
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
 

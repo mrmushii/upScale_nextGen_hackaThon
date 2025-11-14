@@ -23,6 +23,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import YouTubePlayer from "@/components/resources/YouTubePlayer";
 
 type ActiveTab =
@@ -152,19 +153,37 @@ export default function ResourcesPage() {
     setLoadingUdemy(true);
     try {
       const res = await fetch("/api/resources/udemy");
+      const data = await res.json();
+      
       if (res.ok) {
-        const data = await res.json();
-        setUdemyCourses(data.courses || []);
+        const courses = data.courses || [];
+        setUdemyCourses(courses);
         setUdemyMessage(data.message || null);
         setUdemyLoaded(true);
       } else {
-        setUdemyMessage("Unable to load Udemy courses right now.");
+        // Handle specific error cases
+        if (res.status === 403 || res.status === 401) {
+          setUdemyMessage(
+            data.message || 
+            "RapidAPI credentials not configured or invalid. " +
+            "Please check your RAPIDAPI_KEY in environment variables."
+          );
+        } else if (res.status === 429) {
+          setUdemyMessage(
+            "RapidAPI rate limit exceeded. Please try again later or upgrade your RapidAPI plan."
+          );
+        } else {
+          setUdemyMessage(data.message || "Unable to load Udemy courses right now.");
+        }
+        setUdemyCourses([]);
       }
     } catch (error) {
       console.error("Error loading Udemy courses:", error);
-      setUdemyMessage("Unable to load Udemy courses right now. Showing any cached results.");
+      setUdemyMessage("Unable to load Udemy courses right now. Please check your API configuration.");
+      setUdemyCourses([]);
     } finally {
       setLoadingUdemy(false);
+      setUdemyLoaded(true);
     }
   };
 
@@ -742,7 +761,7 @@ export default function ResourcesPage() {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <GraduationCap className="text-primary-600" size={28} />
-            Udemy Courses
+            Udemy Courses ({displayCourses.udemy.length})
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayCourses.udemy.map((course: UdemyCourse) => (
@@ -750,37 +769,51 @@ export default function ResourcesPage() {
                 key={course.id}
                 className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition"
               >
-                <div className="relative">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <button
-                    onClick={() => toggleBookmark(course, "udemy")}
-                    className="absolute top-2 left-2 p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-lg transition"
-                  >
-                    {bookmarks[course.id] ? (
-                      <BookmarkCheck size={20} className="text-yellow-400" />
-                    ) : (
-                      <Bookmark size={20} className="text-white" />
-                    )}
-                  </button>
-                  {progress[course.id]?.completed && (
-                    <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                      <CheckCircle2 size={14} />
-                      Completed
+                <Link href={`/dashboard/resources/udemy/${course.id}`}>
+                  <div className="relative cursor-pointer">
+                    <div className="relative w-full h-48">
+                      <Image
+                        src={course.thumbnail || "/placeholder-course.png"}
+                        alt={course.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
                     </div>
-                  )}
-                </div>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleBookmark(course, "udemy");
+                      }}
+                      className="absolute top-2 left-2 p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-lg transition z-10"
+                    >
+                      {bookmarks[course.id] ? (
+                        <BookmarkCheck size={20} className="text-yellow-400" />
+                      ) : (
+                        <Bookmark size={20} className="text-white" />
+                      )}
+                    </button>
+                    {progress[course.id]?.completed && (
+                      <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
+                        <CheckCircle2 size={14} />
+                        Completed
+                      </div>
+                    )}
+                  </div>
+                </Link>
                 <div className="p-6">
-                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{course.title}</h3>
+                  <Link href={`/dashboard/resources/udemy/${course.id}`}>
+                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 hover:text-primary-600 transition cursor-pointer">
+                      {course.title}
+                    </h3>
+                  </Link>
+                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{course.instructor}</p>
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">{course.description}</p>
 
                   <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
                     <span className="flex items-center gap-1">
                       <Star size={16} className="text-yellow-500 fill-yellow-500" />
-                      {course.rating}
+                      {course.rating.toFixed(1)}
                     </span>
                     <span className="flex items-center gap-1">
                       <Users size={16} />
@@ -818,15 +851,24 @@ export default function ResourcesPage() {
                     </div>
                   )}
 
-                  <a
-                    href={course.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium"
-                  >
-                    View on Udemy
-                    <ExternalLink size={18} />
-                  </a>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/dashboard/resources/udemy/${course.id}`}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+                    >
+                      View Details
+                    </Link>
+                    <a
+                      href={course.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium"
+                    >
+                      Enroll Now
+                      <ExternalLink size={18} />
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}

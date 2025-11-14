@@ -17,6 +17,7 @@ export interface IUser {
   experienceLevel: string;
   preferredTrack: string;
   targetRoles: string[];
+  tools?: string[];
   skills: string[];
   experience?: Array<{
     title: string;
@@ -159,6 +160,10 @@ const UserSchema = new Schema<IUser>(
       required: true,
     },
     targetRoles: {
+      type: [String],
+      default: [],
+    },
+    tools: {
       type: [String],
       default: [],
     },

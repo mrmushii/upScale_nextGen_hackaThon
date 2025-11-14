@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { extractTextFromPdf } from "./pdfParser";
+import { extractTextFromPdf } from "./pdfParser.js";
 import { generateTextUnified, generateObjectUnified, parseJSONFromText } from "./unifiedAI";
 import { z } from "zod";
 

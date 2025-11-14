@@ -19,7 +19,10 @@ Upscale is a full-stack career acceleration platform built with Next.js that hel
 ## 📚 Documentation
 
 - **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Complete file structure, paths, and workflow documentation
-- **[SETUP.md](./SETUP.md)** - Detailed setup and configuration guide
+- **[SETUP.md](./SETUP.md)** - Detailed setup and configuration guide (includes Resume Analyzer setup)
+- **[README_RESUME_ANALYZER.md](./README_RESUME_ANALYZER.md)** - Complete Resume Analyzer guide with API docs and usage
+- **[SKILL_EXTRACTION_ISSUE_LOG.md](./SKILL_EXTRACTION_ISSUE_LOG.md)** - Smart Skill Extraction issues, fixes, and edge cases
+- **[INTEGRATION_ISSUE_LOG.md](./INTEGRATION_ISSUE_LOG.md)** - Resume Analyzer integration log and decisions
 - **[PDF_PARSING_SETUP.md](./PDF_PARSING_SETUP.md)** - PDF parsing setup and troubleshooting
 - **[GEMINI_V1_DIRECT_SDK_REPORT.md](./GEMINI_V1_DIRECT_SDK_REPORT.md)** - AI service unification documentation
 
@@ -37,11 +40,12 @@ Upscale delivers an end-to-end journey for professionals and hiring teams:
   - Generate tailored interview question sets.
   - Launch real-time voice interviews via Vapi.
   - Capture transcripts automatically and receive structured feedback scored across key competencies.
-- **Resume Analyzer (new)** enables users to:
-  - Upload and store multiple resumes (PDF, DOC, DOCX).
-  - Analyze resumes against job descriptions for ATS compatibility.
-  - Receive detailed feedback on tone & style, content, structure, and skills alignment.
-  - Get actionable recommendations to improve resume performance.
+- **Smart Skill Extraction (integrated in Profile)** automatically detects skills, tools, and relevant roles from pasted CV text or the user profile. It's seamlessly integrated into the Profile page's CV/Resume Text section. When you paste your CV text, the extraction panel appears below, allowing you to:
+  - Extract skills, tools, and target roles using AI (Gemini) or heuristic fallback
+  - Review and edit extracted tags before applying
+  - See evidence for each detected item
+  - Apply extracted data directly to your profile with one click
+- **CV Generator** (`/dashboard/cv`) - Generate professional CVs from your profile data
 
 ---
 
@@ -114,7 +118,7 @@ For production use, install `pdf-parse` for server-side PDF text extraction:
 npm install pdf-parse @types/pdf-parse
 ```
 
-**Note:** The Resume Analyzer uses `pdf-parse` for extracting text from PDF resumes. See `PDF_PARSING_SETUP.md` for detailed setup, troubleshooting, and alternative solutions.
+**Note:** Smart Skill Extraction is integrated into the Profile page. Simply paste your CV/resume text in the Profile's "CV / Resume Text" section, and the extraction panel will appear automatically below it.
 
 ### 1. Clone the repository
 ```bash
@@ -198,23 +202,7 @@ The app runs at [http://localhost:3000](http://localhost:3000).
   - Automatic feedback creation scored across Communication, Technical Knowledge, Problem Solving, Cultural Fit, and Confidence.
 - Feedback pages summarise scores, comments, strengths, and suggested improvements for future practise.
 
-### 8. Resume Analyzer
-- Access at `/dashboard/resumes` for all authenticated users.
-- Features include:
-  - **Upload & Storage**: Upload resumes (PDF, DOC, DOCX) up to 20MB. All files are stored securely per user.
-  - **Resume Management**: View all uploaded resumes in a list with metadata (filename, size, upload date, analysis status).
-  - **ATS Analysis**: Provide a job description to analyze resume compatibility with Applicant Tracking Systems.
-  - **Detailed Feedback**: Receive scores and recommendations across:
-    - **ATS Score**: Overall compatibility with ATS systems
-    - **Tone & Style**: Professional writing quality and consistency
-    - **Content**: Relevance and completeness of information
-    - **Structure**: Organization and formatting
-    - **Skills**: Alignment with job requirements
-  - **Actions**: Download, delete, and re-analyze resumes as needed.
-- Upload resumes with optional job details (company name, job title, job description) for better analysis.
-- Analysis results are cached per resume, so you can view feedback without re-analyzing.
-
-### 9. Application Tracker (`/dashboard/applications`)
+### 8. Application Tracker (`/dashboard/applications`)
 - Track all job applications in one place, regardless of source (recruiter-posted or external Findwork jobs).
 - Features include:
   - **Unified Tracking**: All applications appear in the tracker, whether from internal recruiter jobs or external job boards.
@@ -275,37 +263,36 @@ The app runs at [http://localhost:3000](http://localhost:3000).
 
 > **Access control:** all AI interview endpoints enforce Pro/Ultimate tiers and require an authenticated session. Attempts from Basic users return HTTP 403 with guidance to upgrade.
 
-### Resume Analyzer
+### Smart Skill Extraction
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/resumes` | GET | List all resumes for the authenticated user |
-| `/api/resumes` | POST | Upload a new resume (multipart/form-data with file) |
-| `/api/resumes/[id]` | GET | Retrieve a specific resume's metadata |
-| `/api/resumes/[id]` | DELETE | Delete a resume and its associated files |
-| `/api/resumes/[id]/analyze` | POST | Analyze a resume against a job description (requires jobDescription in body) |
-| `/api/resumes/[id]/download` | GET | Download the original resume file |
+| `/api/skills/extract` | POST | Extract skills, tools, and roles from CV text, uploaded file, or user profile. Accepts JSON with `cvText`, `useProfile`, or `resumeId`, or multipart/form-data with `file` |
 
 **Request Examples:**
 
-**Upload Resume:**
+**Extract from CV Text:**
 ```bash
-curl -X POST /api/resumes \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@resume.pdf" \
-  -F "companyName=Google" \
-  -F "jobTitle=Senior Developer" \
-  -F "jobDescription=<job description text>"
-```
-
-**Analyze Resume:**
-```bash
-curl -X POST /api/resumes/{id}/analyze \
+curl -X POST /api/skills/extract \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "jobTitle": "Senior Frontend Developer",
-    "jobDescription": "We are looking for..."
+    "cvText": "Experienced software engineer with 5 years in React and Node.js..."
   }'
+```
+
+**Extract from Uploaded File:**
+```bash
+curl -X POST /api/skills/extract \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@resume.pdf"
+```
+
+**Extract from Profile:**
+```bash
+curl -X POST /api/skills/extract \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"useProfile": true}'
 ```
 
 **Response Example (Analysis):**
@@ -336,7 +323,7 @@ curl -X POST /api/resumes/{id}/analyze \
 }
 ```
 
-> **Security:** All resume endpoints require authentication. Users can only access their own resumes. File uploads are validated for type (PDF/DOC/DOCX) and size (max 20MB).
+> **Security:** All API endpoints require authentication. Users can only access their own data. File uploads are validated for type (PDF/DOC/DOCX) and size (max 20MB).
 
 For request/response examples, see the corresponding files under `app/api/**/route.ts`.
 
