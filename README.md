@@ -180,6 +180,10 @@ The app runs at [http://localhost:3000](http://localhost:3000).
 ### 5. Job Discovery (`/dashboard/jobs`)
 - Combines recruiter-submitted posts with Findwork listings, sorted by personalised relevance scores.
 - Filter by track, location, remote preference, and job type.
+- **Unified Job Details Flow**: All jobs (both recruiter-posted and Findwork API) now show a Job Details page before applying:
+  - Recruiter jobs: Show match score, full description, and allow in-app application
+  - Findwork jobs: Show job description, required skills, and track application before redirecting to external site
+  - Both job types are tracked in the Application Tracker for consistent management
 
 ### 6. Subscriptions & Billing
 - `/dashboard/payment` allows upgrades to Pro or Ultimate; billing preferences live in `/dashboard/settings?tab=subscription`.
@@ -209,6 +213,16 @@ The app runs at [http://localhost:3000](http://localhost:3000).
   - **Actions**: Download, delete, and re-analyze resumes as needed.
 - Upload resumes with optional job details (company name, job title, job description) for better analysis.
 - Analysis results are cached per resume, so you can view feedback without re-analyzing.
+
+### 9. Application Tracker (`/dashboard/applications`)
+- Track all job applications in one place, regardless of source (recruiter-posted or external Findwork jobs).
+- Features include:
+  - **Unified Tracking**: All applications appear in the tracker, whether from internal recruiter jobs or external job boards.
+  - **Status Management**: Update application status (Applied, Interview, Offer, Rejected, Accepted).
+  - **External Job Support**: External applications show an "External" badge and link to the original job posting.
+  - **Notes & Dates**: Add notes, follow-up dates, and interview dates to each application.
+  - **Manual Entry**: Manually add applications for jobs applied outside the platform.
+- Applications are automatically tracked when you apply through the platform, or can be added manually.
 
 ---
 
@@ -245,8 +259,10 @@ The app runs at [http://localhost:3000](http://localhost:3000).
 | Endpoint | Method | Notes |
 |----------|--------|-------|
 | `/api/jobs/unified` | GET | Combined recruiter + Findwork job feed |
+| `/api/jobs/[id]` | GET | Unified job details (handles both recruiter and Findwork jobs) |
 | `/api/jobs/match` | GET | Top job matches for dashboard widgets |
 | `/api/recruiter/my-jobs` | GET | Recruiter vacancy management |
+| `/api/applications` | GET / POST | Application tracker (supports both internal and external jobs) |
 
 ### AI Mock Interviews (Pro & Ultimate only)
 | Endpoint | Method | Description |
