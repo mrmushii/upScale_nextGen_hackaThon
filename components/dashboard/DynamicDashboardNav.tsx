@@ -25,6 +25,8 @@ import {
   BookOpen,
   Sparkles,
   FileCheck,
+  Bot,
+  FileText as FileTextIcon,
 } from "lucide-react";
 import NotificationDropdown from "./NotificationDropdown";
 
@@ -109,6 +111,8 @@ export default function DynamicDashboardNav() {
           : []),
         { icon: BookOpen, label: "Resources", href: "/dashboard/resources", roles: ["user"] },
         { icon: FileCheck, label: "Resumes", href: "/dashboard/resumes", roles: ["user"] },
+        { icon: FileTextIcon, label: "My CV", href: "/dashboard/cv", roles: ["user"] },
+        { icon: Bot, label: "CareerBot", href: "/dashboard/careerbot", roles: ["user"] },
         { icon: FileText, label: "Portfolio", href: "/dashboard/portfolio", roles: ["user"] },
         { icon: Users, label: "Mentors", href: "/dashboard/mentors", roles: ["user"] },
         { icon: Calendar, label: "My Sessions", href: "/dashboard/mentors/my-sessions", roles: ["user"] },

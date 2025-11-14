@@ -45,6 +45,7 @@ export async function PATCH(request: NextRequest) {
       "preferredTrack",
       "educationLevel",
       "educationDepartment",
+      "education", // NEW: Education history array
       "experienceLevel",
       "city",
       "country",
@@ -79,10 +80,18 @@ export async function PATCH(request: NextRequest) {
             }
           }
           // If empty, don't include it in updateData
+        } else if (field === "education" && Array.isArray(body[field])) {
+          // Education array - no date conversion needed, just store as is
+          updateData[field] = body[field];
         } else if (field === "experience" && Array.isArray(body[field])) {
-          // Convert experience dates
+          // Convert experience dates and ensure description is array
           updateData[field] = body[field].map((exp: any) => ({
             ...exp,
+            description: Array.isArray(exp.description) 
+              ? exp.description 
+              : exp.description 
+              ? [exp.description] 
+              : [],
             startDate: exp.startDate ? new Date(exp.startDate) : undefined,
             endDate: exp.endDate ? new Date(exp.endDate) : undefined,
           }));

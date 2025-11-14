@@ -71,11 +71,81 @@ export default function ProfileCompletionPage() {
 
     // Additional
     languages: [] as string[],
+    
+    // Education History (NEW)
+    education: [] as Array<{
+      degree: string;
+      institution: string;
+      field: string;
+      year: string;
+      gpa?: string;
+    }>,
+    
+    // Work Experience (NEW - with array description)
+    experience: [] as Array<{
+      title: string;
+      company: string;
+      location?: string;
+      description: string[];  // Array of bullet points
+      startDate: string;
+      endDate?: string;
+      current: boolean;
+      technologies?: string[];
+      achievements?: string[];
+    }>,
+    
+    // Projects Portfolio (NEW)
+    projects: [] as Array<{
+      title: string;
+      description: string;
+      technologies: string[];
+      url?: string;
+      githubUrl?: string;
+      highlights?: string[];
+    }>,
   });
 
   const [skillInput, setSkillInput] = useState("");
   const [targetRoleInput, setTargetRoleInput] = useState("");
   const [languageInput, setLanguageInput] = useState("");
+  
+  // Education form state
+  const [showAddEducation, setShowAddEducation] = useState(false);
+  const [newEducation, setNewEducation] = useState({
+    degree: "",
+    institution: "",
+    field: "",
+    year: "",
+    gpa: "",
+  });
+  
+  // Experience form state
+  const [showAddExperience, setShowAddExperience] = useState(false);
+  const [newExperience, setNewExperience] = useState({
+    title: "",
+    company: "",
+    location: "",
+    description: [] as string[],
+    startDate: "",
+    endDate: "",
+    current: false,
+    technologies: [] as string[],
+    achievements: [] as string[],
+  });
+  const [expDescriptionInput, setExpDescriptionInput] = useState("");
+  const [expTechInput, setExpTechInput] = useState("");
+  
+  // Project form state
+  const [showAddProject, setShowAddProject] = useState(false);
+  const [newProject, setNewProject] = useState({
+    title: "",
+    description: "",
+    technologies: [] as string[],
+    url: "",
+    githubUrl: "",
+    highlights: [] as string[],
+  });
+  const [projectTechInput, setProjectTechInput] = useState("");
 
   // Calculate progress in real-time based on current formData
   const calculateRealTimeProgress = () => {
@@ -199,6 +269,10 @@ export default function ProfileCompletionPage() {
           portfolio: user.portfolio || "",
           website: user.website || "",
           languages: user.languages || [],
+          // Ensure these array fields are present to avoid runtime errors
+          education: user.education || [],
+          experience: user.experience || [],
+          projects: user.projects || [],
         });
       }
     } catch (error) {
@@ -333,6 +407,141 @@ export default function ProfileCompletionPage() {
     });
   };
 
+  // Education History Functions
+  const addEducation = () => {
+    if (newEducation.degree && newEducation.institution && newEducation.field && newEducation.year) {
+      setFormData({
+        ...formData,
+        education: [...formData.education, { ...newEducation }],
+      });
+      setNewEducation({ degree: "", institution: "", field: "", year: "", gpa: "" });
+      setShowAddEducation(false);
+    }
+  };
+
+  const removeEducation = (index: number) => {
+    setFormData({
+      ...formData,
+      education: formData.education.filter((_, i) => i !== index),
+    });
+  };
+
+  // Experience Functions
+  const addExpDescription = () => {
+    if (expDescriptionInput.trim()) {
+      setNewExperience({
+        ...newExperience,
+        description: [...newExperience.description, expDescriptionInput.trim()],
+      });
+      setExpDescriptionInput("");
+    }
+  };
+
+  const removeExpDescription = (index: number) => {
+    setNewExperience({
+      ...newExperience,
+      description: newExperience.description.filter((_, i) => i !== index),
+    });
+  };
+
+  const addExpTech = () => {
+    if (expTechInput.trim() && !newExperience.technologies?.includes(expTechInput.trim())) {
+      setNewExperience({
+        ...newExperience,
+        technologies: [...(newExperience.technologies || []), expTechInput.trim()],
+      });
+      setExpTechInput("");
+    }
+  };
+
+  const removeExpTech = (tech: string) => {
+    setNewExperience({
+      ...newExperience,
+      technologies: newExperience.technologies?.filter((t) => t !== tech) || [],
+    });
+  };
+
+  const addExperience = () => {
+    if (newExperience.title && newExperience.company && newExperience.description.length > 0) {
+      setFormData({
+        ...formData,
+        experience: [
+          ...formData.experience,
+          {
+            ...newExperience,
+            startDate: newExperience.startDate || "",
+            endDate: newExperience.current ? undefined : newExperience.endDate,
+          },
+        ],
+      });
+      setNewExperience({
+        title: "",
+        company: "",
+        location: "",
+        description: [],
+        startDate: "",
+        endDate: "",
+        current: false,
+        technologies: [],
+        achievements: [],
+      });
+      setExpDescriptionInput("");
+      setExpTechInput("");
+      setShowAddExperience(false);
+    }
+  };
+
+  const removeExperience = (index: number) => {
+    setFormData({
+      ...formData,
+      experience: formData.experience.filter((_, i) => i !== index),
+    });
+  };
+
+  // Project Functions
+  const addProjectTech = () => {
+    if (projectTechInput.trim() && !newProject.technologies.includes(projectTechInput.trim())) {
+      setNewProject({
+        ...newProject,
+        technologies: [...newProject.technologies, projectTechInput.trim()],
+      });
+      setProjectTechInput("");
+    }
+  };
+
+  const removeProjectTech = (tech: string) => {
+    setNewProject({
+      ...newProject,
+      technologies: newProject.technologies.filter((t) => t !== tech),
+    });
+  };
+
+  const addProject = () => {
+    if (newProject.title && newProject.description && newProject.technologies.length > 0) {
+      setFormData({
+        ...formData,
+        projects: [...formData.projects, { ...newProject }],
+      });
+      setNewProject({
+        title: "",
+        description: "",
+        technologies: [],
+        url: "",
+        githubUrl: "",
+        highlights: [],
+      });
+      setProjectTechInput("");
+      setShowAddProject(false);
+    }
+  };
+
+  const removeProject = (index: number) => {
+    setFormData({
+      ...formData,
+      projects: formData.projects.filter((_, i) => i !== index),
+    });
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent, action: () => void) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -376,18 +585,61 @@ export default function ProfileCompletionPage() {
         </p>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress Bar with Tier Breakdown */}
       <div className="bg-white rounded-3xl p-6 shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <span className="font-semibold text-gray-900">Profile Completion</span>
           <span className="text-2xl font-bold text-primary-600">{completionPercentage}%</span>
         </div>
-        <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-4 bg-gray-100 rounded-full overflow-hidden mb-4">
           <div
             className="h-full bg-gradient-to-r from-primary-500 to-coral-500 rounded-full transition-all duration-500"
             style={{ width: `${completionPercentage}%` }}
           />
         </div>
+        
+        {/* Tier Breakdown */}
+        {completion && (
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="bg-blue-50 rounded-lg p-3">
+              <div className="text-xs font-semibold text-blue-700 mb-1">Tier 1: Core (60%)</div>
+              <div className="text-sm text-blue-900">
+                {completion.tier1Complete || 0}/{completion.tier1Total || 9} fields
+              </div>
+              <div className="h-2 bg-blue-200 rounded-full mt-2 overflow-hidden">
+                <div 
+                  className="h-full bg-blue-600 rounded-full transition-all"
+                  style={{ width: `${((completion.tier1Complete || 0) / (completion.tier1Total || 9)) * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-3">
+              <div className="text-xs font-semibold text-green-700 mb-1">Tier 2: Enhancement (30%)</div>
+              <div className="text-sm text-green-900">
+                {completion.tier2Complete || 0}/{completion.tier2Total || 4} fields
+              </div>
+              <div className="h-2 bg-green-200 rounded-full mt-2 overflow-hidden">
+                <div 
+                  className="h-full bg-green-600 rounded-full transition-all"
+                  style={{ width: `${((completion.tier2Complete || 0) / (completion.tier2Total || 4)) * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <div className="text-xs font-semibold text-gray-700 mb-1">Tier 3: Optional (10%)</div>
+              <div className="text-sm text-gray-900">
+                {completion.tier3Complete || 0}/{completion.tier3Total || 7} fields
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                <div 
+                  className="h-full bg-gray-600 rounded-full transition-all"
+                  style={{ width: `${((completion.tier3Complete || 0) / (completion.tier3Total || 7)) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        
         {completion?.missingFields && completion.missingFields.length > 0 && (
           <p className="text-sm text-gray-600 mt-3">
             Missing required fields: {completion.missingFields.slice(0, 5).join(", ")}
@@ -703,12 +955,13 @@ export default function ProfileCompletionPage() {
 
             {/* Education & Experience */}
             {activeSection === "education" && (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                   <GraduationCap className="text-primary-600" size={28} />
                   Education & Experience
                 </h2>
 
+                {/* Basic Education & Experience Level */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -745,6 +998,528 @@ export default function ProfileCompletionPage() {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                {/* Education History Section */}
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">Education History</h3>
+                    <span className="text-sm text-gray-500">Strongly Recommended</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Add your educational background. This improves CV quality and job matching.
+                  </p>
+
+                  {formData.education.length > 0 && (
+                    <div className="space-y-4 mb-4">
+                      {formData.education.map((edu, index) => (
+                        <div key={index} className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{edu.degree} in {edu.field}</h4>
+                              <p className="text-gray-600">{edu.institution}</p>
+                              <p className="text-sm text-gray-500">Year: {edu.year}</p>
+                              {edu.gpa && <p className="text-sm text-gray-500">GPA: {edu.gpa}</p>}
+                            </div>
+                            <button
+                              onClick={() => removeEducation(index)}
+                              className="text-red-600 hover:text-red-700 font-semibold"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!showAddEducation ? (
+                    <button
+                      onClick={() => setShowAddEducation(true)}
+                      className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition text-gray-600 font-semibold"
+                    >
+                      + Add Education Entry
+                    </button>
+                  ) : (
+                    <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+                      <h4 className="font-semibold text-gray-900 mb-4">Add Education</h4>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Degree *</label>
+                          <select
+                            value={newEducation.degree}
+                            onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                          >
+                            <option value="">Select Degree</option>
+                            <option value="High School">High School</option>
+                            <option value="Associate's">Associate's</option>
+                            <option value="Bachelor's">Bachelor's</option>
+                            <option value="Master's">Master's</option>
+                            <option value="PhD">PhD</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Institution *</label>
+                          <input
+                            type="text"
+                            value={newEducation.institution}
+                            onChange={(e) => setNewEducation({ ...newEducation, institution: e.target.value })}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                            placeholder="University/College name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Field of Study *</label>
+                          <input
+                            type="text"
+                            value={newEducation.field}
+                            onChange={(e) => setNewEducation({ ...newEducation, field: e.target.value })}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                            placeholder="e.g., Computer Science"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Year *</label>
+                          <input
+                            type="text"
+                            value={newEducation.year}
+                            onChange={(e) => setNewEducation({ ...newEducation, year: e.target.value })}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                            placeholder="e.g., 2020 or 2018-2022"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">GPA (Optional)</label>
+                          <input
+                            type="text"
+                            value={newEducation.gpa}
+                            onChange={(e) => setNewEducation({ ...newEducation, gpa: e.target.value })}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                            placeholder="e.g., 3.8/4.0"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={addEducation}
+                          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold"
+                        >
+                          Add Education
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowAddEducation(false);
+                            setNewEducation({ degree: "", institution: "", field: "", year: "", gpa: "" });
+                          }}
+                          className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-semibold"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Work Experience Section */}
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">Work Experience</h3>
+                    <span className="text-sm text-gray-500">Strongly Recommended</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Add your work experience with detailed descriptions. This significantly improves CV quality.
+                  </p>
+
+                  {formData.experience.length > 0 && (
+                    <div className="space-y-4 mb-4">
+                      {formData.experience.map((exp, index) => (
+                        <div key={index} className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{exp.title}</h4>
+                              <p className="text-gray-600">{exp.company}</p>
+                              {exp.location && <p className="text-sm text-gray-500">{exp.location}</p>}
+                              <p className="text-sm text-gray-500">
+                                {exp.startDate} - {exp.current ? "Present" : exp.endDate || "N/A"}
+                              </p>
+                              {exp.description && exp.description.length > 0 && (
+                                <ul className="mt-2 list-disc list-inside text-sm text-gray-700">
+                                  {exp.description.map((desc, i) => (
+                                    <li key={i}>{desc}</li>
+                                  ))}
+                                </ul>
+                              )}
+                              {exp.technologies && exp.technologies.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {exp.technologies.map((tech, i) => (
+                                    <span key={i} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                                      {tech}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => removeExperience(index)}
+                              className="text-red-600 hover:text-red-700 font-semibold ml-4"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!showAddExperience ? (
+                    <button
+                      onClick={() => setShowAddExperience(true)}
+                      className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition text-gray-600 font-semibold"
+                    >
+                      + Add Work Experience
+                    </button>
+                  ) : (
+                    <div className="bg-green-50 rounded-xl p-6 border-2 border-green-200">
+                      <h4 className="font-semibold text-gray-900 mb-4">Add Work Experience</h4>
+                      <div className="space-y-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Job Title *</label>
+                            <input
+                              type="text"
+                              value={newExperience.title}
+                              onChange={(e) => setNewExperience({ ...newExperience, title: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                              placeholder="e.g., Frontend Developer"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Company *</label>
+                            <input
+                              type="text"
+                              value={newExperience.company}
+                              onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                              placeholder="Company name"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+                            <input
+                              type="text"
+                              value={newExperience.location}
+                              onChange={(e) => setNewExperience({ ...newExperience, location: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                              placeholder="City, Country"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date *</label>
+                            <input
+                              type="date"
+                              value={newExperience.startDate}
+                              onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
+                            <input
+                              type="date"
+                              value={newExperience.endDate}
+                              onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
+                              disabled={newExperience.current}
+                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg disabled:bg-gray-100"
+                            />
+                          </div>
+                          <div className="flex items-center pt-6">
+                            <input
+                              type="checkbox"
+                              checked={newExperience.current}
+                              onChange={(e) => setNewExperience({ ...newExperience, current: e.target.checked })}
+                              className="w-4 h-4 text-primary-600"
+                            />
+                            <label className="ml-2 text-sm font-semibold text-gray-700">Current Position</label>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Description/Bullet Points * (3-5 recommended)
+                          </label>
+                          <div className="flex gap-2 mb-2">
+                            <input
+                              type="text"
+                              value={expDescriptionInput}
+                              onChange={(e) => setExpDescriptionInput(e.target.value)}
+                              onKeyPress={(e) => e.key === "Enter" && addExpDescription()}
+                              className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg"
+                              placeholder="e.g., Developed responsive web applications using React"
+                            />
+                            <button
+                              onClick={addExpDescription}
+                              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          {newExperience.description.length > 0 && (
+                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 bg-white p-3 rounded-lg mb-2">
+                              {newExperience.description.map((desc, i) => (
+                                <li key={i} className="flex justify-between items-center">
+                                  <span>{desc}</span>
+                                  <button
+                                    onClick={() => removeExpDescription(i)}
+                                    className="text-red-600 hover:text-red-700 ml-2"
+                                  >
+                                    ×
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Technologies Used</label>
+                          <div className="flex gap-2 mb-2">
+                            <input
+                              type="text"
+                              value={expTechInput}
+                              onChange={(e) => setExpTechInput(e.target.value)}
+                              onKeyPress={(e) => e.key === "Enter" && addExpTech()}
+                              className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg"
+                              placeholder="e.g., React, Node.js"
+                            />
+                            <button
+                              onClick={addExpTech}
+                              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          {newExperience.technologies && newExperience.technologies.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {newExperience.technologies.map((tech, i) => (
+                                <span
+                                  key={i}
+                                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                                >
+                                  {tech}
+                                  <button
+                                    onClick={() => removeExpTech(tech)}
+                                    className="hover:text-blue-900"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={addExperience}
+                            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold"
+                          >
+                            Add Experience
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowAddExperience(false);
+                              setNewExperience({
+                                title: "",
+                                company: "",
+                                location: "",
+                                description: [],
+                                startDate: "",
+                                endDate: "",
+                                current: false,
+                                technologies: [],
+                                achievements: [],
+                              });
+                            }}
+                            className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-semibold"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Projects Portfolio Section */}
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">Projects Portfolio</h3>
+                    <span className="text-sm text-gray-500">Strongly Recommended</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Add your projects to showcase your skills. This improves CV quality and portfolio.
+                  </p>
+
+                  {formData.projects.length > 0 && (
+                    <div className="space-y-4 mb-4">
+                      {formData.projects.map((project, index) => (
+                        <div key={index} className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{project.title}</h4>
+                              <p className="text-gray-600 text-sm mt-1">{project.description}</p>
+                              {project.technologies && project.technologies.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {project.technologies.map((tech, i) => (
+                                    <span key={i} className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                                      {tech}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="flex gap-4 mt-2 text-sm">
+                                {project.url && (
+                                  <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    Live Demo
+                                  </a>
+                                )}
+                                {project.githubUrl && (
+                                  <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:underline">
+                                    GitHub
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeProject(index)}
+                              className="text-red-600 hover:text-red-700 font-semibold ml-4"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!showAddProject ? (
+                    <button
+                      onClick={() => setShowAddProject(true)}
+                      className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition text-gray-600 font-semibold"
+                    >
+                      + Add Project
+                    </button>
+                  ) : (
+                    <div className="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
+                      <h4 className="font-semibold text-gray-900 mb-4">Add Project</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Project Title *</label>
+                          <input
+                            type="text"
+                            value={newProject.title}
+                            onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                            placeholder="e.g., E-Commerce Platform"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Description *</label>
+                          <textarea
+                            value={newProject.description}
+                            onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                            rows={3}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                            placeholder="Describe your project..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Technologies Used *</label>
+                          <div className="flex gap-2 mb-2">
+                            <input
+                              type="text"
+                              value={projectTechInput}
+                              onChange={(e) => setProjectTechInput(e.target.value)}
+                              onKeyPress={(e) => e.key === "Enter" && addProjectTech()}
+                              className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg"
+                              placeholder="e.g., React, Node.js, MongoDB"
+                            />
+                            <button
+                              onClick={addProjectTech}
+                              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          {newProject.technologies.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {newProject.technologies.map((tech, i) => (
+                                <span
+                                  key={i}
+                                  className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
+                                >
+                                  {tech}
+                                  <button
+                                    onClick={() => removeProjectTech(tech)}
+                                    className="hover:text-purple-900"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Live URL</label>
+                            <input
+                              type="url"
+                              value={newProject.url}
+                              onChange={(e) => setNewProject({ ...newProject, url: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                              placeholder="https://yourproject.com"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">GitHub URL</label>
+                            <input
+                              type="url"
+                              value={newProject.githubUrl}
+                              onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg"
+                              placeholder="https://github.com/username/project"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={addProject}
+                            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold"
+                          >
+                            Add Project
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowAddProject(false);
+                              setNewProject({
+                                title: "",
+                                description: "",
+                                technologies: [],
+                                url: "",
+                                githubUrl: "",
+                                highlights: [],
+                              });
+                            }}
+                            className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-semibold"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

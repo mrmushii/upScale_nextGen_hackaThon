@@ -31,11 +31,13 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [completion, setCompletion] = useState<any>(null);
   const [formData, setFormData] = useState<any>({
     fullName: "",
     email: "",
     educationLevel: "",
     educationDepartment: "",
+    education: [] as any[],
     experienceLevel: "",
     preferredTrack: "",
     skills: [] as string[],
@@ -56,24 +58,43 @@ export default function UserProfilePage() {
   const [newExperience, setNewExperience] = useState({
     title: "",
     company: "",
-    description: "",
+    location: "",
+    description: "" as string | string[],
     startDate: "",
     endDate: "",
     current: false,
+    technologies: [] as string[],
   });
+  const [expDescriptionInput, setExpDescriptionInput] = useState("");
+  const [expTechInput, setExpTechInput] = useState("");
   const [newProject, setNewProject] = useState({
     title: "",
     description: "",
     technologies: [] as string[],
     url: "",
+    githubUrl: "",
     startDate: "",
     endDate: "",
+    highlights: [] as string[],
   });
   const [techInput, setTechInput] = useState("");
 
   useEffect(() => {
     fetchProfile();
+    fetchCompletion();
   }, []);
+
+  const fetchCompletion = async () => {
+    try {
+      const response = await fetch("/api/user/profile/completion");
+      if (response.ok) {
+        const data = await response.json();
+        setCompletion(data.completion);
+      }
+    } catch (error) {
+      console.error("Error fetching completion:", error);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -87,12 +108,16 @@ export default function UserProfilePage() {
           email: data.user.email || "",
           educationLevel: data.user.educationLevel || "",
           educationDepartment: data.user.educationDepartment || "",
+          education: data.user.education || [],
           experienceLevel: data.user.experienceLevel || "",
           preferredTrack: data.user.preferredTrack || "",
           skills: data.user.skills || [],
           targetRoles: data.user.targetRoles || [],
           careerInterests: data.user.careerInterests || [],
-          experience: data.user.experience || [],
+          experience: (data.user.experience || []).map((exp: any) => ({
+            ...exp,
+            description: Array.isArray(exp.description) ? exp.description : exp.description ? [exp.description] : [],
+          })),
           projects: data.user.projects || [],
           cvText: data.user.cvText || "",
           country: data.user.country || "",
@@ -122,6 +147,7 @@ export default function UserProfilePage() {
         setEditing(false);
         toast.success("Profile updated successfully!");
         await fetchProfile();
+        await fetchCompletion();
       } else {
         const data = await response.json();
         toast.error(data.error || "Failed to save profile");
@@ -302,6 +328,42 @@ export default function UserProfilePage() {
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">My Profile</h1>
           <p className="text-gray-600 mt-2">View and manage your profile information</p>
+          
+          {/* Profile Completion Status */}
+          {completion && (
+            <div className="mt-4 bg-white rounded-xl p-4 shadow-sm border-2 border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-semibold text-gray-900">Profile Completion</span>
+                <span className="text-2xl font-bold text-primary-600">{completion.percentage || 0}%</span>
+              </div>
+              <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-3">
+                <div
+                  className="h-full bg-gradient-to-r from-primary-500 to-coral-500 rounded-full transition-all duration-500"
+                  style={{ width: `${completion.percentage || 0}%` }}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-xs">
+                <div className="bg-blue-50 rounded p-2">
+                  <div className="font-semibold text-blue-700">Tier 1: Core</div>
+                  <div className="text-blue-900">{completion.tier1Complete || 0}/{completion.tier1Total || 9}</div>
+                </div>
+                <div className="bg-green-50 rounded p-2">
+                  <div className="font-semibold text-green-700">Tier 2: Enhancement</div>
+                  <div className="text-green-900">{completion.tier2Complete || 0}/{completion.tier2Total || 4}</div>
+                </div>
+                <div className="bg-gray-50 rounded p-2">
+                  <div className="font-semibold text-gray-700">Tier 3: Optional</div>
+                  <div className="text-gray-900">{completion.tier3Complete || 0}/{completion.tier3Total || 7}</div>
+                </div>
+              </div>
+              {completion.missingFields && completion.missingFields.length > 0 && (
+                <p className="text-xs text-gray-600 mt-2">
+                  Missing: {completion.missingFields.slice(0, 3).join(", ")}
+                  {completion.missingFields.length > 3 && ` +${completion.missingFields.length - 3} more`}
+                </p>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex gap-3">
           {editing ? (
@@ -530,6 +592,49 @@ export default function UserProfilePage() {
             </div>
           </div>
 
+          {/* Education History */}
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <GraduationCap size={24} className="text-primary-600" />
+              Education History
+            </h3>
+            {editing ? (
+              <div className="space-y-4">
+                {formData.education && formData.education.length > 0 ? (
+                  formData.education.map((edu: any, index: number) => (
+                    <div key={index} className="p-4 border-2 border-gray-200 rounded-xl">
+                      <div className="font-bold text-gray-900">{edu.degree} {edu.field ? `in ${edu.field}` : ""}</div>
+                      <div className="text-gray-600">{edu.institution}</div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {edu.year && `Year: ${edu.year}`}
+                        {edu.gpa && ` | GPA: ${edu.gpa}`}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No education history added. Add it in the profile completion page.</p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {profile.education && profile.education.length > 0 ? (
+                  profile.education.map((edu: any, index: number) => (
+                    <div key={index} className="p-4 bg-gray-50 rounded-xl">
+                      <div className="font-bold text-gray-900">{edu.degree} {edu.field ? `in ${edu.field}` : ""}</div>
+                      <div className="text-gray-600">{edu.institution}</div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {edu.year && `Year: ${edu.year}`}
+                        {edu.gpa && ` | GPA: ${edu.gpa}`}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No education history added yet</p>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Skills */}
           <div>
             <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -747,7 +852,24 @@ export default function UserProfilePage() {
                             ? new Date(exp.endDate).toLocaleDateString()
                             : "End date"}
                         </div>
-                        <p className="text-gray-700 mt-2">{exp.description}</p>
+                        {Array.isArray(exp.description) && exp.description.length > 0 ? (
+                          <ul className="list-disc list-inside text-gray-700 mt-2 space-y-1">
+                            {exp.description.map((desc: string, i: number) => (
+                              <li key={i}>{desc}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-700 mt-2">{exp.description || "No description"}</p>
+                        )}
+                        {exp.technologies && exp.technologies.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {exp.technologies.map((tech: string, i: number) => (
+                              <span key={i} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() => removeExperience(index)}
@@ -775,13 +897,135 @@ export default function UserProfilePage() {
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
                         placeholder="Company"
                       />
-                      <textarea
-                        value={newExperience.description}
-                        onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
-                        rows={3}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
-                        placeholder="Description *"
-                      />
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Description/Bullet Points * (Add multiple)
+                        </label>
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={expDescriptionInput}
+                            onChange={(e) => setExpDescriptionInput(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const desc = Array.isArray(newExperience.description) 
+                                  ? newExperience.description 
+                                  : newExperience.description 
+                                  ? [newExperience.description] 
+                                  : [];
+                                setNewExperience({ ...newExperience, description: [...desc, expDescriptionInput.trim()] });
+                                setExpDescriptionInput("");
+                              }
+                            }}
+                            className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                            placeholder="e.g., Developed responsive web applications"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const desc = Array.isArray(newExperience.description) 
+                                ? newExperience.description 
+                                : newExperience.description 
+                                ? [newExperience.description] 
+                                : [];
+                              setNewExperience({ ...newExperience, description: [...desc, expDescriptionInput.trim()] });
+                              setExpDescriptionInput("");
+                            }}
+                            className="px-4 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
+                          >
+                            Add
+                          </button>
+                        </div>
+                        {Array.isArray(newExperience.description) && newExperience.description.length > 0 && (
+                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg mb-2">
+                            {newExperience.description.map((desc: string, i: number) => (
+                              <li key={i} className="flex justify-between items-center">
+                                <span>{desc}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const desc = newExperience.description as string[];
+                                    setNewExperience({ ...newExperience, description: desc.filter((_, idx) => idx !== i) });
+                                  }}
+                                  className="text-red-600 hover:text-red-700 ml-2"
+                                >
+                                  ×
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Technologies Used</label>
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={expTechInput}
+                            onChange={(e) => setExpTechInput(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const techs = newExperience.technologies || [];
+                                if (!techs.includes(expTechInput.trim())) {
+                                  setNewExperience({ ...newExperience, technologies: [...techs, expTechInput.trim()] });
+                                  setExpTechInput("");
+                                }
+                              }
+                            }}
+                            className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                            placeholder="e.g., React, Node.js"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const techs = newExperience.technologies || [];
+                              if (!techs.includes(expTechInput.trim())) {
+                                setNewExperience({ ...newExperience, technologies: [...techs, expTechInput.trim()] });
+                                setExpTechInput("");
+                              }
+                            }}
+                            className="px-4 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
+                          >
+                            Add
+                          </button>
+                        </div>
+                        {newExperience.technologies && newExperience.technologies.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {newExperience.technologies.map((tech: string, i: number) => (
+                              <span
+                                key={i}
+                                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                              >
+                                {tech}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setNewExperience({ 
+                                      ...newExperience, 
+                                      technologies: newExperience.technologies?.filter((t) => t !== tech) || [] 
+                                    });
+                                  }}
+                                  className="hover:text-blue-900"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+                        <input
+                          type="text"
+                          value={newExperience.location}
+                          onChange={(e) => setNewExperience({ ...newExperience, location: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                          placeholder="City, Country"
+                        />
+                      </div>
                       <div className="grid md:grid-cols-2 gap-4">
                         <input
                           type="date"
@@ -823,11 +1067,15 @@ export default function UserProfilePage() {
                             setNewExperience({
                               title: "",
                               company: "",
+                              location: "",
                               description: "",
                               startDate: "",
                               endDate: "",
                               current: false,
+                              technologies: [],
                             });
+                            setExpDescriptionInput("");
+                            setExpTechInput("");
                           }}
                           className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-semibold"
                         >
@@ -864,7 +1112,24 @@ export default function UserProfilePage() {
                           ? new Date(exp.endDate).toLocaleDateString()
                           : "End date"}
                       </div>
-                      <p className="text-gray-700 mt-2">{exp.description}</p>
+                      {Array.isArray(exp.description) && exp.description.length > 0 ? (
+                        <ul className="list-disc list-inside text-gray-700 mt-2 space-y-1">
+                          {exp.description.map((desc: string, i: number) => (
+                            <li key={i}>{desc}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-700 mt-2">{exp.description || "No description"}</p>
+                      )}
+                      {exp.technologies && exp.technologies.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {exp.technologies.map((tech: string, i: number) => (
+                            <span key={i} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -887,16 +1152,28 @@ export default function UserProfilePage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="font-bold text-gray-900">{project.title}</div>
-                        {project.url && (
-                          <a
-                            href={project.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary-600 hover:underline text-sm"
-                          >
-                            {project.url}
-                          </a>
-                        )}
+                        <div className="flex gap-4 mt-2 text-sm">
+                          {project.url && (
+                            <a
+                              href={project.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              Live Demo
+                            </a>
+                          )}
+                          {project.githubUrl && (
+                            <a
+                              href={project.githubUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-600 hover:underline"
+                            >
+                              GitHub
+                            </a>
+                          )}
+                        </div>
                         <p className="text-gray-700 mt-2">{project.description}</p>
                         {project.technologies && project.technologies.length > 0 && (
                           <div className="flex flex-wrap gap-2 mt-2">
@@ -937,13 +1214,22 @@ export default function UserProfilePage() {
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
                         placeholder="Project Description *"
                       />
-                      <input
-                        type="url"
-                        value={newProject.url}
-                        onChange={(e) => setNewProject({ ...newProject, url: e.target.value })}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
-                        placeholder="Project URL (optional)"
-                      />
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <input
+                          type="url"
+                          value={newProject.url}
+                          onChange={(e) => setNewProject({ ...newProject, url: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                          placeholder="Live URL (optional)"
+                        />
+                        <input
+                          type="url"
+                          value={newProject.githubUrl}
+                          onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                          placeholder="GitHub URL (optional)"
+                        />
+                      </div>
                       <div className="space-y-2">
                         <div className="flex gap-2">
                           <input
@@ -980,22 +1266,22 @@ export default function UserProfilePage() {
                           ))}
                         </div>
                       </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <input
-                          type="date"
-                          value={newProject.startDate}
-                          onChange={(e) => setNewProject({ ...newProject, startDate: e.target.value })}
-                          className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
-                          placeholder="Start Date"
-                        />
-                        <input
-                          type="date"
-                          value={newProject.endDate}
-                          onChange={(e) => setNewProject({ ...newProject, endDate: e.target.value })}
-                          className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
-                          placeholder="End Date"
-                        />
-                      </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <input
+                            type="url"
+                            value={newProject.url}
+                            onChange={(e) => setNewProject({ ...newProject, url: e.target.value })}
+                            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                            placeholder="Live URL (optional)"
+                          />
+                          <input
+                            type="url"
+                            value={newProject.githubUrl}
+                            onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })}
+                            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                            placeholder="GitHub URL (optional)"
+                          />
+                        </div>
                       <div className="flex gap-2">
                         <button
                           onClick={addProject}
@@ -1038,17 +1324,29 @@ export default function UserProfilePage() {
                   profile.projects.map((project: any, index: number) => (
                     <div key={index} className="p-4 bg-gray-50 rounded-xl">
                       <div className="font-bold text-gray-900">{project.title}</div>
-                      {project.url && (
-                        <a
-                          href={project.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-600 hover:underline text-sm"
-                        >
-                          {project.url}
-                        </a>
-                      )}
-                      <p className="text-gray-700 mt-2">{project.description}</p>
+                        <p className="text-gray-700 mt-2">{project.description}</p>
+                        <div className="flex gap-4 mt-2 text-sm">
+                          {project.url && (
+                            <a
+                              href={project.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              Live Demo
+                            </a>
+                          )}
+                          {project.githubUrl && (
+                            <a
+                              href={project.githubUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-600 hover:underline"
+                            >
+                              GitHub
+                            </a>
+                          )}
+                        </div>
                       {project.technologies && project.technologies.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {project.technologies.map((tech: string, techIndex: number) => (
