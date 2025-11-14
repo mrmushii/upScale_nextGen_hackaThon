@@ -103,18 +103,18 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       if (jobResponse.ok) {
         const jobData = await jobResponse.json();
         setJob(jobData.job);
-      }
 
-      // Fetch all matches to find this job's match data (only for recruiter jobs)
-      if (jobData.job?.source === "recruiter") {
-        const matchResponse = await fetch("/api/jobs/match");
-        if (matchResponse.ok) {
-          const matchData = await matchResponse.json();
-          const thisJobMatch = matchData.matches?.find(
-            (m: any) => m.job._id === params.id
-          );
-          if (thisJobMatch) {
-            setMatchData(thisJobMatch);
+        // Fetch all matches to find this job's match data (only for recruiter jobs)
+        if (jobData.job?.source === "recruiter") {
+          const matchResponse = await fetch("/api/jobs/match");
+          if (matchResponse.ok) {
+            const matchData = await matchResponse.json();
+            const thisJobMatch = matchData.matches?.find(
+              (m: any) => m.job._id === params.id
+            );
+            if (thisJobMatch) {
+              setMatchData(thisJobMatch);
+            }
           }
         }
       }

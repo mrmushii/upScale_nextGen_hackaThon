@@ -1,351 +1,529 @@
 # Upscale Career Platform
 
-Upscale is a full-stack career acceleration platform built with Next.js that helps talent discover learning resources, generate tailored roadmaps, run AI-powered mock interviews, and collaborate with mentors and recruiters. The latest release integrates the **Ai-Interview** voice experience so Pro and Ultimate users can generate interview scenarios, practise in real time with an AI interviewer, and receive structured feedback without leaving the dashboard.
+A full-stack career acceleration platform built with Next.js that helps professionals discover learning resources, generate tailored roadmaps, run AI-powered mock interviews, and collaborate with mentors and recruiters.
+
+![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
 
 ## Table of Contents
 
-- [Project Overview](#project-overview)
+- [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Installation & Setup](#installation--setup)
+- [Environment Variables](#environment-variables)
 - [Usage Guide](#usage-guide)
 - [API Documentation](#api-documentation)
-- [Contribution Guidelines](#contribution-guidelines)
+- [Deployment](#deployment)
+- [Security](#security)
+- [Known Issues](#known-issues)
+- [Future Improvements](#future-improvements)
+- [Contributing](#contributing)
 - [License](#license)
 
 ---
 
-## 📚 Documentation
+## Features
 
-- **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Complete file structure, paths, and workflow documentation
-- **[SETUP.md](./SETUP.md)** - Detailed setup and configuration guide (includes Resume Analyzer setup)
-- **[README_RESUME_ANALYZER.md](./README_RESUME_ANALYZER.md)** - Complete Resume Analyzer guide with API docs and usage
-- **[SKILL_EXTRACTION_ISSUE_LOG.md](./SKILL_EXTRACTION_ISSUE_LOG.md)** - Smart Skill Extraction issues, fixes, and edge cases
-- **[INTEGRATION_ISSUE_LOG.md](./INTEGRATION_ISSUE_LOG.md)** - Resume Analyzer integration log and decisions
-- **[PDF_PARSING_SETUP.md](./PDF_PARSING_SETUP.md)** - PDF parsing setup and troubleshooting
-- **[GEMINI_V1_DIRECT_SDK_REPORT.md](./GEMINI_V1_DIRECT_SDK_REPORT.md)** - AI service unification documentation
+### Core Features
 
-## Project Overview
+- **Personalized Onboarding**: Profile completion tracking ensures users complete necessary information before accessing premium features
+- **AI-Powered Roadmaps**: Generate personalized 3-stage learning plans using Google Gemini AI
+- **Interactive Learning**: Track course progress, code challenges, bookmarks, and watch history
+- **Smart Job Discovery**: Unified job board combining internal recruiter posts with external Findwork.dev listings, sorted by personalized relevance scores
+- **Favorite Jobs & Skill Gap Analysis**: Save favorite jobs and get automatic skill gap analysis with course recommendations
+- **Role-Based Dashboards**: Separate portals for users, recruiters, mentors, and admins
+- **Subscription Tiers**: Basic, Pro, and Ultimate plans with usage limits and payment integration
+- **AI Mock Interviews** (Pro & Ultimate): Generate interview scenarios, practice with voice AI, and receive structured feedback
+- **Smart Skill Extraction**: Automatically extract skills, tools, and roles from CV text or uploaded files
+- **CV Generator**: Generate professional CVs from profile data
+- **Application Tracker**: Track all job applications in one place
+- **Portfolio Builder**: Create and publish professional portfolios
+- **Community Forum**: Ask questions and get answers from the community
+- **Mentor Booking**: Book sessions with verified mentors
 
-Upscale delivers an end-to-end journey for professionals and hiring teams:
+### Learning Resources
 
-- **Personalised onboarding** ensures job seekers complete the right profile data before unlocking premium tooling.
-- **Roadmap generation** powered by Google Gemini outlines a three-stage learning plan using Udemy, YouTube, and Microsoft Learn content.
-- **Interactive learning** keeps track of course progress, code challenges, bookmarks, and watch history in one hub.
-- **Smart job discovery** scores internal job posts and Findwork listings against a user’s target roles and skills.
-- **Role-based portals** give recruiters and mentors focused dashboards, while admins can curate talent pools.
-- **Subscription tiers** (Basic, Pro, Ultimate) gate advanced functionality, quotas, and payment options.
-- **AI Mock Interviews (new)** allow Pro & Ultimate users to:
-  - Generate tailored interview question sets.
-  - Launch real-time voice interviews via Vapi.
-  - Capture transcripts automatically and receive structured feedback scored across key competencies.
-- **Smart Skill Extraction (integrated in Profile)** automatically detects skills, tools, and relevant roles from pasted CV text or the user profile. It's seamlessly integrated into the Profile page's CV/Resume Text section. When you paste your CV text, the extraction panel appears below, allowing you to:
-  - Extract skills, tools, and target roles using AI (Gemini) or heuristic fallback
-  - Review and edit extracted tags before applying
-  - See evidence for each detected item
-  - Apply extracted data directly to your profile with one click
-- **CV Generator** (`/dashboard/cv`) - Generate professional CVs from your profile data
+- **Udemy Integration**: Browse and enroll in Udemy courses via RapidAPI
+- **YouTube Playlists**: Curated learning playlists from top channels
+- **Microsoft Learn**: Access Microsoft Learn modules and certifications
 
 ---
 
 ## Tech Stack
 
-| Layer             | Technologies |
-|-------------------|--------------|
-| Frontend          | Next.js 14 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons |
-| Backend / API     | Next.js Route Handlers, NextAuth.js (JWT), Vercel AI SDK |
-| Database          | MongoDB Atlas, Mongoose ODM |
-| AI & Voice        | Google Gemini 2.0 Flash, `ai` SDK, `@ai-sdk/google`, Vapi Web Voice SDK |
-| Integrations      | RapidAPI (Findwork, Paid Udemy), YouTube Data API v3, Microsoft Learn |
-| Tooling           | ESLint, TypeScript, react-hot-toast |
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | Next.js 14 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons |
+| **Backend** | Next.js Route Handlers, NextAuth.js (JWT), Vercel AI SDK |
+| **Database** | MongoDB Atlas, Mongoose ODM |
+| **AI & Voice** | Google Gemini 2.0 Flash, `ai` SDK, `@ai-sdk/google`, Vapi Web Voice SDK |
+| **Integrations** | RapidAPI (Findwork, Udemy), YouTube Data API v3, Microsoft Learn |
+| **Authentication** | NextAuth.js with Credentials provider |
+| **File Storage** | Local filesystem (public/uploads) |
+| **Deployment** | Vercel-ready |
 
 ---
 
 ## Installation & Setup
 
 ### Prerequisites
-- Node.js v18 or higher & npm
+
+- Node.js v18 or higher
+- npm or yarn
 - MongoDB connection string (local or Atlas)
-- API keys for Google Gemini, Vapi, RapidAPI, and other integrations
-- Git for cloning the repository
+- API keys for integrations (see [Environment Variables](#environment-variables))
 
-### AI Service Architecture
+### Step 1: Clone the Repository
 
-The application uses a **unified AI service** (`lib/unifiedAI.ts`) that provides consistent AI functionality across all features using the **Google Generative AI SDK** directly.
-
-- **SDK:** `@google/generative-ai` (direct SDK usage)
-- **Model:** `gemini-2.0-flash-001` (single unified model for all tasks)
-- **Initialization:** `new GoogleGenerativeAI(process.env.GEMINI_API_KEY)`
-- **Pattern:** Cached model singleton with direct `generateContent()` calls
-
-**Core Functions:**
-- ✅ `analyzeCV(cvText: string)` - CV/Resume analysis (HR Assistant role)
-- ✅ `generateRoadmap(goal: string, skills: string[])` - Career roadmap generation (Career Coach role)
-- ✅ `runInterviewPrompt(prompt: string)` - Interview assistance (Interview Assistant role)
-
-**Backward Compatibility:**
-- ✅ `generateTextUnified()` - Text generation wrapper
-- ✅ `generateObjectUnified()` - Structured output with Zod validation
-- ✅ `parseJSONFromText()` - JSON parsing with graceful fallback
-- ✅ `validateAPIKey()` - API key validation
-
-**Features using unified AI:**
-- ✅ Roadmap Generation (`lib/geminiAI.ts`, `lib/geminiAIEnhanced.ts`)
-- ✅ Resume Analyzer (`lib/analyzerService.ts`)
-- ✅ Mock Interviews (`lib/aiInterview.ts`)
-
-**Benefits:**
-- Direct SDK control with full feature access
-- Single model ensures consistency across all features
-- Centralized error handling with meaningful messages
-- Better performance with cached model instance
-- Easier maintenance and updates
-- Graceful JSON parsing with fallback
-- Schema validation with Zod for structured outputs
-
-**Error Handling:**
-- API key validation with clear error messages
-- Rate limit detection and user-friendly messages
-- Safety filter detection
-- Graceful JSON parsing fallback for malformed responses
-
-See `GEMINI_V1_DIRECT_SDK_REPORT.md` for detailed technical documentation.
-
-### Optional Dependencies (for Enhanced PDF Parsing)
-For production use, install `pdf-parse` for server-side PDF text extraction:
-```bash
-npm install pdf-parse @types/pdf-parse
-```
-
-**Note:** Smart Skill Extraction is integrated into the Profile page. Simply paste your CV/resume text in the Profile's "CV / Resume Text" section, and the extraction panel will appear automatically below it.
-
-### 1. Clone the repository
 ```bash
 git clone https://github.com/your-org/upscale.git
 cd upscale/upScale_nextGen_hackaThon
 ```
 
-### 2. Install dependencies
+### Step 2: Install Dependencies
+
 ```bash
 npm install
 ```
 
-### 3. Configure environment variables
-- Copy the template and fill in your values:
+### Step 3: Configure Environment Variables
+
+Copy the environment template:
 
 ```bash
 cp env.template .env.local
 ```
 
-- Required keys include (see `env.template` for the full list):
-  - `MONGODB_URI`
-  - `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
-  - `GEMINI_API_KEY` (required for all AI features: roadmaps, resume analysis, mock interviews)
-  - `NEXT_PUBLIC_VAPI_WEB_TOKEN`, `NEXT_PUBLIC_VAPI_WORKFLOW_ID` (for voice interviews)
-  - RapidAPI keys for job and course integrations
+Fill in all required variables (see [Environment Variables](#environment-variables) below).
 
-> **AI Service Note:** The unified AI service uses `GEMINI_API_KEY` and the direct `@google/generative-ai` SDK. All AI features (roadmaps, resume analysis, mock interviews) use the same unified service and model (`gemini-2.0-flash-001`). The service provides core functions (`analyzeCV`, `generateRoadmap`, `runInterviewPrompt`) and maintains backward compatibility with existing code.
+### Step 4: Start Development Server
 
-> **Tip:** Maintain separate `.env.local` files per environment and never commit secrets.
-
-### 4. Start the development server
 ```bash
 npm run dev
 ```
-The app runs at [http://localhost:3000](http://localhost:3000).
 
-### 5. Optional tooling
-- `npm run build` – production build
-- `npm run start` – serve the production build
-- `npm run lint` – run static analysis (accept the Next.js ESLint prompt on first run)
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
+### Step 5: Create Admin User (Optional)
+
+```bash
+npm run create:admin
+```
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Create production build
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run seed:jobs` - Seed sample job listings
+- `npm run create:admin` - Create admin user
+
+---
+
+## Environment Variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+### Required Variables
+
+```env
+# Database
+MONGODB_URI="mongodb://localhost:27017/upscale"
+# For MongoDB Atlas:
+# MONGODB_URI="mongodb+srv://username:password@cluster.mongodb.net/upscale?retryWrites=true&w=majority"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key-here" # Generate with: openssl rand -base64 32
+
+# AI APIs
+GEMINI_API_KEY="your-gemini-api-key-here"
+GOOGLE_GENERATIVE_AI_API_KEY="" # Optional, falls back to GEMINI_API_KEY
+
+# Voice AI (for Pro/Ultimate interviews)
+NEXT_PUBLIC_VAPI_WEB_TOKEN="your-vapi-web-token"
+NEXT_PUBLIC_VAPI_WORKFLOW_ID="your-vapi-workflow-id"
+
+# RapidAPI
+RAPIDAPI_KEY="your-rapidapi-key"
+RAPIDAPI_UDEMY_HOST="udemy-paid-courses-for-free-api.p.rapidapi.com"
+
+# Findwork.dev API
+FINDWORK_API_TOKEN="your-findwork-api-token"
+```
+
+### Optional Variables
+
+```env
+# Payment Gateways
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+BKASH_API_KEY="your-bkash-api-key"
+BKASH_API_SECRET="your-bkash-api-secret"
+NAGAD_API_KEY="your-nagad-api-key"
+NAGAD_API_SECRET="your-nagad-api-secret"
+
+# Email Service
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASSWORD="your-app-password"
+
+# Storage (for production, consider AWS S3)
+AWS_ACCESS_KEY_ID="your-access-key"
+AWS_SECRET_ACCESS_KEY="your-secret-key"
+AWS_REGION="ap-south-1"
+AWS_S3_BUCKET="upscale-assets"
+
+# Feature Flags
+ENABLE_AI_FEATURES="true"
+ENABLE_MENTOR_BOOKING="true"
+ENABLE_PAYMENTS="false"
+
+# App Configuration
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:3000/api"
+```
+
+> **Security Note**: Never commit `.env.local` to version control. All secrets should be stored securely.
 
 ---
 
 ## Usage Guide
 
-### 1. Landing & Registration
-- Visit `/` for the public marketing experience and pricing plans.
-- Selecting a paid plan routes guests to authentication and signed-in users to `/dashboard/payment` with the tier pre-selected.
-- Users can register as job seekers, recruiters, or mentors.
+### For Job Seekers
 
-### 2. Completing the Profile
-- Basic users must complete `/dashboard/profile/complete` before unlocking premium tools.
-- A persistent progress widget highlights missing sections and completion percentage.
+1. **Register & Complete Profile**
+   - Sign up at `/register`
+   - Complete your profile at `/dashboard/profile/complete`
+   - Add skills, experience, education, and target roles
 
-### 3. Dashboard Navigation
-- `/dashboard` surfaces quick stats, job matches, roadmap progress, and subscription status.
-- Recruiters, mentors, and admins are redirected to their specific dashboards automatically.
+2. **Generate Roadmap**
+   - Navigate to `/dashboard/roadmap`
+   - Select your target role
+   - AI generates a personalized 3-stage learning plan
 
-### 4. Learning Resources (`/dashboard/resources`)
-- Tabbed interface for Udemy coupons, curated YouTube playlists, Microsoft Learn, personalised suggestions, bookmarks, and history.
-- APIs degrade gracefully with cached fallbacks when third-party quotas are reached.
+3. **Browse Jobs**
+   - Visit `/dashboard/jobs` to see job listings
+   - Filter by track, location, remote preference
+   - Click "Favorite" to save jobs and get skill gap analysis
+   - View favorite jobs at `/dashboard/jobs/favorites`
 
-### 5. Job Discovery (`/dashboard/jobs`)
-- Combines recruiter-submitted posts with Findwork listings, sorted by personalised relevance scores.
-- Filter by track, location, remote preference, and job type.
-- **Unified Job Details Flow**: All jobs (both recruiter-posted and Findwork API) now show a Job Details page before applying:
-  - Recruiter jobs: Show match score, full description, and allow in-app application
-  - Findwork jobs: Show job description, required skills, and track application before redirecting to external site
-  - Both job types are tracked in the Application Tracker for consistent management
+4. **Track Applications**
+   - Apply to jobs through the platform
+   - Track all applications at `/dashboard/applications`
+   - Update status and add notes
 
-### 6. Subscriptions & Billing
-- `/dashboard/payment` allows upgrades to Pro or Ultimate; billing preferences live in `/dashboard/settings?tab=subscription`.
-- Usage quotas are enforced at the API level (roadmaps, CV analysis, mock interviews).
+5. **AI Mock Interviews** (Pro/Ultimate)
+   - Access at `/dashboard/interviews`
+   - Generate interview scenarios
+   - Practice with voice AI
+   - Review feedback and scores
 
-### 7. AI Mock Interviews (Pro & Ultimate)
-- Access the new experience at `/dashboard/interviews` (visible once the subscription tier is Pro or Ultimate).
-- Features include:
-  - Interview generator form to capture role, level, focus, tech stack, and question count.
-  - Personal library of generated interviews plus community scenarios shared by other users.
-  - Real-time voice interview using Vapi with live transcript capture.
-  - Automatic feedback creation scored across Communication, Technical Knowledge, Problem Solving, Cultural Fit, and Confidence.
-- Feedback pages summarise scores, comments, strengths, and suggested improvements for future practise.
+6. **Learning Resources**
+   - Browse courses at `/dashboard/resources`
+   - Bookmark favorites
+   - Track progress
 
-### 8. Application Tracker (`/dashboard/applications`)
-- Track all job applications in one place, regardless of source (recruiter-posted or external Findwork jobs).
-- Features include:
-  - **Unified Tracking**: All applications appear in the tracker, whether from internal recruiter jobs or external job boards.
-  - **Status Management**: Update application status (Applied, Interview, Offer, Rejected, Accepted).
-  - **External Job Support**: External applications show an "External" badge and link to the original job posting.
-  - **Notes & Dates**: Add notes, follow-up dates, and interview dates to each application.
-  - **Manual Entry**: Manually add applications for jobs applied outside the platform.
-- Applications are automatically tracked when you apply through the platform, or can be added manually.
+### For Recruiters
+
+1. **Register as Recruiter**
+   - Sign up at `/register-recruiter`
+   - Wait for admin approval
+
+2. **Post Jobs**
+   - Navigate to `/recruiter/jobs`
+   - Create job listings
+   - Jobs require admin approval before going live
+
+3. **Analytics**
+   - View job performance metrics
+   - Track applications
+
+### For Mentors
+
+1. **Register as Mentor**
+   - Sign up and complete mentor profile
+   - Set availability and rates
+
+2. **Manage Sessions**
+   - View bookings at `/mentor/sessions`
+   - Track earnings
+   - Manage schedule
 
 ---
 
 ## API Documentation
 
-### Authentication & Profile
+### Authentication
+
+All API endpoints (except public test endpoints) require authentication via NextAuth.js session.
+
+### Core Endpoints
+
+#### User & Profile
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/auth/[...nextauth]` | POST | NextAuth credential login/session |
-| `/api/auth/register` | POST | Register a new job seeker |
-| `/api/auth/register-recruiter` | POST | Register a recruiter account |
-| `/api/user/profile` | GET / PATCH | Fetch or update the signed-in user's profile |
-| `/api/user/profile/completion` | GET | Retrieve recalculated profile completion metrics |
+| `/api/auth/register` | POST | Register new user |
+| `/api/auth/register-recruiter` | POST | Register recruiter account |
+| `/api/user/profile` | GET, PATCH | Get/update user profile |
+| `/api/user/profile/completion` | GET | Get profile completion metrics |
+| `/api/upload/avatar` | POST | Upload profile avatar (max 5MB) |
 
-### Settings & Subscriptions
-| Endpoint | Method | Notes |
-|----------|--------|-------|
-| `/api/settings/profile` | GET / PUT | Profile & password updates |
-| `/api/settings/preferences` | GET / PUT | Account, notification, privacy, and billing preferences |
-| `/api/subscription` | GET / POST / PUT | Manage plan selection, upgrades, cancellations |
+#### Jobs & Applications
 
-### Learning & Roadmaps
-| Endpoint | Method | Notes |
-|----------|--------|-------|
-| `/api/roadmap/generate` | POST | Generate AI roadmaps (quota limited) |
-| `/api/roadmap/[id]` | GET | Retrieve a specific roadmap |
-| `/api/resources/udemy` | GET | Udemy coupon feed |
-| `/api/resources/youtube` | GET | Curated YouTube playlists |
-| `/api/resources/microsoft` | GET | Microsoft Learn catalogue |
-| `/api/resources/bookmarks` | GET / POST | Manage saved resources |
-| `/api/resources/history` | GET | Retrieve content history |
-
-### Jobs & Recruiters
-| Endpoint | Method | Notes |
-|----------|--------|-------|
-| `/api/jobs/unified` | GET | Combined recruiter + Findwork job feed |
-| `/api/jobs/[id]` | GET | Unified job details (handles both recruiter and Findwork jobs) |
-| `/api/jobs/match` | GET | Top job matches for dashboard widgets |
-| `/api/recruiter/my-jobs` | GET | Recruiter vacancy management |
-| `/api/applications` | GET / POST | Application tracker (supports both internal and external jobs) |
-
-### AI Mock Interviews (Pro & Ultimate only)
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/ai-interviews` | GET | Fetch personal and community interviews for the signed-in user |
-| `/api/ai-interviews` | POST | Generate a new interview scenario (Google Gemini) |
-| `/api/ai-interviews/[id]` | GET | Retrieve interview details and questions |
-| `/api/ai-interviews/[id]/feedback` | GET | Fetch the signed-in user's feedback for an interview |
-| `/api/ai-interviews/[id]/feedback` | POST | Generate structured feedback from an interview transcript |
+| `/api/jobs/unified` | GET | Get unified job feed (recruiter + Findwork) |
+| `/api/jobs/[id]` | GET | Get job details |
+| `/api/jobs/match` | GET | Get top job matches for user |
+| `/api/jobs/favorites` | GET, POST, DELETE | Manage favorite jobs |
+| `/api/jobs/favorites/[jobId]/suggestions` | GET | Get course suggestions for skill gaps |
+| `/api/applications` | GET, POST | Manage job applications |
 
-> **Access control:** all AI interview endpoints enforce Pro/Ultimate tiers and require an authenticated session. Attempts from Basic users return HTTP 403 with guidance to upgrade.
+#### Learning & Roadmaps
 
-### Smart Skill Extraction
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/skills/extract` | POST | Extract skills, tools, and roles from CV text, uploaded file, or user profile. Accepts JSON with `cvText`, `useProfile`, or `resumeId`, or multipart/form-data with `file` |
+| `/api/roadmap/generate` | POST | Generate AI roadmap (quota limited) |
+| `/api/roadmap/[id]` | GET | Get roadmap details |
+| `/api/resources/udemy` | GET | Search Udemy courses |
+| `/api/resources/udemy/[id]` | GET | Get Udemy course details |
+| `/api/resources/youtube` | GET | Get YouTube playlists |
+| `/api/resources/microsoft` | GET | Get Microsoft Learn modules |
+| `/api/resources/bookmarks` | GET, POST | Manage bookmarks |
+| `/api/resources/history` | GET | Get learning history |
 
-**Request Examples:**
+#### AI Features
 
-**Extract from CV Text:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/ai-interviews` | GET, POST | List/generate AI interviews (Pro/Ultimate) |
+| `/api/ai-interviews/[id]` | GET | Get interview details |
+| `/api/ai-interviews/[id]/feedback` | GET, POST | Get/generate interview feedback |
+| `/api/skills/extract` | POST | Extract skills from CV text/file |
+| `/api/cv/analyze` | POST | Analyze CV (quota limited) |
+| `/api/cv/generate` | POST | Generate CV from profile |
+
+#### Subscriptions
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/subscription` | GET, POST | Get/update subscription |
+| `/api/settings/preferences` | GET, PUT | Update preferences |
+
+### Request/Response Examples
+
+#### Generate Roadmap
+
 ```bash
-curl -X POST /api/skills/extract \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "cvText": "Experienced software engineer with 5 years in React and Node.js..."
-  }'
-```
+POST /api/roadmap/generate
+Content-Type: application/json
+Authorization: Bearer <session-token>
 
-**Extract from Uploaded File:**
-```bash
-curl -X POST /api/skills/extract \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@resume.pdf"
-```
-
-**Extract from Profile:**
-```bash
-curl -X POST /api/skills/extract \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"useProfile": true}'
-```
-
-**Response Example (Analysis):**
-```json
 {
-  "success": true,
-  "analysis": {
-    "overallScore": 75,
-    "ATS": {
-      "score": 80,
-      "tips": [
-        { "type": "good", "tip": "Well-structured format" },
-        { "type": "improve", "tip": "Add more keywords" }
-      ]
-    },
-    "toneAndStyle": {
-      "score": 70,
-      "tips": [
-        { "type": "good", "tip": "Professional tone", "explanation": "..." },
-        { "type": "improve", "tip": "Vary sentence length", "explanation": "..." }
-      ]
-    },
-    "content": { "score": 75, "tips": [...] },
-    "structure": { "score": 80, "tips": [...] },
-    "skills": { "score": 70, "tips": [...] }
-  },
-  "resume": { ... }
+  "targetRole": "Full Stack Developer"
 }
 ```
 
-> **Security:** All API endpoints require authentication. Users can only access their own data. File uploads are validated for type (PDF/DOC/DOCX) and size (max 20MB).
+Response:
+```json
+{
+  "roadmap": {
+    "_id": "...",
+    "targetRole": "Full Stack Developer",
+    "stages": [...],
+    "progress": {...}
+  }
+}
+```
 
-For request/response examples, see the corresponding files under `app/api/**/route.ts`.
+#### Add Favorite Job
+
+```bash
+POST /api/jobs/favorites
+Content-Type: application/json
+Authorization: Bearer <session-token>
+
+{
+  "jobId": "123",
+  "jobTitle": "Senior Developer",
+  "company": "Tech Corp",
+  "jobData": {...}
+}
+```
+
+Response:
+```json
+{
+  "message": "Job added to favorites",
+  "favoriteJob": {
+    "_id": "...",
+    "jobId": "123",
+    "skillGaps": {
+      "missingSkills": ["React", "TypeScript"],
+      "existingSkills": ["JavaScript", "Node.js"],
+      "matchPercentage": 60,
+      "recommendations": [...]
+    }
+  }
+}
+```
 
 ---
 
-## Contribution Guidelines
+## Deployment
 
-1. **Fork** the repository and create a feature branch.
-2. Run `npm install` and ensure `npm run lint` passes (accept the initial Next.js ESLint configuration prompt if presented).
-3. Add tests where practical and keep pull requests focused.
-4. Submit a PR that includes:
-   - A descriptive title following conventional commits (`feat:`, `fix:`, etc.).
-   - Summary of changes and testing performed.
-   - Screenshots or cURL samples when modifying UI or APIs.
-5. One reviewer approval is required before merge.
+### Vercel Deployment
+
+This application is optimized for Vercel deployment.
+
+#### Step 1: Prepare for Production
+
+1. Ensure all environment variables are set in Vercel dashboard
+2. Update `NEXTAUTH_URL` to your production domain
+3. Set `NODE_ENV=production`
+
+#### Step 2: Deploy to Vercel
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+
+# For production
+vercel --prod
+```
+
+#### Step 3: Configure Environment Variables
+
+In Vercel dashboard:
+1. Go to Project Settings → Environment Variables
+2. Add all variables from `env.template`
+3. Ensure `NEXTAUTH_URL` matches your domain
+
+#### Step 4: Database Setup
+
+- Use MongoDB Atlas for production
+- Update `MONGODB_URI` in Vercel environment variables
+- Ensure IP whitelist includes Vercel IPs
+
+### Other Platforms
+
+The application can be deployed to any platform supporting Next.js:
+
+- **Netlify**: Use Netlify's Next.js runtime
+- **AWS Amplify**: Configure build settings for Next.js
+- **Docker**: Use the included Dockerfile (if available)
+
+### Production Checklist
+
+- [ ] All environment variables configured
+- [ ] MongoDB Atlas connection string set
+- [ ] `NEXTAUTH_SECRET` is a strong random string
+- [ ] `NEXTAUTH_URL` matches production domain
+- [ ] API keys for all integrations configured
+- [ ] File upload directory has write permissions
+- [ ] Test endpoints are protected or removed
+- [ ] Error logging configured
+- [ ] Monitoring set up
+
+---
+
+## Security
+
+### Security Features
+
+- ✅ Authentication required for all protected routes
+- ✅ Role-based access control (RBAC)
+- ✅ API keys stored in environment variables (never hardcoded)
+- ✅ File upload validation (type and size)
+- ✅ Password hashing with bcrypt
+- ✅ SQL injection prevention (MongoDB with Mongoose)
+- ✅ XSS protection (React's built-in escaping)
+- ✅ CSRF protection (NextAuth.js)
+- ✅ Rate limiting on API routes (via usage limits)
+- ✅ Test endpoints protected in production
+
+### Security Best Practices
+
+1. **Never commit secrets**: All API keys and secrets should be in `.env.local` (gitignored)
+2. **Use strong passwords**: Enforce minimum password requirements
+3. **Regular updates**: Keep dependencies updated
+4. **Monitor logs**: Set up error tracking (e.g., Sentry)
+5. **HTTPS only**: Always use HTTPS in production
+6. **File validation**: Validate all file uploads for type and size
+
+### Reporting Security Issues
+
+If you discover a security vulnerability, please email security@upscale.com (replace with your email) instead of using the issue tracker.
+
+---
+
+## Known Issues
+
+1. **File Storage**: Currently uses local filesystem. For production, consider migrating to AWS S3 or similar.
+2. **Rate Limiting**: API rate limiting is handled via usage limits. Consider implementing proper rate limiting middleware.
+3. **Email Service**: Email functionality is optional and not fully implemented.
+4. **Payment Integration**: Payment gateways are configured but may need additional setup for production.
+
+---
+
+## Future Improvements
+
+- [ ] Implement proper rate limiting middleware
+- [ ] Migrate file storage to AWS S3 or Cloudinary
+- [ ] Add email notifications
+- [ ] Implement real-time notifications (WebSockets)
+- [ ] Add unit and integration tests
+- [ ] Implement caching layer (Redis)
+- [ ] Add analytics dashboard
+- [ ] Mobile app (React Native)
+- [ ] Multi-language support
+- [ ] Advanced search and filtering
+
+---
+
+## Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Make** your changes
+4. **Run** linting (`npm run lint`)
+5. **Commit** your changes (`git commit -m 'feat: Add amazing feature'`)
+6. **Push** to the branch (`git push origin feature/amazing-feature`)
+7. **Open** a Pull Request
+
+### Code Style
+
+- Follow TypeScript best practices
+- Use ESLint configuration
+- Write descriptive commit messages
+- Add comments for complex logic
+- Update documentation for new features
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License**. You may use, modify, and distribute it provided that all copies include the original license text.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-Built with ❤️ by the Upscale team — accelerating careers one roadmap (and interview) at a time.
+## Support
+
+For support, email support@upscale.com or open an issue in the repository.
+
+---
+
+**Built with ❤️ by the Upscale team** — accelerating careers one roadmap at a time.

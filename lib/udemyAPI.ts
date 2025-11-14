@@ -62,9 +62,12 @@ interface RapidAPICourseListResponse {
  * Get RapidAPI headers
  */
 function getRapidAPIHeaders(): Record<string, string> {
-  // Use provided key or fallback to default
-  const apiKey = process.env.RAPIDAPI_KEY || "f5c8a371bdmsh3f7b65dd0e65183p1f4577jsne6ee05bec5b4";
+  const apiKey = process.env.RAPIDAPI_KEY;
   const apiHost = process.env.RAPIDAPI_UDEMY_HOST || "udemy-paid-courses-for-free-api.p.rapidapi.com";
+
+  if (!apiKey) {
+    throw new Error("RAPIDAPI_KEY environment variable is not set");
+  }
 
   return {
     "x-rapidapi-key": apiKey,
