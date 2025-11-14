@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 const stats = [
   {
     value: "5,000+",
@@ -24,14 +26,38 @@ const stats = [
 ];
 
 export default function Statistics() {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="py-20 bg-gradient-to-br from-primary-600 to-coral-600 relative overflow-hidden">
+    <section ref={sectionRef} className="py-20 bg-gradient-to-br from-primary-600 to-coral-600 relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+      <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 animate-pulse-slow"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div 
+          className={`text-center max-w-3xl mx-auto mb-16 transition-all duration-1000 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Trusted by Thousands
           </h2>
@@ -45,10 +71,15 @@ export default function Statistics() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="text-center bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 animate-fade-in-up"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className={`text-center bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:bg-white/20 hover:scale-110 transition-all duration-300 ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+              }`}
+              style={{ 
+                transitionDelay: `${index * 0.1}s`,
+                animationDelay: `${index * 0.1}s`
+              }}
             >
-              <div className="text-5xl md:text-6xl font-bold text-white mb-2">
+              <div className="text-5xl md:text-6xl font-bold text-white mb-2 animate-count-up">
                 {stat.value}
               </div>
               <div className="text-xl font-semibold text-white mb-2">
