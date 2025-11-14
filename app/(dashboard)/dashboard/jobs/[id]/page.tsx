@@ -24,10 +24,75 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   const [matchData, setMatchData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     fetchJobDetails();
+    checkFavoriteStatus();
   }, [params.id]);
+
+  const checkFavoriteStatus = async () => {
+    try {
+      const response = await fetch("/api/jobs/favorites");
+      if (response.ok) {
+        const data = await response.json();
+        const favoriteJobs = data.favoriteJobs || [];
+        const jobId = params.id.toString();
+        setIsFavorite(
+          favoriteJobs.some((fj: any) => fj.jobId.toString() === jobId)
+        );
+      }
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    if (!job) return;
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        const response = await fetch(`/api/jobs/favorites?jobId=${params.id}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          setIsFavorite(false);
+          toast.success("Removed from favorites");
+        } else {
+          toast.error("Failed to remove from favorites");
+        }
+      } else {
+        // Add to favorites
+        const response = await fetch("/api/jobs/favorites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jobId: params.id.toString(),
+            jobTitle: job.title,
+            company: job.company || "Unknown Company",
+            jobData: job,
+          }),
+        });
+
+        if (response.ok) {
+          setIsFavorite(true);
+          toast.success("Added to favorites! Check skill gaps in Favorites section.");
+        } else {
+          const errorData = await response.json();
+          if (response.status === 409) {
+            toast.error("Job already in favorites");
+            setIsFavorite(true);
+          } else {
+            toast.error(errorData.error || "Failed to add to favorites");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Failed to update favorites");
+    }
+  };
 
   const fetchJobDetails = async () => {
     try {
@@ -233,9 +298,16 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
             </button>
 
             <div className="flex gap-2">
-              <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition font-semibold">
-                <Heart size={18} />
-                Save
+              <button
+                onClick={toggleFavorite}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-xl transition font-semibold ${
+                  isFavorite
+                    ? "border-red-300 bg-red-50 text-red-600"
+                    : "border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+                }`}
+              >
+                <Heart size={18} className={isFavorite ? "fill-current" : ""} />
+                {isFavorite ? "Favorited" : "Favorite"}
               </button>
               <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-primary-300 hover:bg-primary-50 transition font-semibold">
                 <Share2 size={18} />
