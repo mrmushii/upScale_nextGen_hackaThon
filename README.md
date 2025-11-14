@@ -16,6 +16,13 @@ Upscale is a full-stack career acceleration platform built with Next.js that hel
 
 ---
 
+## 📚 Documentation
+
+- **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Complete file structure, paths, and workflow documentation
+- **[SETUP.md](./SETUP.md)** - Detailed setup and configuration guide
+- **[PDF_PARSING_SETUP.md](./PDF_PARSING_SETUP.md)** - PDF parsing setup and troubleshooting
+- **[GEMINI_V1_DIRECT_SDK_REPORT.md](./GEMINI_V1_DIRECT_SDK_REPORT.md)** - AI service unification documentation
+
 ## Project Overview
 
 Upscale delivers an end-to-end journey for professionals and hiring teams:
