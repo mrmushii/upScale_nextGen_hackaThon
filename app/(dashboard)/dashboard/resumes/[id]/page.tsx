@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import ResumeAnalysis from "@/components/resumes/ResumeAnalysis";
+import EnhancedResumeAnalysis from "@/components/resumes/EnhancedResumeAnalysis";
 
 export default function ResumeDetailPage() {
   const params = useParams();
@@ -123,8 +124,12 @@ export default function ResumeDetailPage() {
       </div>
 
       {hasAnalysis ? (
-        /* Analysis Results */
-        <ResumeAnalysis analysis={resume.analysisResult} />
+        /* Analysis Results - Use Enhanced if available, fallback to simple */
+        resume.analysisResult.ATS ? (
+          <EnhancedResumeAnalysis analysis={resume.analysisResult} />
+        ) : (
+          <ResumeAnalysis analysis={resume.analysisResult} />
+        )
       ) : (
         /* Analyze Form */
         <div className="bg-white rounded-xl border border-gray-200 p-8">

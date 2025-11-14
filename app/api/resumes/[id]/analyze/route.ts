@@ -6,6 +6,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { extractTextFromPdf } from "@/lib/pdfParser";
 import { analyzeResume } from "@/lib/resumeAnalyzer";
+import { analyzeResumeEnhanced } from "@/lib/enhancedResumeAnalyzer";
 
 /**
  * Simplified Resume Analysis API
@@ -95,9 +96,9 @@ export async function POST(
       // Save extracted text
       resume.parsedText = parseResult.text.substring(0, 100000); // Limit to 100KB
 
-      // Step 3: Analyze resume with Gemini API
-      console.log("Analyzing resume with Gemini AI...");
-      const analysis = await analyzeResume(
+      // Step 3: Analyze resume with Gemini API (Enhanced Analysis)
+      console.log("Analyzing resume with Gemini AI (Enhanced)...");
+      const analysis = await analyzeResumeEnhanced(
         parseResult.text,
         jobTitle,
         jobDescription
