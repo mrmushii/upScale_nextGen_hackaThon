@@ -1,6 +1,7 @@
 "use client";
 
 import { Star, Quote } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const testimonials = [
   {
@@ -30,11 +31,35 @@ const testimonials = [
 ];
 
 export default function Testimonials() {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section id="testimonials" className="py-20 bg-gradient-primary">
+    <section ref={sectionRef} id="testimonials" className="py-20 bg-gradient-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div 
+          className={`text-center max-w-3xl mx-auto mb-16 transition-all duration-1000 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             What Our Users Say About Upscale
           </h2>
@@ -48,12 +73,17 @@ export default function Testimonials() {
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 animate-fade-in-up relative"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 relative ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+              }`}
+              style={{ 
+                transitionDelay: `${index * 0.15}s`,
+                transitionDuration: "0.8s"
+              }}
             >
               {/* Quote Icon */}
-              <div className="absolute -top-4 right-8">
-                <div className="bg-primary-600 p-3 rounded-full shadow-lg">
+              <div className="absolute -top-4 right-8 animate-bounce-slow">
+                <div className="bg-primary-600 p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
                   <Quote size={24} className="text-white" />
                 </div>
               </div>
@@ -64,7 +94,8 @@ export default function Testimonials() {
                   <Star
                     key={i}
                     size={20}
-                    className="fill-yellow-400 text-yellow-400"
+                    className="fill-yellow-400 text-yellow-400 animate-scale-in"
+                    style={{ animationDelay: `${i * 0.1}s` }}
                   />
                 ))}
               </div>
