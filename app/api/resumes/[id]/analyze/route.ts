@@ -64,16 +64,20 @@ export async function POST(
         );
       }
 
-      // Validate file exists
+      // Extract text from PDF first (we'll use it for analysis and save it)
       const { readFile } = await import("fs/promises");
       const { join } = await import("path");
+      const { extractTextFromPdf } = await import("@/lib/pdfParser");
+      
       const relativePath = resume.filePath.startsWith("/uploads")
         ? resume.filePath.substring(1)
         : resume.filePath;
       const fullPath = join(process.cwd(), "public", relativePath);
       
+      // Validate file exists and read it
+      let buffer: Buffer;
       try {
-        await readFile(fullPath);
+        buffer = await readFile(fullPath);
       } catch (fileError: any) {
         resume.parsedStatus = "failed";
         await resume.save();
@@ -86,16 +90,44 @@ export async function POST(
         );
       }
 
-      // Analyze resume
-      const analysisResult = await analyzeResumeFromFile(
-        resume.filePath,
+      // Extract text from PDF
+      const parseResult = await extractTextFromPdf(buffer);
+      
+      if (!parseResult.success || !parseResult.text) {
+        resume.parsedStatus = "failed";
+        await resume.save();
+        return NextResponse.json(
+          {
+            error: "PDF Processing Error",
+            details: parseResult.error || "Failed to extract text from PDF. Please ensure the PDF contains readable text (not just images).",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Save parsed text (limit to 100KB for database efficiency)
+      resume.parsedText = parseResult.text.substring(0, 100000);
+
+      // Analyze resume using extracted text
+      const { analyzeResumeAgainstJD } = await import("@/lib/analyzerService");
+      const analysisResult = await analyzeResumeAgainstJD(
+        parseResult.text,
         jobTitle,
         jobDescription
       );
 
       // Validate analysis result
-      if (!analysisResult || !analysisResult.overallScore) {
-        throw new Error("Invalid analysis result received from AI");
+      if (!analysisResult || typeof analysisResult.overallScore !== "number") {
+        throw new Error("Invalid analysis result received from AI: missing overallScore");
+      }
+
+      // Validate all required fields
+      const requiredFields = ["ATS", "toneAndStyle", "content", "structure", "skills"];
+      for (const field of requiredFields) {
+        if (!analysisResult[field as keyof typeof analysisResult] || 
+            typeof (analysisResult[field as keyof typeof analysisResult] as any)?.score !== "number") {
+          throw new Error(`Invalid analysis result: missing or invalid ${field} score`);
+        }
       }
 
       // Update resume with analysis

@@ -34,7 +34,19 @@ function getUnifiedModel() {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  cachedModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
+  
+  // Configure model with generation settings
+  const generationConfig = {
+    temperature: 0.7,
+    topP: 0.8,
+    topK: 40,
+    maxOutputTokens: 8192,
+  };
+  
+  cachedModel = genAI.getGenerativeModel({ 
+    model: "gemini-2.0-flash-001",
+    generationConfig,
+  });
   
   return cachedModel;
 }
@@ -46,19 +58,13 @@ function getUnifiedModel() {
 async function generateContent(prompt: string, systemInstruction?: string): Promise<string> {
   try {
     const model = getUnifiedModel();
-    
-    const generationConfig = {
-      temperature: 0.7,
-      topP: 0.8,
-      topK: 40,
-      maxOutputTokens: 8192,
-    };
 
     // Build the full prompt with system instruction if provided
     const fullPrompt = systemInstruction 
       ? `${systemInstruction}\n\n${prompt}`
       : prompt;
 
+    // Generate content (generationConfig is already set in model initialization)
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();

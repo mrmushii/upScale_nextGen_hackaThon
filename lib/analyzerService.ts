@@ -263,6 +263,10 @@ Analyze this resume and provide detailed feedback.`;
 
 /**
  * Analyze resume from file path
+ * @param filePath - Path to the resume file (relative to public/uploads)
+ * @param jobTitle - Job title for analysis context
+ * @param jobDescription - Job description for analysis context
+ * @returns Analysis result with scores and feedback
  */
 export async function analyzeResumeFromFile(
   filePath: string,
@@ -273,30 +277,66 @@ export async function analyzeResumeFromFile(
     // Read file
     const relativePath = filePath.startsWith("/uploads")
       ? filePath.substring(1)
-      : filePath;
+      : filePath.startsWith("uploads")
+      ? filePath
+      : `uploads/${filePath}`;
+    
     const fullPath = join(process.cwd(), "public", relativePath);
-    const buffer = await readFile(fullPath);
+    
+    // Check if file exists
+    let buffer: Buffer;
+    try {
+      buffer = await readFile(fullPath);
+    } catch (fileError: any) {
+      if (fileError.code === "ENOENT") {
+        throw new Error(`Resume file not found at ${filePath}. Please re-upload the resume.`);
+      }
+      throw new Error(`Failed to read resume file: ${fileError.message}`);
+    }
+
+    // Validate file size (max 20MB)
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (buffer.length > maxSize) {
+      throw new Error(`File size (${Math.round(buffer.length / 1024 / 1024)}MB) exceeds maximum allowed size of 20MB.`);
+    }
 
     // Extract text from PDF
+    console.log(`Extracting text from PDF: ${filePath} (${buffer.length} bytes)`);
     const parseResult = await extractTextFromPdf(buffer);
     
     if (!parseResult.success || !parseResult.text) {
+      const errorMsg = parseResult.error || 
+        "Failed to extract text from PDF. Please ensure the PDF contains readable text (not just images).";
+      
+      // Log metadata if available for debugging
+      if (parseResult.metadata) {
+        console.error("PDF parsing metadata:", {
+          numPages: parseResult.metadata.numPages,
+          hasInfo: !!parseResult.metadata.info,
+        });
+      }
+      
+      throw new Error(errorMsg);
+    }
+
+    // Validate extracted text length
+    const textLength = parseResult.text.trim().length;
+    if (textLength < 50) {
       throw new Error(
-        parseResult.error || 
-        "Failed to extract text from PDF. Please ensure the PDF contains readable text (not just images)."
+        `Extracted text is too short (${textLength} characters). The PDF may be image-based or corrupted. Please use a PDF with selectable text.`
       );
     }
 
-    // Validate extracted text
-    if (parseResult.text.trim().length < 50) {
-      throw new Error(
-        "Extracted text is too short. The PDF may be image-based or corrupted. Please use a PDF with selectable text."
-      );
-    }
+    console.log(`Successfully extracted ${textLength} characters from PDF`);
 
+    // Analyze resume against job description
     return await analyzeResumeAgainstJD(parseResult.text, jobTitle, jobDescription);
   } catch (error: any) {
-    console.error("Error analyzing resume from file:", error);
+    console.error("Error analyzing resume from file:", {
+      filePath,
+      error: error.message,
+      stack: error.stack,
+    });
     throw new Error(`Failed to analyze resume file: ${error.message}`);
   }
 }
