@@ -211,3 +211,14 @@ export function getMatchBadgeColor(percentage: number): string {
   return "bg-red-100 text-red-700";
 }
 
+// Format file size (client-safe)
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+

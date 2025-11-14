@@ -11,9 +11,10 @@
     "create:admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@ai-sdk/google": "^1.2.2",
+    "@google/generative-ai": "^0.24.1",
     "@vapi-ai/web": "^2.2.4",
+    "ai": "^5.0.93",
     "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
     "clsx": "^2.1.0",
@@ -25,17 +26,18 @@
     "mongoose": "^8.19.3",
     "next": "^14.2.0",
     "next-auth": "^5.0.0-beta.30",
+    "pdf-parse": "^2.4.5",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.6.0",
     "tailwind-merge": "^2.2.0",
-    "ai": "^4.2.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.18",

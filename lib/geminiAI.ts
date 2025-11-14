@@ -1,8 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+/**
+ * Roadmap Generation Service (Unified AI)
+ * 
+ * This file uses the unified AI service for consistency across the application.
+ * The implementation follows the same pattern as aiInterview.ts.
+ */
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY || "your-api-key-here"
-);
+import { generateTextUnified, parseJSONFromText } from "./unifiedAI";
 
 export async function generateRoadmapWithGemini(
   userProfile: {
@@ -13,9 +16,6 @@ export async function generateRoadmapWithGemini(
   }
 ): Promise<any> {
   try {
-    // Use gemini-2.5-flash for faster responses
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
     const prompt = `Create a detailed 3-stage career roadmap for someone who wants to become a ${userProfile.targetRole}.
 
 Current Profile:
@@ -49,22 +49,16 @@ Requirements:
 
 Return ONLY the JSON object, no other text.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = await generateTextUnified({
+      prompt,
+      system: "You are an expert career advisor. Create detailed, actionable learning roadmaps.",
+    });
 
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("No JSON found in response");
-    }
-
-    const roadmapData = JSON.parse(jsonMatch[0]);
-    return roadmapData.stages;
-  } catch (error) {
-    console.error("Gemini AI error:", error);
+    const roadmapData = parseJSONFromText(text);
+    return roadmapData.stages || [];
+  } catch (error: any) {
+    console.error("Roadmap generation error:", error);
     // Fallback to template-based generation
     return null;
   }
 }
-

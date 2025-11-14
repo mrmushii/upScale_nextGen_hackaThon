@@ -9,6 +9,7 @@ export { default as Portfolio } from "./Portfolio";
 export { default as Question } from "./Question";
 export { default as Interview } from "./Interview";
 export { default as InterviewFeedback } from "./InterviewFeedback";
+export { default as Resume } from "./Resume";
 
 // Re-export types
 export type { IUser } from "./User";
@@ -21,4 +22,5 @@ export type { IPortfolio, IPortfolioSection } from "./Portfolio";
 export type { IQuestion, IAnswer } from "./Question";
 export type { IInterview } from "./Interview";
 export type { IInterviewFeedback } from "./InterviewFeedback";
+export type { IResume } from "./Resume";
 

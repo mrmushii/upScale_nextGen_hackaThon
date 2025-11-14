@@ -1,68 +1,84 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { auth } from "@/auth";
+import { generateTextUnified, validateAPIKey } from "@/lib/unifiedAI";
 
+/**
+ * Test endpoint for Gemini API configuration
+ * 
+ * NOTE: This endpoint is public for testing purposes.
+ * In production, consider adding authentication or removing this endpoint.
+ * 
+ * Usage: GET http://localhost:3000/api/test/gemini
+ */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === "your-api-key-here" || GEMINI_API_KEY === "AIzaSyDummy-Key-For-Testing") {
+    // Validate API key using unified service
+    if (!validateAPIKey()) {
       return NextResponse.json({
         success: false,
         error: "Gemini API key not configured",
-        message: "Please set GEMINI_API_KEY in your .env.local file",
+        message: "Please set GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY in your .env.local file",
         apiKeyStatus: "missing_or_invalid",
       });
     }
 
     try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      // Use gemini-2.5-flash
-      const modelName = "gemini-2.5-flash";
-      const model = genAI.getGenerativeModel({ model: modelName });
-
       const testPrompt = "Say 'Hello, Gemini is working!' and nothing else.";
 
-      console.log("Testing Gemini API...");
+      console.log("Testing unified AI service...");
       const startTime = Date.now();
       
-      const result = await model.generateContent(testPrompt);
-      const response = await result.response;
-      const text = response.text();
+      const text = await generateTextUnified({
+        prompt: testPrompt,
+        system: "You are a helpful assistant.",
+      });
       
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
-      console.log("Gemini API Response:", text);
+      console.log("Unified AI Response:", text);
       console.log("Response time:", responseTime, "ms");
 
       return NextResponse.json({
         success: true,
-        message: "Gemini API is working correctly!",
+        message: "Unified AI service is working correctly!",
         response: text.trim(),
         responseTime: `${responseTime}ms`,
         apiKeyStatus: "configured",
-        model: modelName,
+        model: "gemini-2.0-flash-001",
+        service: "unifiedAI",
         timestamp: new Date().toISOString(),
+        note: "This is a test endpoint. In production, consider adding authentication.",
       });
-    } catch (geminiError: any) {
-      console.error("Gemini API Error:", geminiError);
+    } catch (aiError: any) {
+      console.error("Unified AI Service Error:", aiError);
+      
+      // Provide helpful error messages
+      let errorMessage = "Unified AI service call failed";
+      let helpfulHint = "";
+      
+      if (aiError.message?.includes("API key") || aiError.message?.includes("Missing Gemini")) {
+        errorMessage = "Invalid API Key";
+        helpfulHint = "Check that GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY is set correctly in .env.local";
+      } else if (aiError.message?.includes("rate limit") || aiError.message?.includes("quota")) {
+        errorMessage = "Rate Limit Exceeded";
+        helpfulHint = "You've exceeded the API quota. Wait a moment or upgrade your plan.";
+      } else if (aiError.message?.includes("not found") || aiError.message?.includes("not available")) {
+        errorMessage = "Model Not Available";
+        helpfulHint = "The unified AI model (gemini-2.0-flash-001) is not available. Check your API key and model access.";
+      }
       
       return NextResponse.json({
         success: false,
-        error: "Gemini API call failed",
-        message: geminiError.message || "Unknown error",
+        error: errorMessage,
+        message: aiError.message || "Unknown error",
+        hint: helpfulHint,
         details: {
-          name: geminiError.name,
-          code: geminiError.code,
-          status: geminiError.status,
+          name: aiError.name,
+          code: aiError.code,
+          status: aiError.status,
         },
-        apiKeyStatus: "configured_but_error",
+        apiKeyStatus: validateAPIKey() ? "configured_but_error" : "missing_or_invalid",
+        service: "unifiedAI",
         timestamp: new Date().toISOString(),
       }, { status: 500 });
     }

@@ -1,10 +1,13 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+/**
+ * Enhanced Roadmap Generation Service (Unified AI)
+ * 
+ * This file uses the unified AI service for consistency across the application.
+ * The implementation follows the same pattern as aiInterview.ts.
+ */
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY || "AIzaSyDummy-Key-For-Testing"
-);
+import { generateTextUnified, parseJSONFromText } from "./unifiedAI";
 
-interface Exercise {
+export interface Exercise {
   title: string;
   description: string;
   code: string;
@@ -15,7 +18,7 @@ interface Exercise {
   lastSubmission?: string;
 }
 
-interface RoadmapStage {
+export interface RoadmapStage {
   name: string;
   goals: string[];
   exercises: Exercise[];
@@ -24,6 +27,10 @@ interface RoadmapStage {
   estimatedWeeks: number;
   completed: boolean;
   completedExercises: number;
+  suggestedCourses?: {
+    youtube?: string[];
+    udemy?: string[];
+  };
 }
 
 // Retry function with exponential backoff
@@ -70,16 +77,7 @@ export async function generateInteractiveRoadmap(
   }
 ): Promise<RoadmapStage[]> {
   try {
-    // Try different models in order of preference
-    const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
-    let lastError: any = null;
-
-    for (const modelName of modelsToTry) {
-      try {
-        console.log(`Trying model: ${modelName}`);
-        const model = genAI.getGenerativeModel({ model: modelName });
-
-        const prompt = `Create an interactive, hands-on learning roadmap for someone who wants to become a ${userProfile.targetRole}.
+    const prompt = `Create an interactive, hands-on learning roadmap for someone who wants to become a ${userProfile.targetRole}.
 
 Current Profile:
 - Current Skills: ${userProfile.skills.join(", ") || "Beginner"}
@@ -145,56 +143,34 @@ IMPORTANT:
 
 Return ONLY valid JSON, no markdown or extra text.`;
 
-        console.log("Calling Gemini API for roadmap generation...");
-        const startTime = Date.now();
-        
-        // Use retry logic for 503/429 errors
-        const result = await retryWithBackoff(async () => {
-          return await model.generateContent(prompt);
-        });
-        
-        const response = await result.response;
-        const text = response.text();
-
-        const endTime = Date.now();
-        console.log(`✅ Gemini API (${modelName}) response received in ${endTime - startTime}ms`);
-        console.log("Gemini response length:", text.length, "characters");
-        console.log("Gemini response preview:", text.substring(0, 200) + "...");
-
-        // Extract JSON
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          console.error("No JSON found in Gemini response. Full response:", text);
-          throw new Error("No JSON in response");
-        }
-
-        try {
-          const roadmapData = JSON.parse(jsonMatch[0]);
-          console.log("Successfully parsed Gemini response. Stages count:", roadmapData.stages?.length || 0);
-          return roadmapData.stages;
-        } catch (parseError) {
-          console.error("JSON parse error:", parseError);
-          console.error("JSON match:", jsonMatch[0].substring(0, 500));
-          throw new Error("Failed to parse JSON from Gemini response");
-        }
-      } catch (modelError: any) {
-        console.warn(`Model ${modelName} failed:`, modelError.message);
-        lastError = modelError;
-        
-        // If it's a 503 or overloaded error, try next model
-        if (modelError.status === 503 || modelError.message?.includes("overloaded")) {
-          continue; // Try next model
-        }
-        
-        // For other errors, throw immediately
-        throw modelError;
-      }
-    }
+    console.log("Calling unified AI service for roadmap generation...");
+    const startTime = Date.now();
     
-    // If all models failed, throw the last error
-    throw lastError || new Error("All Gemini models failed");
+    // Use retry logic for 503/429 errors
+    const text = await retryWithBackoff(async () => {
+      return await generateTextUnified({
+        prompt,
+        system: "You are an expert career advisor. Create detailed, interactive learning roadmaps with hands-on exercises.",
+      });
+    });
+    
+    const endTime = Date.now();
+    console.log(`✅ Unified AI service response received in ${endTime - startTime}ms`);
+    console.log("Response length:", text.length, "characters");
+    console.log("Response preview:", text.substring(0, 200) + "...");
+
+    // Extract JSON
+    const roadmapData = parseJSONFromText(text);
+    
+    if (!roadmapData.stages || !Array.isArray(roadmapData.stages)) {
+      console.error("Invalid roadmap structure in response");
+      throw new Error("Invalid roadmap structure in AI response");
+    }
+
+    console.log("Successfully parsed AI response. Stages count:", roadmapData.stages.length);
+    return roadmapData.stages;
   } catch (error: any) {
-    console.error("Gemini AI error (all models failed):", error);
+    console.error("Enhanced roadmap generation error:", error);
     console.error("Error details:", {
       name: error.name,
       message: error.message,
@@ -380,7 +356,7 @@ function getFallbackInteractiveRoadmap(track: string): RoadmapStage[] {
 
 
 // Print all variables
-console.log(name, age, likesCoding);`,
+console.log(name, age, likesCoding)`,
       solution: `// Declare a variable for your name
 let name = "John Doe";
 
@@ -545,8 +521,3 @@ console.log(doubled, evens, sum);`,
 }
 
 export { type Exercise, type RoadmapStage };
-
-
-
-
-
