@@ -27,13 +27,44 @@ import {
   FileCheck,
   Bot,
   FileText as FileTextIcon,
+  ChevronDown,
+  ChevronRight,
+  Folder,
 } from "lucide-react";
 import NotificationDropdown from "./NotificationDropdown";
+import { usePathname } from "next/navigation";
 
 export default function DynamicDashboardNav() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  // Load expanded sections from localStorage
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("dashboard-nav-expanded");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // Fallback to defaults if parse fails
+        }
+      }
+    }
+    return {
+      career: true, // Default expanded
+      documents: false,
+      ai: false,
+      support: false,
+    };
+  });
+
+  // Save expanded sections to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("dashboard-nav-expanded", JSON.stringify(expandedSections));
+    }
+  }, [expandedSections]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -57,6 +88,29 @@ export default function DynamicDashboardNav() {
   const subscriptionTierRaw =
     profile?.subscription?.tier || (session?.user as any)?.tier || "basic";
   const subscriptionTier = subscriptionTierRaw.toString().toLowerCase();
+
+  // Auto-expand section if current page is in that section
+  useEffect(() => {
+    if (userRole === "user" && pathname) {
+      const sections = {
+        career: ["/dashboard/profile", "/dashboard/jobs", "/dashboard/roadmap", "/dashboard/resources"],
+        documents: ["/dashboard/resumes", "/dashboard/cv", "/dashboard/portfolio"],
+        ai: ["/dashboard/careerbot", "/dashboard/interviews"],
+        support: ["/dashboard/mentors", "/dashboard/community"],
+      };
+
+      Object.entries(sections).forEach(([sectionId, paths]) => {
+        if (paths.some((path) => pathname.startsWith(path))) {
+          setExpandedSections((prev) => ({ ...prev, [sectionId]: true }));
+        }
+      });
+    }
+  }, [pathname, userRole]);
+
+  // Helper to check if link is active
+  const isActiveLink = (href: string) => {
+    return pathname === href || pathname?.startsWith(href + "/");
+  };
 
   // ensure user's dashboard link is /dashboard (not /user/dashboard)
   const dashboardHref = userRole === "user" ? "/dashboard" : `/${userRole}/dashboard`;
@@ -94,38 +148,81 @@ export default function DynamicDashboardNav() {
         { icon: Settings, label: "Settings", href: "/mentor/settings", roles: ["mentor"] },
       ];
     } else {
-      const items = [
-        ...baseItems,
-        { icon: User, label: "Profile", href: "/dashboard/profile", roles: ["user"] },
-        { icon: Briefcase, label: "Jobs", href: "/dashboard/jobs", roles: ["user"] },
-        { icon: Map, label: "Roadmap", href: "/dashboard/roadmap", roles: ["user"] },
-        ...(subscriptionTier === "pro" || subscriptionTier === "ultimate"
-          ? [
-              {
-                icon: Sparkles,
-                label: "AI Interviews",
-                href: "/dashboard/interviews",
-                roles: ["user"],
-              },
-            ]
-          : []),
-        { icon: BookOpen, label: "Resources", href: "/dashboard/resources", roles: ["user"] },
-        { icon: FileCheck, label: "Resumes", href: "/dashboard/resumes", roles: ["user"] },
-        { icon: FileTextIcon, label: "My CV", href: "/dashboard/cv", roles: ["user"] },
-        { icon: Bot, label: "CareerBot", href: "/dashboard/careerbot", roles: ["user"] },
-        { icon: FileText, label: "Portfolio", href: "/dashboard/portfolio", roles: ["user"] },
-        { icon: Users, label: "Mentors", href: "/dashboard/mentors", roles: ["user"] },
-        { icon: Calendar, label: "My Sessions", href: "/dashboard/mentors/my-sessions", roles: ["user"] },
-        { icon: MessageSquare, label: "Community", href: "/dashboard/community", roles: ["user"] },
-        { icon: ClipboardList, label: "Applications", href: "/dashboard/applications", roles: ["user"] },
-        { icon: Settings, label: "Settings", href: "/dashboard/settings", roles: ["user"] },
-      ];
-
-      return items;
+      // Return grouped structure for users
+      return "grouped";
     }
   };
 
   const navItems = getNavItems();
+  
+  // Get grouped navigation for users
+  const getUserNavSections = () => {
+    if (userRole !== "user") return null;
+    
+    return [
+      {
+        id: "career",
+        label: "Career Tools",
+        icon: Briefcase,
+        defaultExpanded: expandedSections.career,
+        items: [
+          { icon: User, label: "Profile", href: "/dashboard/profile" },
+          { icon: Briefcase, label: "Jobs", href: "/dashboard/jobs" },
+          { icon: Map, label: "Roadmap", href: "/dashboard/roadmap" },
+          { icon: BookOpen, label: "Resources", href: "/dashboard/resources" },
+        ],
+      },
+      {
+        id: "documents",
+        label: "Documents",
+        icon: Folder,
+        defaultExpanded: expandedSections.documents,
+        items: [
+          { icon: FileCheck, label: "Resumes", href: "/dashboard/resumes" },
+          { icon: FileTextIcon, label: "My CV", href: "/dashboard/cv" },
+          { icon: FileText, label: "Portfolio", href: "/dashboard/portfolio" },
+        ],
+      },
+      {
+        id: "ai",
+        label: "AI Assistant",
+        icon: Sparkles,
+        defaultExpanded: expandedSections.ai,
+        items: [
+          { icon: Bot, label: "CareerBot", href: "/dashboard/careerbot" },
+          ...(subscriptionTier === "pro" || subscriptionTier === "ultimate"
+            ? [
+                {
+                  icon: Sparkles,
+                  label: "AI Interviews",
+                  href: "/dashboard/interviews",
+                },
+              ]
+            : []),
+        ],
+      },
+      {
+        id: "support",
+        label: "Support",
+        icon: Users,
+        defaultExpanded: expandedSections.support,
+        items: [
+          { icon: Users, label: "Mentors", href: "/dashboard/mentors" },
+          { icon: Calendar, label: "My Sessions", href: "/dashboard/mentors/my-sessions" },
+          { icon: MessageSquare, label: "Community", href: "/dashboard/community" },
+        ],
+      },
+    ];
+  };
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
+
+  const userNavSections = getUserNavSections();
 
   const getRoleLabel = () => {
     switch (userRole) {
@@ -164,17 +261,102 @@ export default function DynamicDashboardNav() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-        {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition group"
-            >
-              <item.icon size={20} className="group-hover:scale-110 transition" />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          ))}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          {userRole === "user" && userNavSections ? (
+            <>
+              {/* Dashboard - Always visible */}
+              <Link
+                href={dashboardHref}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition group mb-2 ${
+                  isActiveLink(dashboardHref)
+                    ? "bg-primary-100 text-primary-700 font-semibold"
+                    : "text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+                }`}
+              >
+                <LayoutDashboard size={20} className="group-hover:scale-110 transition" />
+                <span className="font-medium">Dashboard</span>
+              </Link>
+
+              {/* Grouped Sections */}
+              {userNavSections.map((section) => (
+                <div key={section.id} className="mb-2">
+                  {/* Section Header */}
+                  <button
+                    onClick={() => toggleSection(section.id)}
+                    className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-50 rounded-lg transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <section.icon size={14} />
+                      <span>{section.label}</span>
+                    </div>
+                    {expandedSections[section.id] ? (
+                      <ChevronDown size={14} />
+                    ) : (
+                      <ChevronRight size={14} />
+                    )}
+                  </button>
+
+                  {/* Section Items */}
+                  {expandedSections[section.id] && (
+                    <div className="mt-1 space-y-1">
+                      {section.items.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`flex items-center gap-3 px-4 py-2.5 ml-4 rounded-lg transition group text-sm ${
+                            isActiveLink(item.href)
+                              ? "bg-primary-100 text-primary-700 font-semibold"
+                              : "text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+                          }`}
+                        >
+                          <item.icon size={18} className="group-hover:scale-110 transition" />
+                          <span className="font-medium">{item.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Standalone Items */}
+              <div className="mt-4 pt-4 border-t border-gray-200 space-y-1">
+                <Link
+                  href="/dashboard/applications"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition group ${
+                    isActiveLink("/dashboard/applications")
+                      ? "bg-primary-100 text-primary-700 font-semibold"
+                      : "text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+                  }`}
+                >
+                  <ClipboardList size={20} className="group-hover:scale-110 transition" />
+                  <span className="font-medium">Applications</span>
+                </Link>
+                <Link
+                  href="/dashboard/settings"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition group ${
+                    isActiveLink("/dashboard/settings")
+                      ? "bg-primary-100 text-primary-700 font-semibold"
+                      : "text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+                  }`}
+                >
+                  <Settings size={20} className="group-hover:scale-110 transition" />
+                  <span className="font-medium">Settings</span>
+                </Link>
+              </div>
+            </>
+          ) : (
+            // Non-user roles (admin, recruiter, mentor) - flat navigation
+            navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition group"
+              >
+                <item.icon size={20} className="group-hover:scale-110 transition" />
+                <span className="font-medium">{item.label}</span>
+              </Link>
+            ))
+          )}
         </nav>
 
         {/* Bottom Actions */}
@@ -221,18 +403,87 @@ export default function DynamicDashboardNav() {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg max-h-[calc(100vh-64px)] overflow-y-auto">
-            <nav className="p-4 space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition"
-                >
-                  <item.icon size={20} />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              ))}
+            <nav className="p-4 space-y-2">
+              {userRole === "user" && userNavSections ? (
+                <>
+                  {/* Dashboard */}
+                  <Link
+                    href={dashboardHref}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition"
+                  >
+                    <LayoutDashboard size={20} />
+                    <span className="font-medium">Dashboard</span>
+                  </Link>
+
+                  {/* Grouped Sections */}
+                  {userNavSections.map((section) => (
+                    <div key={section.id}>
+                      <button
+                        onClick={() => toggleSection(section.id)}
+                        className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                      >
+                        <div className="flex items-center gap-2">
+                          <section.icon size={14} />
+                          <span>{section.label}</span>
+                        </div>
+                        {expandedSections[section.id] ? (
+                          <ChevronDown size={14} />
+                        ) : (
+                          <ChevronRight size={14} />
+                        )}
+                      </button>
+                      {expandedSections[section.id] && (
+                        <div className="mt-1 space-y-1">
+                          {section.items.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 ml-4 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition text-sm"
+                            >
+                              <item.icon size={18} />
+                              <span className="font-medium">{item.label}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Standalone Items */}
+                  <div className="pt-2 border-t border-gray-200 space-y-1">
+                    <Link
+                      href="/dashboard/applications"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition"
+                    >
+                      <ClipboardList size={20} />
+                      <span className="font-medium">Applications</span>
+                    </Link>
+                    <Link
+                      href="/dashboard/settings"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition"
+                    >
+                      <Settings size={20} />
+                      <span className="font-medium">Settings</span>
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition"
+                  >
+                    <item.icon size={20} />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                ))
+              )}
               <div className="pt-4 border-t border-gray-200">
                 <button
                   onClick={async () => {
