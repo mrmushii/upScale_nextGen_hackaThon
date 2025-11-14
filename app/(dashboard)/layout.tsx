@@ -1,10 +1,17 @@
+"use client";
+
+import { useSession } from "next-auth/react";
 import DynamicDashboardNav from "@/components/dashboard/DynamicDashboardNav";
+import FloatingCareerBot from "@/components/career/FloatingCareerBot";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role || "user";
+
   return (
     <div className="min-h-screen bg-gradient-primary">
       <DynamicDashboardNav />
@@ -15,6 +22,9 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {/* Floating CareerBot - Only for users */}
+      {userRole === "user" && <FloatingCareerBot />}
     </div>
   );
 }
