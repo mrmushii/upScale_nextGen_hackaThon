@@ -7,6 +7,13 @@ export interface IUser {
   role: "user" | "admin" | "recruiter" | "mentor";
   educationLevel: string;
   educationDepartment?: string;
+  education?: Array<{
+    degree: string;
+    institution: string;
+    field: string;
+    year: string;
+    gpa?: string;
+  }>;
   experienceLevel: string;
   preferredTrack: string;
   targetRoles: string[];
@@ -14,18 +21,23 @@ export interface IUser {
   experience?: Array<{
     title: string;
     company?: string;
-    description: string;
+    location?: string;
+    description: string[];  // Array of bullet points
     startDate?: Date;
     endDate?: Date;
     current?: boolean;
+    technologies?: string[];
+    achievements?: string[];
   }>;
   projects?: Array<{
     title: string;
     description: string;
     technologies?: string[];
     url?: string;
+    githubUrl?: string;
     startDate?: Date;
     endDate?: Date;
+    highlights?: string[];
   }>;
   careerInterests?: string[];
   cvText?: string;
@@ -126,6 +138,18 @@ const UserSchema = new Schema<IUser>(
     educationDepartment: {
       type: String,
     },
+    education: {
+      type: [
+        {
+          degree: String,        // e.g., "Bachelor's", "Master's", "PhD"
+          institution: String,   // University/College name
+          field: String,         // Field of study (e.g., "Computer Science")
+          year: String,          // Graduation year or range (e.g., "2020" or "2018-2022")
+          gpa: String,           // Optional GPA
+        },
+      ],
+      default: [],
+    },
     experienceLevel: {
       type: String,
       required: true,
@@ -147,10 +171,13 @@ const UserSchema = new Schema<IUser>(
         {
           title: String,
           company: String,
-          description: String,
+          location: String,      // Optional location
+          description: [String],  // Array of bullet points (3-5 recommended)
           startDate: Date,
           endDate: Date,
           current: { type: Boolean, default: false },
+          technologies: [String], // Technologies used
+          achievements: [String], // Key achievements (optional)
         },
       ],
       default: [],
@@ -161,9 +188,11 @@ const UserSchema = new Schema<IUser>(
           title: String,
           description: String,
           technologies: [String],
-          url: String,
+          url: String,           // Live URL
+          githubUrl: String,     // GitHub repository URL
           startDate: Date,
           endDate: Date,
+          highlights: [String],  // Key features/achievements
         },
       ],
       default: [],
