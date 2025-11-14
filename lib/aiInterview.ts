@@ -1,5 +1,4 @@
-import { generateObject, generateText } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 
 const COVER_THEMES = [
@@ -63,28 +62,36 @@ export function getRandomCoverTheme(): CoverTheme {
 
 function parseQuestionsResponse(response: string): string[] {
   try {
-    const parsed = JSON.parse(response);
-    if (Array.isArray(parsed)) {
-      return parsed
-        .map((item) => (typeof item === "string" ? item.trim() : ""))
-        .filter(Boolean);
+    // Try to parse as JSON first
+    const cleaned = response.trim();
+    // Remove markdown code blocks if present
+    const jsonMatch = cleaned.match(/\[.*\]/s);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => (typeof item === "string" ? item.trim() : ""))
+          .filter(Boolean);
+      }
     }
   } catch (error) {
-    console.warn("Failed to parse interview questions", error);
+    console.warn("Failed to parse interview questions as JSON, trying fallback", error);
   }
+  
+  // Fallback: parse line by line
   return response
     .split("\n")
-    .map((line) => line.replace(/^\d+\.\s*/, "").trim())
-    .filter(Boolean);
+    .map((line) => line.replace(/^\d+\.\s*/, "").replace(/^[-*]\s*/, "").replace(/^["']|["']$/g, "").trim())
+    .filter(Boolean)
+    .filter((line) => line.length > 10); // Filter out very short lines
 }
 
-let cachedGoogleProvider:
-  | ReturnType<typeof createGoogleGenerativeAI>
-  | null = null;
+// Cached model instance
+let cachedModel: any = null;
 
-function resolveGoogleProvider() {
-  if (cachedGoogleProvider) {
-    return cachedGoogleProvider;
+function getGeminiModel() {
+  if (cachedModel) {
+    return cachedModel;
   }
 
   const apiKey =
@@ -96,8 +103,18 @@ function resolveGoogleProvider() {
     );
   }
 
-  cachedGoogleProvider = createGoogleGenerativeAI({ apiKey });
-  return cachedGoogleProvider;
+  const genAI = new GoogleGenerativeAI(apiKey);
+  cachedModel = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash-001",
+    generationConfig: {
+      temperature: 0.7,
+      topP: 0.8,
+      topK: 40,
+      maxOutputTokens: 2048,
+    },
+  });
+
+  return cachedModel;
 }
 
 export async function generateInterviewQuestions(options: {
@@ -107,29 +124,33 @@ export async function generateInterviewQuestions(options: {
   type: string;
   amount: number;
 }): Promise<string[]> {
-  const { role, level, techstack, type, amount } = options;
-  const google = resolveGoogleProvider();
+  try {
+    const { role, level, techstack, type, amount } = options;
+    const model = getGeminiModel();
 
-  const { text } = await generateText({
-    model: google("gemini-2.0-flash-001"),
-    prompt: QUESTIONS_PROMPT(role, level, techstack, type, amount),
-  });
+    const prompt = QUESTIONS_PROMPT(role, level, techstack, type, amount);
 
-  return parseQuestionsResponse(text);
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    return parseQuestionsResponse(text);
+  } catch (error: any) {
+    console.error("Error generating interview questions:", error);
+    throw new Error(`Failed to generate interview questions: ${error.message}`);
+  }
 }
 
 export async function generateInterviewFeedback(options: {
   transcript: Array<{ role: string; content: string }>;
 }): Promise<FeedbackSchema> {
-  const google = resolveGoogleProvider();
-  const transcriptLines = options.transcript
-    .map(({ role, content }) => `- ${role}: ${content}`)
-    .join("\n");
+  try {
+    const model = getGeminiModel();
+    const transcriptLines = options.transcript
+      .map(({ role, content }) => `- ${role}: ${content}`)
+      .join("\n");
 
-  const { object } = await generateObject({
-    model: google("gemini-2.0-flash-001", { structuredOutputs: false }),
-    schema: feedbackSchema,
-    prompt: `
+    const prompt = `
 You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
 Transcript:
 ${transcriptLines}
@@ -140,12 +161,75 @@ Please score the candidate from 0 to 100 in the following areas. Do not add cate
 - Problem Solving: Ability to analyze problems and propose solutions.
 - Cultural & Role Fit: Alignment with company values and job role.
 - Confidence & Clarity: Confidence in responses, engagement, and clarity.
-`,
-    system:
-      "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories.",
-  });
 
-  return object;
+Return your analysis as a valid JSON object in this exact format:
+{
+  "totalScore": 75,
+  "categoryScores": [
+    {
+      "name": "Communication Skills",
+      "score": 80,
+      "comment": "Clear and articulate responses"
+    },
+    {
+      "name": "Technical Knowledge",
+      "score": 70,
+      "comment": "Good understanding but could be deeper"
+    },
+    {
+      "name": "Problem Solving",
+      "score": 75,
+      "comment": "Shows logical thinking"
+    },
+    {
+      "name": "Cultural & Role Fit",
+      "score": 80,
+      "comment": "Good alignment with role requirements"
+    },
+    {
+      "name": "Confidence & Clarity",
+      "score": 70,
+      "comment": "Could be more confident"
+    }
+  ],
+  "strengths": ["strength 1", "strength 2"],
+  "areasForImprovement": ["area 1", "area 2"],
+  "finalAssessment": "Overall assessment of the candidate"
+}
+
+Return ONLY the JSON object, no other text or markdown formatting.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Parse JSON from response
+    let parsed: any;
+    try {
+      // Clean the response (remove markdown code blocks if present)
+      const cleanedText = text
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
+      
+      parsed = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error("Failed to parse feedback JSON:", text);
+      throw new Error("AI returned invalid JSON. Please try again.");
+    }
+
+    // Validate with Zod schema
+    const validated = feedbackSchema.parse(parsed);
+    return validated;
+  } catch (error: any) {
+    console.error("Error generating interview feedback:", error);
+    
+    if (error instanceof z.ZodError) {
+      throw new Error(`Invalid feedback structure: ${error.errors.map(e => e.message).join(", ")}`);
+    }
+    
+    throw new Error(`Failed to generate interview feedback: ${error.message}`);
+  }
 }
 
 export function normalizeTechstack(raw: string[] | string): string[] {
@@ -162,5 +246,3 @@ export function normalizeTechstack(raw: string[] | string): string[] {
     .filter(Boolean)
     .slice(0, 12);
 }
-
-

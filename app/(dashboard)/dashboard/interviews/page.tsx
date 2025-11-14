@@ -10,7 +10,7 @@ import {
   INTERVIEW_TYPES,
 } from "@/constants/aiInterview";
 import Link from "next/link";
-import { ChevronRight, Loader2, ShieldCheck } from "lucide-react";
+import { ChevronRight, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 
 interface InterviewResponse {
   myInterviews: AIInterview[];
@@ -131,8 +131,8 @@ export default function InterviewsPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary-500" />
-          <p className="text-sm font-medium text-slate-600">
+          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-600">
             Preparing your interview workspace...
           </p>
         </div>
@@ -143,21 +143,21 @@ export default function InterviewsPage() {
   if (!eligible && !loading) {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="rounded-3xl bg-white p-10 text-center shadow-xl">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-primary-500 to-coral-500 text-white shadow-lg">
+        <div className="rounded-3xl bg-white p-10 text-center shadow-lg border-2 border-gray-200">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-primary-600 to-coral-600 text-white shadow-lg mb-6">
             <ShieldCheck className="h-8 w-8" />
           </div>
-          <h1 className="mt-6 text-3xl font-bold text-slate-900">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
             Unlock AI Mock Interviews
           </h1>
-          <p className="mt-3 text-base text-slate-600">
+          <p className="text-base text-gray-600 mb-6">
             Practice with voice-powered interviews and get actionable feedback.
             Upgrade to the Pro or Ultimate plan to enable this feature on your
             account.
           </p>
           <Link
             href="/dashboard/settings?tab=subscription"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-500 to-coral-500 px-8 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:shadow-xl"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-coral-600 px-8 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:shadow-xl"
           >
             View Plans
             <ChevronRight className="h-4 w-4" />
@@ -168,32 +168,37 @@ export default function InterviewsPage() {
   }
 
   return (
-    <div className="space-y-10">
-      <header className="space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-wide text-primary-500">
-          AI Mock Interviews
-        </p>
-        <h1 className="text-3xl font-bold text-slate-900">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-primary-100 rounded-lg">
+            <Sparkles className="w-5 h-5 text-primary-600" />
+          </div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-primary-600">
+            AI Mock Interviews
+          </p>
+        </div>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
           Practice smarter with voice-powered interviews
         </h1>
-        <p className="max-w-2xl text-base text-slate-600">
+        <p className="max-w-2xl text-base text-gray-600">
           Generate tailored interview question sets based on your target role,
           run a live voice interview with our AI interviewer, and receive
           structured feedback on the spot.
         </p>
-      </header>
+      </div>
 
-      <section className="rounded-3xl bg-white p-8 shadow-lg ring-1 ring-slate-100">
-        <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">
-              Create a new interview
-            </h2>
-            <p className="text-sm text-slate-600">
-              Provide a few details and let our AI generate a focused interview
-              scenario.
-            </p>
-          </div>
+      {/* Create Interview Form */}
+      <section className="rounded-3xl bg-white p-8 shadow-lg border-2 border-gray-200">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Create a new interview
+          </h2>
+          <p className="text-sm text-gray-600">
+            Provide a few details and let our AI generate a focused interview
+            scenario.
+          </p>
         </div>
 
         <form
@@ -201,7 +206,7 @@ export default function InterviewsPage() {
           className="grid gap-6 md:grid-cols-2 md:gap-8"
         >
           <div className="space-y-2">
-            <label htmlFor="role" className="text-sm font-semibold text-slate-700">
+            <label htmlFor="role" className="block text-sm font-semibold text-gray-700">
               Target role
             </label>
             <input
@@ -211,7 +216,7 @@ export default function InterviewsPage() {
               value={form.role}
               onChange={handleChange}
               placeholder="e.g. Senior Frontend Engineer"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-100"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
               required
             />
           </div>
@@ -219,7 +224,7 @@ export default function InterviewsPage() {
           <div className="space-y-2">
             <label
               htmlFor="level"
-              className="text-sm font-semibold text-slate-700"
+              className="block text-sm font-semibold text-gray-700"
             >
               Experience level
             </label>
@@ -228,7 +233,7 @@ export default function InterviewsPage() {
               name="level"
               value={form.level}
               onChange={handleChange}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-100"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
             >
               {EXPERIENCE_LEVELS.map((level) => (
                 <option key={level} value={level}>
@@ -241,7 +246,7 @@ export default function InterviewsPage() {
           <div className="space-y-2">
             <label
               htmlFor="type"
-              className="text-sm font-semibold text-slate-700"
+              className="block text-sm font-semibold text-gray-700"
             >
               Interview focus
             </label>
@@ -250,7 +255,7 @@ export default function InterviewsPage() {
               name="type"
               value={form.type}
               onChange={handleChange}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-100"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
             >
               {INTERVIEW_TYPES.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -263,7 +268,7 @@ export default function InterviewsPage() {
           <div className="space-y-2">
             <label
               htmlFor="techstack"
-              className="text-sm font-semibold text-slate-700"
+              className="block text-sm font-semibold text-gray-700"
             >
               Tech stack (comma separated)
             </label>
@@ -274,16 +279,16 @@ export default function InterviewsPage() {
               value={form.techstack}
               onChange={handleChange}
               placeholder="React, TypeScript, Next.js"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-100"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
             />
           </div>
 
           <div className="space-y-2 md:col-span-2">
             <label
               htmlFor="amount"
-              className="text-sm font-semibold text-slate-700"
+              className="block text-sm font-semibold text-gray-700"
             >
-              Number of questions
+              Number of questions: {form.amount}
             </label>
             <input
               id="amount"
@@ -293,9 +298,9 @@ export default function InterviewsPage() {
               max={12}
               value={form.amount}
               onChange={handleChange}
-              className="w-full accent-primary-500"
+              className="w-full accent-primary-600"
             />
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-gray-500">
               {form.amount} questions will be generated.
             </div>
           </div>
@@ -304,7 +309,7 @@ export default function InterviewsPage() {
             <button
               type="submit"
               disabled={creating}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-500 to-coral-500 px-8 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-coral-600 px-8 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
             >
               {creating && <Loader2 className="h-4 w-4 animate-spin" />}
               Generate interview
@@ -313,13 +318,14 @@ export default function InterviewsPage() {
         </form>
       </section>
 
+      {/* Your Interviews */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-slate-900">
+          <h2 className="text-2xl font-bold text-gray-900">
             Your interviews
           </h2>
           {interviews.length > 0 && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-gray-500">
               {interviews.length} saved interview
               {interviews.length === 1 ? "" : "s"}
             </p>
@@ -327,8 +333,13 @@ export default function InterviewsPage() {
         </div>
 
         {interviews.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-            Generate your first mock interview to see it listed here.
+          <div className="rounded-3xl border-2 border-dashed border-gray-300 bg-white p-10 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
+              <Sparkles className="w-8 h-8 text-primary-600" />
+            </div>
+            <p className="text-sm text-gray-600">
+              Generate your first mock interview to see it listed here.
+            </p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -343,19 +354,25 @@ export default function InterviewsPage() {
         )}
       </section>
 
+      {/* Community Interviews */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            Practise with community scenarios
+          <h2 className="text-2xl font-bold text-gray-900">
+            Practice with community scenarios
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-gray-500">
             Trending interviews from fellow Upscale users
           </p>
         </div>
 
         {latestInterviews.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-            New interviews will appear here as the community creates them.
+          <div className="rounded-3xl border-2 border-dashed border-gray-300 bg-white p-10 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <Sparkles className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-sm text-gray-600">
+              New interviews will appear here as the community creates them.
+            </p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -372,5 +389,3 @@ export default function InterviewsPage() {
     </div>
   );
 }
-
-

@@ -13,18 +13,16 @@ export default function TechStackIcons({ techStack }: Props) {
       {items.map((tech) => (
         <span
           key={tech}
-          className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+          className="rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-700 border border-primary-200"
         >
           {tech}
         </span>
       ))}
       {remainder > 0 && (
-        <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
+        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 border border-gray-200">
           +{remainder}
         </span>
       )}
     </div>
   );
 }
-
-
