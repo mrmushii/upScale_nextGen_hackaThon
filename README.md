@@ -30,6 +30,11 @@ Upscale delivers an end-to-end journey for professionals and hiring teams:
   - Generate tailored interview question sets.
   - Launch real-time voice interviews via Vapi.
   - Capture transcripts automatically and receive structured feedback scored across key competencies.
+- **Resume Analyzer (new)** enables users to:
+  - Upload and store multiple resumes (PDF, DOC, DOCX).
+  - Analyze resumes against job descriptions for ATS compatibility.
+  - Receive detailed feedback on tone & style, content, structure, and skills alignment.
+  - Get actionable recommendations to improve resume performance.
 
 ---
 
@@ -54,6 +59,56 @@ Upscale delivers an end-to-end journey for professionals and hiring teams:
 - API keys for Google Gemini, Vapi, RapidAPI, and other integrations
 - Git for cloning the repository
 
+### AI Service Architecture
+
+The application uses a **unified AI service** (`lib/unifiedAI.ts`) that provides consistent AI functionality across all features using the **Google Generative AI SDK** directly.
+
+- **SDK:** `@google/generative-ai` (direct SDK usage)
+- **Model:** `gemini-2.0-flash-001` (single unified model for all tasks)
+- **Initialization:** `new GoogleGenerativeAI(process.env.GEMINI_API_KEY)`
+- **Pattern:** Cached model singleton with direct `generateContent()` calls
+
+**Core Functions:**
+- ✅ `analyzeCV(cvText: string)` - CV/Resume analysis (HR Assistant role)
+- ✅ `generateRoadmap(goal: string, skills: string[])` - Career roadmap generation (Career Coach role)
+- ✅ `runInterviewPrompt(prompt: string)` - Interview assistance (Interview Assistant role)
+
+**Backward Compatibility:**
+- ✅ `generateTextUnified()` - Text generation wrapper
+- ✅ `generateObjectUnified()` - Structured output with Zod validation
+- ✅ `parseJSONFromText()` - JSON parsing with graceful fallback
+- ✅ `validateAPIKey()` - API key validation
+
+**Features using unified AI:**
+- ✅ Roadmap Generation (`lib/geminiAI.ts`, `lib/geminiAIEnhanced.ts`)
+- ✅ Resume Analyzer (`lib/analyzerService.ts`)
+- ✅ Mock Interviews (`lib/aiInterview.ts`)
+
+**Benefits:**
+- Direct SDK control with full feature access
+- Single model ensures consistency across all features
+- Centralized error handling with meaningful messages
+- Better performance with cached model instance
+- Easier maintenance and updates
+- Graceful JSON parsing with fallback
+- Schema validation with Zod for structured outputs
+
+**Error Handling:**
+- API key validation with clear error messages
+- Rate limit detection and user-friendly messages
+- Safety filter detection
+- Graceful JSON parsing fallback for malformed responses
+
+See `GEMINI_V1_DIRECT_SDK_REPORT.md` for detailed technical documentation.
+
+### Optional Dependencies (for Enhanced PDF Parsing)
+For production use, install `pdf-parse` for server-side PDF text extraction:
+```bash
+npm install pdf-parse @types/pdf-parse
+```
+
+**Note:** The Resume Analyzer uses `pdf-parse` for extracting text from PDF resumes. See `PDF_PARSING_SETUP.md` for detailed setup, troubleshooting, and alternative solutions.
+
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/your-org/upscale.git
@@ -75,9 +130,11 @@ cp env.template .env.local
 - Required keys include (see `env.template` for the full list):
   - `MONGODB_URI`
   - `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
-  - `GEMINI_API_KEY` (or set `GOOGLE_GENERATIVE_AI_API_KEY` to override the AI SDK)
+  - `GEMINI_API_KEY` (required for all AI features: roadmaps, resume analysis, mock interviews)
   - `NEXT_PUBLIC_VAPI_WEB_TOKEN`, `NEXT_PUBLIC_VAPI_WORKFLOW_ID` (for voice interviews)
   - RapidAPI keys for job and course integrations
+
+> **AI Service Note:** The unified AI service uses `GEMINI_API_KEY` and the direct `@google/generative-ai` SDK. All AI features (roadmaps, resume analysis, mock interviews) use the same unified service and model (`gemini-2.0-flash-001`). The service provides core functions (`analyzeCV`, `generateRoadmap`, `runInterviewPrompt`) and maintains backward compatibility with existing code.
 
 > **Tip:** Maintain separate `.env.local` files per environment and never commit secrets.
 
@@ -130,6 +187,22 @@ The app runs at [http://localhost:3000](http://localhost:3000).
   - Automatic feedback creation scored across Communication, Technical Knowledge, Problem Solving, Cultural Fit, and Confidence.
 - Feedback pages summarise scores, comments, strengths, and suggested improvements for future practise.
 
+### 8. Resume Analyzer
+- Access at `/dashboard/resumes` for all authenticated users.
+- Features include:
+  - **Upload & Storage**: Upload resumes (PDF, DOC, DOCX) up to 20MB. All files are stored securely per user.
+  - **Resume Management**: View all uploaded resumes in a list with metadata (filename, size, upload date, analysis status).
+  - **ATS Analysis**: Provide a job description to analyze resume compatibility with Applicant Tracking Systems.
+  - **Detailed Feedback**: Receive scores and recommendations across:
+    - **ATS Score**: Overall compatibility with ATS systems
+    - **Tone & Style**: Professional writing quality and consistency
+    - **Content**: Relevance and completeness of information
+    - **Structure**: Organization and formatting
+    - **Skills**: Alignment with job requirements
+  - **Actions**: Download, delete, and re-analyze resumes as needed.
+- Upload resumes with optional job details (company name, job title, job description) for better analysis.
+- Analysis results are cached per resume, so you can view feedback without re-analyzing.
+
 ---
 
 ## API Documentation
@@ -178,6 +251,69 @@ The app runs at [http://localhost:3000](http://localhost:3000).
 | `/api/ai-interviews/[id]/feedback` | POST | Generate structured feedback from an interview transcript |
 
 > **Access control:** all AI interview endpoints enforce Pro/Ultimate tiers and require an authenticated session. Attempts from Basic users return HTTP 403 with guidance to upgrade.
+
+### Resume Analyzer
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/resumes` | GET | List all resumes for the authenticated user |
+| `/api/resumes` | POST | Upload a new resume (multipart/form-data with file) |
+| `/api/resumes/[id]` | GET | Retrieve a specific resume's metadata |
+| `/api/resumes/[id]` | DELETE | Delete a resume and its associated files |
+| `/api/resumes/[id]/analyze` | POST | Analyze a resume against a job description (requires jobDescription in body) |
+| `/api/resumes/[id]/download` | GET | Download the original resume file |
+
+**Request Examples:**
+
+**Upload Resume:**
+```bash
+curl -X POST /api/resumes \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@resume.pdf" \
+  -F "companyName=Google" \
+  -F "jobTitle=Senior Developer" \
+  -F "jobDescription=<job description text>"
+```
+
+**Analyze Resume:**
+```bash
+curl -X POST /api/resumes/{id}/analyze \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jobTitle": "Senior Frontend Developer",
+    "jobDescription": "We are looking for..."
+  }'
+```
+
+**Response Example (Analysis):**
+```json
+{
+  "success": true,
+  "analysis": {
+    "overallScore": 75,
+    "ATS": {
+      "score": 80,
+      "tips": [
+        { "type": "good", "tip": "Well-structured format" },
+        { "type": "improve", "tip": "Add more keywords" }
+      ]
+    },
+    "toneAndStyle": {
+      "score": 70,
+      "tips": [
+        { "type": "good", "tip": "Professional tone", "explanation": "..." },
+        { "type": "improve", "tip": "Vary sentence length", "explanation": "..." }
+      ]
+    },
+    "content": { "score": 75, "tips": [...] },
+    "structure": { "score": 80, "tips": [...] },
+    "skills": { "score": 70, "tips": [...] }
+  },
+  "resume": { ... }
+}
+```
+
+> **Security:** All resume endpoints require authentication. Users can only access their own resumes. File uploads are validated for type (PDF/DOC/DOCX) and size (max 20MB).
 
 For request/response examples, see the corresponding files under `app/api/**/route.ts`.
 
