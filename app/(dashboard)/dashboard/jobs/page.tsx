@@ -38,7 +38,7 @@ export default function JobsPage() {
       const response = await fetch("/api/jobs/favorites");
       if (response.ok) {
         const data = await response.json();
-        const favoriteIds = new Set(
+        const favoriteIds = new Set<string>(
           (data.favoriteJobs || []).map((job: any) => job.jobId.toString())
         );
         setFavoriteJobIds(favoriteIds);

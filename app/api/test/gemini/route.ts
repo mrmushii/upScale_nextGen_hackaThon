@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTextUnified, validateAPIKey } from "@/lib/unifiedAI";
+import { auth } from "@/auth";
 
 /**
  * Test endpoint for Gemini API configuration
  * 
- * NOTE: This endpoint is public for testing purposes.
- * In production, consider adding authentication or removing this endpoint.
+ * WARNING: This endpoint is public for testing purposes.
+ * In production, this should be protected with authentication or removed.
  * 
  * Usage: GET http://localhost:3000/api/test/gemini
  */
 export async function GET(request: NextRequest) {
+  // Require authentication in production
+  if (process.env.NODE_ENV === "production") {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+  
   try {
     // Validate API key using unified service
     if (!validateAPIKey()) {

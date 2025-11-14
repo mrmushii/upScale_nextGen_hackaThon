@@ -4,8 +4,15 @@ import Job from "@/models/Job";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
 
-const FINDWORK_API_TOKEN = "c6dc3e4923b38120c5e2f14d4d55be3cd96e9f0a";
 const FINDWORK_API_URL = "https://findwork.dev/api/jobs/";
+
+function getFindworkApiToken(): string {
+  const token = process.env.FINDWORK_API_TOKEN;
+  if (!token) {
+    throw new Error("FINDWORK_API_TOKEN environment variable is not set");
+  }
+  return token;
+}
 
 export async function GET(
   request: NextRequest,
@@ -40,7 +47,7 @@ export async function GET(
       const findworkResponse = await fetch(`${FINDWORK_API_URL}${params.id}/`, {
         method: "GET",
         headers: {
-          Authorization: `Token ${FINDWORK_API_TOKEN}`,
+          Authorization: `Token ${getFindworkApiToken()}`,
           "Content-Type": "application/json",
         },
       });

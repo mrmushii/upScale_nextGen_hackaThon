@@ -4,9 +4,20 @@ import connectDB from "@/lib/mongodb";
 /**
  * Test API route to verify MongoDB connection
  * 
+ * NOTE: This endpoint should be protected in production.
+ * Consider adding authentication or removing this endpoint.
+ * 
  * Usage: GET http://localhost:3000/api/test
  */
 export async function GET() {
+  // Require authentication in production
+  if (process.env.NODE_ENV === "production") {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+  
   try {
     await connectDB();
     

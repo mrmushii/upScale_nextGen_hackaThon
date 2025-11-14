@@ -97,11 +97,13 @@ export default function CVPreview({ cvData }: CVPreviewProps) {
                     </div>
                     <span className="text-sm text-gray-500">{exp.duration}</span>
                   </div>
-                  <ul className="mt-2 list-disc list-inside space-y-1 text-sm text-gray-700">
-                    {exp.description.map((desc, i) => (
-                      <li key={i}>{desc}</li>
-                    ))}
-                  </ul>
+                  {exp.description && Array.isArray(exp.description) && exp.description.length > 0 && (
+                    <ul className="mt-2 list-disc list-inside space-y-1 text-sm text-gray-700">
+                      {exp.description.map((desc, i) => (
+                        <li key={i}>{desc}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               ))}
             </div>
@@ -136,13 +138,15 @@ export default function CVPreview({ cvData }: CVPreviewProps) {
                 <div key={index}>
                   <h3 className="font-semibold">{project.name}</h3>
                   <p className="text-gray-700 text-sm">{project.description}</p>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {project.technologies.map((tech, i) => (
-                      <span key={i} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
+                  {project.technologies && Array.isArray(project.technologies) && project.technologies.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {project.technologies.map((tech, i) => (
+                        <span key={i} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
