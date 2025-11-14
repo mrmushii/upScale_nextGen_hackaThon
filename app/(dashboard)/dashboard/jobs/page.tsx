@@ -356,25 +356,13 @@ export default function JobsPage() {
                     <button className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition">
                       <Heart size={20} />
                     </button>
-                    {job.source === "findwork.dev" && job.url ? (
-                      <a
-                        href={job.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold flex items-center gap-2"
-                      >
-                        Apply
-                        <ExternalLink size={16} />
-                      </a>
-                    ) : (
-                      <Link
-                        href={`/dashboard/jobs/${job.id || job._id}`}
-                        className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold flex items-center gap-2"
-                      >
-                        View Details
-                        <ExternalLink size={16} />
-                      </Link>
-                    )}
+                    <Link
+                      href={`/dashboard/jobs/${job.id || job._id}`}
+                      className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold flex items-center gap-2"
+                    >
+                      View Details
+                      <ExternalLink size={16} />
+                    </Link>
                   </div>
                 </div>
               </div>

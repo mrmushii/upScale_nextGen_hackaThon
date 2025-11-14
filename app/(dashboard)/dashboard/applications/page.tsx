@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Briefcase, CheckCircle2, Clock, XCircle, Calendar, Trash2 } from "lucide-react";
+import { Plus, Briefcase, CheckCircle2, Clock, XCircle, Calendar, Trash2, ExternalLink } from "lucide-react";
 
 const statusConfig = {
   applied: { icon: Clock, label: "Applied", color: "bg-blue-100 text-blue-700" },
@@ -255,10 +255,28 @@ export default function ApplicationsPage() {
                       {app.companyName.charAt(0)}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-1">
-                        {app.position}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {app.position}
+                        </h3>
+                        {app.externalLink && (
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                            External
+                          </span>
+                        )}
+                      </div>
                       <p className="text-gray-600 mb-2">{app.companyName}</p>
+                      {app.externalLink && (
+                        <a
+                          href={app.externalLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 text-sm font-semibold mb-2"
+                        >
+                          View Job Posting
+                          <ExternalLink size={14} />
+                        </a>
+                      )}
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
                           <Calendar size={14} />
