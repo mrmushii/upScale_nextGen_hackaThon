@@ -1,6 +1,6 @@
 # Upscale Career Platform
 
-Upscale is a full-stack career acceleration platform built with Next.js that helps job seekers discover learning resources, generate tailored roadmaps, track progress, and move quickly from learning to landing a role. Recruiters and mentors get dedicated dashboards, while an integrated payment system unlocks premium features for power users.
+Upscale is a full-stack career acceleration platform built with Next.js that helps talent discover learning resources, generate tailored roadmaps, run AI-powered mock interviews, and collaborate with mentors and recruiters. The latest release integrates the **Ai-Interview** voice experience so Pro and Ultimate users can generate interview scenarios, practise in real time with an AI interviewer, and receive structured feedback without leaving the dashboard.
 
 ---
 
@@ -11,7 +11,6 @@ Upscale is a full-stack career acceleration platform built with Next.js that hel
 - [Installation & Setup](#installation--setup)
 - [Usage Guide](#usage-guide)
 - [API Documentation](#api-documentation)
-- [Known Issues & Future Improvements](#known-issues--future-improvements)
 - [Contribution Guidelines](#contribution-guidelines)
 - [License](#license)
 
@@ -19,119 +18,117 @@ Upscale is a full-stack career acceleration platform built with Next.js that hel
 
 ## Project Overview
 
-Upscale provides an end-to-end experience for aspiring professionals:
+Upscale delivers an end-to-end journey for professionals and hiring teams:
 
-- *Personalised onboarding* that enforces completion of critical profile data before unlocking premium features.
-- *Roadmap generation* powered by Google Gemini AI that blends paid Udemy content, curated YouTube playlists, and Microsoft Learn modules.
-- *Interactive learning pages* with code challenges, YouTube player progress tracking, bookmarking, and history.
-- *Smart job discovery* combining our recruiter postings with the Findwork API, scored against a user’s profile.
-- *Subscription tiers* (Basic, Pro, Ultimate) with payment processing and usage limits managed per plan.
-- *Role-based portals* for recruiters, mentors, admins, and job seekers.
+- **Personalised onboarding** ensures job seekers complete the right profile data before unlocking premium tooling.
+- **Roadmap generation** powered by Google Gemini outlines a three-stage learning plan using Udemy, YouTube, and Microsoft Learn content.
+- **Interactive learning** keeps track of course progress, code challenges, bookmarks, and watch history in one hub.
+- **Smart job discovery** scores internal job posts and Findwork listings against a user’s target roles and skills.
+- **Role-based portals** give recruiters and mentors focused dashboards, while admins can curate talent pools.
+- **Subscription tiers** (Basic, Pro, Ultimate) gate advanced functionality, quotas, and payment options.
+- **AI Mock Interviews (new)** allow Pro & Ultimate users to:
+  - Generate tailored interview question sets.
+  - Launch real-time voice interviews via Vapi.
+  - Capture transcripts automatically and receive structured feedback scored across key competencies.
 
 ---
 
 ## Tech Stack
 
-| Layer              | Technologies |
-|--------------------|--------------|
-| Frontend           | Next.js 13 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons |
-| Backend / API      | Next.js API Routes, NextAuth.js, Google Gemini AI SDK |
-| Database           | MongoDB Atlas, Mongoose ODM |
-| Authentication     | NextAuth (Credentials + Session) |
-| External Services  | RapidAPI (Findwork, Paid Udemy Courses), YouTube Data API v3, Microsoft Learn Catalog |
-| Tooling            | ESLint, Prettier, react-hot-toast |
+| Layer             | Technologies |
+|-------------------|--------------|
+| Frontend          | Next.js 14 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons |
+| Backend / API     | Next.js Route Handlers, NextAuth.js (JWT), Vercel AI SDK |
+| Database          | MongoDB Atlas, Mongoose ODM |
+| AI & Voice        | Google Gemini 2.0 Flash, `ai` SDK, `@ai-sdk/google`, Vapi Web Voice SDK |
+| Integrations      | RapidAPI (Findwork, Paid Udemy), YouTube Data API v3, Microsoft Learn |
+| Tooling           | ESLint, TypeScript, react-hot-toast |
 
 ---
 
 ## Installation & Setup
 
 ### Prerequisites
-- *Node.js* v18 or higher
-- *npm* (or yarn/pnpm) and *Git*
-- *MongoDB Atlas* connection string
-- API keys for all external services (RapidAPI, Google, Gemini, etc.)
+- Node.js v18 or higher & npm
+- MongoDB connection string (local or Atlas)
+- API keys for Google Gemini, Vapi, RapidAPI, and other integrations
+- Git for cloning the repository
 
 ### 1. Clone the repository
-bash
+```bash
 git clone https://github.com/your-org/upscale.git
-cd upscale
-
+cd upscale/upScale_nextGen_hackaThon
+```
 
 ### 2. Install dependencies
-bash
+```bash
 npm install
-
+```
 
 ### 3. Configure environment variables
-Create a .env.local file in the project root:
-bash
-cp .env.example .env.local
+- Copy the template and fill in your values:
 
+```bash
+cp env.template .env.local
+```
 
-Populate the file with your own values:
+- Required keys include (see `env.template` for the full list):
+  - `MONGODB_URI`
+  - `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
+  - `GEMINI_API_KEY` (or set `GOOGLE_GENERATIVE_AI_API_KEY` to override the AI SDK)
+  - `NEXT_PUBLIC_VAPI_WEB_TOKEN`, `NEXT_PUBLIC_VAPI_WORKFLOW_ID` (for voice interviews)
+  - RapidAPI keys for job and course integrations
 
-NODE_ENV=development
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_nextauth_secret
-MONGODB_URI=your_mongodb_connection
+> **Tip:** Maintain separate `.env.local` files per environment and never commit secrets.
 
-# Authentication providers
-GEMINI_API_KEY=your_gemini_api_key
-YOUTUBE_API_KEY=your_youtube_key
-
-# RapidAPI keys
-RAPIDAPI_KEY=your_global_rapidapi_key
-PAID_UDEMY_API_HOST=paid-udemy-course-for-free.p.rapidapi.com
-PAID_UDEMY_API_KEY=your_specific_paid_udemy_key
-FINDWORK_API_TOKEN=your_findwork_api_token
-
-# Optional email / storage settings
-EMAIL_FROM=noreply@upscale.com
-
-
-
-> *Tip:* Keep different .env.local files per environment. Never commit secrets.
-
-### 4. Run the development server
-bash
+### 4. Start the development server
+```bash
 npm run dev
+```
+The app runs at [http://localhost:3000](http://localhost:3000).
 
-The app is now available at *http://localhost:3000*.
+### 5. Optional tooling
+- `npm run build` – production build
+- `npm run start` – serve the production build
+- `npm run lint` – run static analysis (accept the Next.js ESLint prompt on first run)
 
 ---
 
 ## Usage Guide
 
 ### 1. Landing & Registration
-- Navigate to / to view the marketing landing page.
-- Choose a plan in *Pricing*. Signed-in users are routed to /dashboard/payment with the correct plan preselected; guests are taken to login.
-- Complete registration for job seeker, recruiter, or mentor roles.
+- Visit `/` for the public marketing experience and pricing plans.
+- Selecting a paid plan routes guests to authentication and signed-in users to `/dashboard/payment` with the tier pre-selected.
+- Users can register as job seekers, recruiters, or mentors.
 
 ### 2. Completing the Profile
-- Basic users are redirected to /dashboard/profile/complete until required information is provided.
-- Progress indicators update in real time and the dashboard visualises completion status.
+- Basic users must complete `/dashboard/profile/complete` before unlocking premium tools.
+- A persistent progress widget highlights missing sections and completion percentage.
 
-### 3. Exploring the Dashboard
-- Access personalised stats, quick actions, and “Top Job Matches”.
-- A persistent profile completion card highlights missing data and the user’s current tier.
+### 3. Dashboard Navigation
+- `/dashboard` surfaces quick stats, job matches, roadmap progress, and subscription status.
+- Recruiters, mentors, and admins are redirected to their specific dashboards automatically.
 
-### 4. Learning Resources (/dashboard/resources)
-- Tabs for *Udemy, **YouTube, **Microsoft Learn, **Suggested, **Bookmarks, and **History*.
-- External APIs load lazily (Udemy coupons, curated YouTube playlists, Microsoft Learn catalog) and fall back to cached data during outages or rate limits.
-- Track progress with the custom YouTube player, bookmark courses, and resume from history.
+### 4. Learning Resources (`/dashboard/resources`)
+- Tabbed interface for Udemy coupons, curated YouTube playlists, Microsoft Learn, personalised suggestions, bookmarks, and history.
+- APIs degrade gracefully with cached fallbacks when third-party quotas are reached.
 
-### 5. Job Board (/dashboard/jobs)
-- Combines recruiter-approved posts with Findwork listings.
-- Filters by job type, remote status, location, and career track. Results are sorted using profile match scoring.
+### 5. Job Discovery (`/dashboard/jobs`)
+- Combines recruiter-submitted posts with Findwork listings, sorted by personalised relevance scores.
+- Filter by track, location, remote preference, and job type.
 
-### 6. Subscription & Payments
-- Use /dashboard/payment to upgrade plans (Pro/Ultimate). Auto-renew can be managed in *Settings → Billing*.
-- Usage limits are enforced at the API level (/api/subscription, /api/roadmap/generate, etc.).
+### 6. Subscriptions & Billing
+- `/dashboard/payment` allows upgrades to Pro or Ultimate; billing preferences live in `/dashboard/settings?tab=subscription`.
+- Usage quotas are enforced at the API level (roadmaps, CV analysis, mock interviews).
 
-> Screenshots: Place PNGs or GIFs in public/docs/ and reference them, e.g.:
-> markdown
-> ![Dashboard](public/docs/dashboard.png)
-> 
+### 7. AI Mock Interviews (Pro & Ultimate)
+- Access the new experience at `/dashboard/interviews` (visible once the subscription tier is Pro or Ultimate).
+- Features include:
+  - Interview generator form to capture role, level, focus, tech stack, and question count.
+  - Personal library of generated interviews plus community scenarios shared by other users.
+  - Real-time voice interview using Vapi with live transcript capture.
+  - Automatic feedback creation scored across Communication, Technical Knowledge, Problem Solving, Cultural Fit, and Confidence.
+- Feedback pages summarise scores, comments, strengths, and suggested improvements for future practise.
 
 ---
 
@@ -140,79 +137,69 @@ The app is now available at *http://localhost:3000*.
 ### Authentication & Profile
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| /api/auth/[...nextauth] | POST | NextAuth credential login & session handling |
-| /api/auth/register | POST | Create a new job seeker account |
-| /api/auth/register-recruiter | POST | Create a recruiter account |
-| /api/user/profile | GET | Fetch current user profile |
-| /api/user/profile | PATCH | Update core profile fields, experience, projects, etc. |
-| /api/user/profile/completion | GET | Retrieve recalculated profile completion metrics |
+| `/api/auth/[...nextauth]` | POST | NextAuth credential login/session |
+| `/api/auth/register` | POST | Register a new job seeker |
+| `/api/auth/register-recruiter` | POST | Register a recruiter account |
+| `/api/user/profile` | GET / PATCH | Fetch or update the signed-in user's profile |
+| `/api/user/profile/completion` | GET | Retrieve recalculated profile completion metrics |
 
-### Settings
+### Settings & Subscriptions
 | Endpoint | Method | Notes |
 |----------|--------|-------|
-| /api/settings/profile | GET / PUT | Fetch & update account profile and password |
-| /api/settings/preferences | GET / PUT | Manage account, notification, privacy, and billing preferences |
+| `/api/settings/profile` | GET / PUT | Profile & password updates |
+| `/api/settings/preferences` | GET / PUT | Account, notification, privacy, and billing preferences |
+| `/api/subscription` | GET / POST / PUT | Manage plan selection, upgrades, cancellations |
 
-### Subscriptions & Billing
+### Learning & Roadmaps
 | Endpoint | Method | Notes |
 |----------|--------|-------|
-| /api/subscription | GET | Get current plan & usage limits |
-| /api/subscription | POST | Upgrade or change subscription tier |
-| /api/subscription | PUT | Cancel plan or toggle auto-renew |
-
-### Roadmaps & Learning
-| Endpoint | Method | Notes |
-|----------|--------|-------|
-| /api/roadmap/generate | POST | Generate AI-assisted roadmap (usage-limited) |
-| /api/roadmap/[id] | GET | Fetch specific roadmap |
-| /api/resources/udemy | GET | Fetch Udemy coupons via RapidAPI (with fallback) |
-| /api/resources/youtube | GET | Fetch curated YouTube content (FreeCodeCamp, JavaScript Mastery) |
-| /api/resources/microsoft | GET | Fetch Microsoft Learn catalog |
-| /api/resources/suggest | GET | Roadmap-aware course suggestions |
-| /api/resources/bookmarks | GET / POST | Manage course bookmarks |
-| /api/resources/history | GET | Retrieve watch history |
-| /api/resources/progress | GET / POST | Persist course progress |
+| `/api/roadmap/generate` | POST | Generate AI roadmaps (quota limited) |
+| `/api/roadmap/[id]` | GET | Retrieve a specific roadmap |
+| `/api/resources/udemy` | GET | Udemy coupon feed |
+| `/api/resources/youtube` | GET | Curated YouTube playlists |
+| `/api/resources/microsoft` | GET | Microsoft Learn catalogue |
+| `/api/resources/bookmarks` | GET / POST | Manage saved resources |
+| `/api/resources/history` | GET | Retrieve content history |
 
 ### Jobs & Recruiters
 | Endpoint | Method | Notes |
 |----------|--------|-------|
-| /api/jobs/unified | GET | Unified job feed (recruiter + Findwork) |
-| /api/jobs/match | GET | Get top scored jobs for dashboard widgets |
-| /api/recruiter/my-jobs | GET | Recruiter job management |
+| `/api/jobs/unified` | GET | Combined recruiter + Findwork job feed |
+| `/api/jobs/match` | GET | Top job matches for dashboard widgets |
+| `/api/recruiter/my-jobs` | GET | Recruiter vacancy management |
 
-> For complete request/response samples, check the corresponding files in app/api/**/route.ts.
+### AI Mock Interviews (Pro & Ultimate only)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/ai-interviews` | GET | Fetch personal and community interviews for the signed-in user |
+| `/api/ai-interviews` | POST | Generate a new interview scenario (Google Gemini) |
+| `/api/ai-interviews/[id]` | GET | Retrieve interview details and questions |
+| `/api/ai-interviews/[id]/feedback` | GET | Fetch the signed-in user's feedback for an interview |
+| `/api/ai-interviews/[id]/feedback` | POST | Generate structured feedback from an interview transcript |
 
----
+> **Access control:** all AI interview endpoints enforce Pro/Ultimate tiers and require an authenticated session. Attempts from Basic users return HTTP 403 with guidance to upgrade.
 
-## Known Issues & Future Improvements
-
-- *External API rate limits:* RapidAPI and YouTube enforce quotas. We currently fall back to cached data when hitting limits; adding persistent caching (Redis) would improve resilience.
-- *Payment flow:* The payment experience is simulated. Integrating an actual PSP (Stripe, SSLCOMMERZ, etc.) is planned.
-- *Automated testing:* End-to-end and integration tests are limited. Adding Playwright/Cypress coverage is a priority.
-- *Accessibility & localisation:* Additional a11y audits and multi-language support would expand reach.
-- *Realtime notifications:* WebSockets (or Pusher) could enhance recruiter ↔ candidate messaging.
+For request/response examples, see the corresponding files under `app/api/**/route.ts`.
 
 ---
 
 ## Contribution Guidelines
 
-1. *Fork* the repository and create a local branch.
-2. Run npm install and ensure npm run lint passes.
-3. Make changes (include tests where possible).
-4. Submit a PR with:
-   - A descriptive title
-   - Summary of changes
-   - Screenshots or curl samples (when applicable)
-5. One reviewer approval is required before merging.
-
-Please follow conventional commits (feat:, fix:, etc.) and keep pull requests focused.
+1. **Fork** the repository and create a feature branch.
+2. Run `npm install` and ensure `npm run lint` passes (accept the initial Next.js ESLint configuration prompt if presented).
+3. Add tests where practical and keep pull requests focused.
+4. Submit a PR that includes:
+   - A descriptive title following conventional commits (`feat:`, `fix:`, etc.).
+   - Summary of changes and testing performed.
+   - Screenshots or cURL samples when modifying UI or APIs.
+5. One reviewer approval is required before merge.
 
 ---
 
 ## License
 
-This project is released under the *MIT License*. You are free to use, modify, and distribute it as long as the license terms are respected.
+This project is licensed under the **MIT License**. You may use, modify, and distribute it provided that all copies include the original license text.
 
 ---
 
-Built with ❤️ by the Upscale team — accelerating careers one roadmap at a time.
+Built with ❤️ by the Upscale team — accelerating careers one roadmap (and interview) at a time.

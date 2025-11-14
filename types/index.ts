@@ -114,6 +114,42 @@ export interface InterviewSession {
   createdAt: Date;
 }
 
+export interface AIInterview {
+  id: string;
+  userId: string;
+  role: string;
+  type: string;
+  level: string;
+  techstack: string[];
+  questions: string[];
+  finalized: boolean;
+  coverTheme: string;
+  createdAt: string;
+  updatedAt: string;
+  feedback?: {
+    totalScore: number;
+    finalAssessment: string;
+    createdAt: string;
+  } | null;
+}
+
+export interface AIInterviewFeedback {
+  id: string;
+  interviewId: string;
+  userId: string;
+  totalScore: number;
+  categoryScores: Array<{
+    name: string;
+    score: number;
+    comment: string;
+  }>;
+  strengths: string[];
+  areasForImprovement: string[];
+  finalAssessment: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Mentor Types
 export interface Mentor {
   id: string;

@@ -23,6 +23,7 @@ import {
   PlusCircle,
   BarChart3,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import NotificationDropdown from "./NotificationDropdown";
 
@@ -50,6 +51,9 @@ export default function DynamicDashboardNav() {
   }, [session]);
 
   const userRole = session?.user?.role || profile?.role || "user";
+  const subscriptionTierRaw =
+    profile?.subscription?.tier || (session?.user as any)?.tier || "basic";
+  const subscriptionTier = subscriptionTierRaw.toString().toLowerCase();
 
   // ensure user's dashboard link is /dashboard (not /user/dashboard)
   const dashboardHref = userRole === "user" ? "/dashboard" : `/${userRole}/dashboard`;
@@ -87,11 +91,21 @@ export default function DynamicDashboardNav() {
         { icon: Settings, label: "Settings", href: "/mentor/settings", roles: ["mentor"] },
       ];
     } else {
-      return [
+      const items = [
         ...baseItems,
         { icon: User, label: "Profile", href: "/dashboard/profile", roles: ["user"] },
         { icon: Briefcase, label: "Jobs", href: "/dashboard/jobs", roles: ["user"] },
         { icon: Map, label: "Roadmap", href: "/dashboard/roadmap", roles: ["user"] },
+        ...(subscriptionTier === "pro" || subscriptionTier === "ultimate"
+          ? [
+              {
+                icon: Sparkles,
+                label: "AI Interviews",
+                href: "/dashboard/interviews",
+                roles: ["user"],
+              },
+            ]
+          : []),
         { icon: BookOpen, label: "Resources", href: "/dashboard/resources", roles: ["user"] },
         { icon: FileText, label: "Portfolio", href: "/dashboard/portfolio", roles: ["user"] },
         { icon: Users, label: "Mentors", href: "/dashboard/mentors", roles: ["user"] },
@@ -100,6 +114,8 @@ export default function DynamicDashboardNav() {
         { icon: ClipboardList, label: "Applications", href: "/dashboard/applications", roles: ["user"] },
         { icon: Settings, label: "Settings", href: "/dashboard/settings", roles: ["user"] },
       ];
+
+      return items;
     }
   };
 

@@ -7,6 +7,8 @@ export { default as Application } from "./Application";
 export { default as Notification } from "./Notification";
 export { default as Portfolio } from "./Portfolio";
 export { default as Question } from "./Question";
+export { default as Interview } from "./Interview";
+export { default as InterviewFeedback } from "./InterviewFeedback";
 
 // Re-export types
 export type { IUser } from "./User";
@@ -17,4 +19,6 @@ export type { IApplication } from "./Application";
 export type { INotification } from "./Notification";
 export type { IPortfolio, IPortfolioSection } from "./Portfolio";
 export type { IQuestion, IAnswer } from "./Question";
+export type { IInterview } from "./Interview";
+export type { IInterviewFeedback } from "./InterviewFeedback";
 
