@@ -2,14 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import Resume from "@/models/Resume";
-import { analyzeResumeFromFile } from "@/lib/analyzerService";
+import { readFile } from "fs/promises";
+import { join } from "path";
+import { extractTextFromPdf } from "@/lib/pdfParser";
+import { analyzeResume } from "@/lib/resumeAnalyzer";
 
-// POST - Analyze a resume against a job description
+/**
+ * Simplified Resume Analysis API
+ * 
+ * Flow:
+ * 1. Get resume from database
+ * 2. Extract text from PDF
+ * 3. Send text to Gemini API for analysis
+ * 4. Save and return results
+ */
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Authenticate user
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,7 +32,7 @@ export async function POST(
 
     await connectDB();
 
-    // Get resume
+    // Get resume from database
     const resume = await Resume.findOne({
       _id: id,
       userId: session.user.id,
@@ -33,48 +45,22 @@ export async function POST(
       );
     }
 
-    // Get job description from request body
+    // Get job information from request body
     const body = await request.json();
     const jobTitle = body.jobTitle || resume.jobTitle || "";
     const jobDescription = body.jobDescription || resume.jobDescription || "";
 
-    if (!jobDescription && !resume.jobDescription) {
-      return NextResponse.json(
-        { error: "Job description is required for analysis" },
-        { status: 400 }
-      );
-    }
-
-    // Update resume status
+    // Update status to processing
     resume.parsedStatus = "processing";
     await resume.save();
 
     try {
-      // Validate API key before processing
-      const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-      if (!apiKey || apiKey === "your-api-key-here" || apiKey === "AIzaSyDummy-Key-For-Testing") {
-        resume.parsedStatus = "failed";
-        await resume.save();
-        return NextResponse.json(
-          {
-            error: "Gemini API key not configured",
-            details: "Please set GEMINI_API_KEY in your .env.local file. See SETUP.md for instructions.",
-          },
-          { status: 500 }
-        );
-      }
-
-      // Extract text from PDF first (we'll use it for analysis and save it)
-      const { readFile } = await import("fs/promises");
-      const { join } = await import("path");
-      const { extractTextFromPdf } = await import("@/lib/pdfParser");
-      
+      // Step 1: Read PDF file
       const relativePath = resume.filePath.startsWith("/uploads")
         ? resume.filePath.substring(1)
         : resume.filePath;
       const fullPath = join(process.cwd(), "public", relativePath);
-      
-      // Validate file exists and read it
+
       let buffer: Buffer;
       try {
         buffer = await readFile(fullPath);
@@ -90,48 +76,36 @@ export async function POST(
         );
       }
 
-      // Extract text from PDF
+      // Step 2: Extract text from PDF
+      console.log("Extracting text from PDF...");
       const parseResult = await extractTextFromPdf(buffer);
-      
+
       if (!parseResult.success || !parseResult.text) {
         resume.parsedStatus = "failed";
         await resume.save();
         return NextResponse.json(
           {
             error: "PDF Processing Error",
-            details: parseResult.error || "Failed to extract text from PDF. Please ensure the PDF contains readable text (not just images).",
+            details: parseResult.error || "Failed to extract text from PDF. Please ensure the PDF contains readable text.",
           },
           { status: 400 }
         );
       }
 
-      // Save parsed text (limit to 100KB for database efficiency)
-      resume.parsedText = parseResult.text.substring(0, 100000);
+      // Save extracted text
+      resume.parsedText = parseResult.text.substring(0, 100000); // Limit to 100KB
 
-      // Analyze resume using extracted text
-      const { analyzeResumeAgainstJD } = await import("@/lib/analyzerService");
-      const analysisResult = await analyzeResumeAgainstJD(
+      // Step 3: Analyze resume with Gemini API
+      console.log("Analyzing resume with Gemini AI...");
+      const analysis = await analyzeResume(
         parseResult.text,
         jobTitle,
         jobDescription
       );
 
-      // Validate analysis result
-      if (!analysisResult || typeof analysisResult.overallScore !== "number") {
-        throw new Error("Invalid analysis result received from AI: missing overallScore");
-      }
-
-      // Validate all required fields
-      const requiredFields = ["ATS", "toneAndStyle", "content", "structure", "skills"];
-      for (const field of requiredFields) {
-        if (!analysisResult[field as keyof typeof analysisResult] || 
-            typeof (analysisResult[field as keyof typeof analysisResult] as any)?.score !== "number") {
-          throw new Error(`Invalid analysis result: missing or invalid ${field} score`);
-        }
-      }
-
-      // Update resume with analysis
-      resume.analysisResult = analysisResult;
+      // Step 4: Save results
+      // Cast to any to allow new simplified structure
+      resume.analysisResult = analysis as any;
       resume.parsedStatus = "completed";
       resume.analyzedAt = new Date();
       if (jobTitle) resume.jobTitle = jobTitle;
@@ -140,7 +114,7 @@ export async function POST(
 
       return NextResponse.json({
         success: true,
-        analysis: analysisResult,
+        analysis,
         resume: resume.toObject(),
       });
     } catch (analysisError: any) {
@@ -148,47 +122,24 @@ export async function POST(
       resume.parsedStatus = "failed";
       await resume.save();
 
-      // Log detailed error for debugging
       console.error("Resume analysis error:", {
         resumeId: resume._id,
         error: analysisError.message,
-        stack: analysisError.stack,
-        filePath: resume.filePath,
       });
-
-      // Provide user-friendly error messages
-      let errorMessage = "Failed to analyze resume";
-      let errorDetails = analysisError.message;
-
-      if (analysisError.message?.includes("API key")) {
-        errorMessage = "API Configuration Error";
-        errorDetails = "Gemini API key is missing or invalid. Please check your .env.local file.";
-      } else if (analysisError.message?.includes("PDF") || analysisError.message?.includes("text")) {
-        errorMessage = "PDF Processing Error";
-        errorDetails = analysisError.message;
-      } else if (analysisError.message?.includes("JSON") || analysisError.message?.includes("parse")) {
-        errorMessage = "AI Response Error";
-        errorDetails = "The AI service returned an invalid response. Please try again.";
-      } else if (analysisError.message?.includes("rate limit") || analysisError.message?.includes("quota")) {
-        errorMessage = "Rate Limit Exceeded";
-        errorDetails = "Too many requests. Please wait a moment and try again.";
-      }
 
       return NextResponse.json(
         {
-          error: errorMessage,
-          details: errorDetails,
-          hint: "Check server logs for more details. Ensure GEMINI_API_KEY is set correctly.",
+          error: "Analysis Failed",
+          details: analysisError.message,
         },
         { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error("Error analyzing resume:", error);
+    console.error("Error in analyze route:", error);
     return NextResponse.json(
       { error: "Failed to analyze resume", details: error.message },
       { status: 500 }
     );
   }
 }
-
