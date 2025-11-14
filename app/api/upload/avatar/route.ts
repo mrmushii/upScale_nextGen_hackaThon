@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { writeFile, mkdir } from "fs/promises";
+import { join, dirname } from "path";
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Save to public/uploads directory
     const path = join(process.cwd(), "public", "uploads", filename);
+    await mkdir(dirname(path), { recursive: true });
     await writeFile(path, buffer);
 
     const avatarUrl = `/uploads/${filename}`;

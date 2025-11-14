@@ -107,7 +107,6 @@ const QuestionSchema = new Schema<IQuestion>(
 );
 
 // Indexes for better query performance
-QuestionSchema.index({ tags: 1 });
 QuestionSchema.index({ createdAt: -1 });
 QuestionSchema.index({ upvotes: -1 });
 QuestionSchema.index({ isAnswered: 1 });

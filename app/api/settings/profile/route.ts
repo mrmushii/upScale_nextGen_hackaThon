@@ -49,6 +49,10 @@ export async function PUT(request: NextRequest) {
       }
 
       const user = await User.findById(userId);
+      if (!user || !user.password) {
+        return NextResponse.json({ error: "User credentials unavailable" }, { status: 400 });
+      }
+
       const isValid = await bcrypt.compare(currentPassword, user.password);
 
       if (!isValid) {
@@ -74,6 +78,10 @@ export async function PUT(request: NextRequest) {
       { $set: updates },
       { new: true }
     ).select("-password");
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
     return NextResponse.json({ 
       success: true,

@@ -59,12 +59,30 @@ export interface Resource {
 }
 
 // Roadmap Types
+export interface RoadmapExercise {
+  title: string;
+  description: string;
+  code: string;
+  solution: string;
+  hints: string[];
+  testCases: Array<{ input: string; expected: string }>;
+  completed: boolean;
+  lastSubmission?: string;
+}
+
 export interface RoadmapStage {
   name: string;
   goals: string[];
-  resources: Resource[];
+  exercises: RoadmapExercise[];
+  resources: string[];
   projects: string[];
   estimatedWeeks: number;
+  completed: boolean;
+  completedExercises: number;
+  suggestedCourses?: {
+    youtube: string[];
+    udemy: string[];
+  };
 }
 
 export interface Roadmap {
@@ -94,6 +112,42 @@ export interface InterviewSession {
   feedback: string[];
   score: number;
   createdAt: Date;
+}
+
+export interface AIInterview {
+  id: string;
+  userId: string;
+  role: string;
+  type: string;
+  level: string;
+  techstack: string[];
+  questions: string[];
+  finalized: boolean;
+  coverTheme: string;
+  createdAt: string;
+  updatedAt: string;
+  feedback?: {
+    totalScore: number;
+    finalAssessment: string;
+    createdAt: string;
+  } | null;
+}
+
+export interface AIInterviewFeedback {
+  id: string;
+  interviewId: string;
+  userId: string;
+  totalScore: number;
+  categoryScores: Array<{
+    name: string;
+    score: number;
+    comment: string;
+  }>;
+  strengths: string[];
+  areasForImprovement: string[];
+  finalAssessment: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Mentor Types

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { LucideIcon } from "lucide-react";
 import { CreditCard, Check, ArrowLeft, Sparkles, Shield, Zap, Infinity, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,7 +9,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 
-const PLAN_FEATURES = {
+type PlanKey = "basic" | "pro" | "ultimate";
+
+type PlanDefinition = {
+  name: string;
+  price: number;
+  description: string;
+  features: string[];
+  color: string;
+  icon: LucideIcon;
+  popular?: boolean;
+};
+
+const PLAN_FEATURES: Record<PlanKey, PlanDefinition> = {
   basic: {
     name: "Basic",
     price: 0,
@@ -63,7 +76,7 @@ const PLAN_FEATURES = {
 export default function PaymentPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const [selectedPlan, setSelectedPlan] = useState<keyof typeof PLAN_FEATURES>("pro");
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("pro");
   const [paymentMethod, setPaymentMethod] = useState<"bkash" | "nagad" | "card">("bkash");
   const [processing, setProcessing] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
@@ -293,7 +306,7 @@ export default function PaymentPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Plan Cards */}
           <div className="grid md:grid-cols-3 gap-6">
-            {Object.entries(PLAN_FEATURES).map(([key, plan]) => {
+            {(Object.entries(PLAN_FEATURES) as [PlanKey, PlanDefinition][]).map(([key, plan]) => {
               const Icon = plan.icon;
               const isSelected = selectedPlan === key;
               const isCurrent = currentSubscription?.currentTier === key;
@@ -301,7 +314,7 @@ export default function PaymentPage() {
               return (
                 <motion.button
                   key={key}
-                  onClick={() => setSelectedPlan(key as keyof typeof PLAN_FEATURES)}
+                  onClick={() => setSelectedPlan(key)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={`text-left p-6 rounded-3xl border-4 transition relative overflow-hidden ${

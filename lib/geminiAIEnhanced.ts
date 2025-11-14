@@ -11,6 +11,8 @@ interface Exercise {
   solution: string;
   hints: string[];
   testCases: Array<{ input: string; expected: string }>;
+  completed?: boolean;
+  lastSubmission?: string;
 }
 
 interface RoadmapStage {

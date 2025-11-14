@@ -1,9 +1,16 @@
 import User from "@/models/User";
 import { TIER_LIMITS } from "@/types";
 
+type UsageFeature =
+  | "evaluationInterviews"
+  | "careerRoadmaps"
+  | "mockInterviews"
+  | "cvAnalyses"
+  | "mentorSessions";
+
 export async function checkUsageLimit(
   userId: string,
-  feature: keyof typeof TIER_LIMITS.basic
+  feature: UsageFeature
 ): Promise<{ allowed: boolean; message?: string; current?: number; limit?: number }> {
   try {
     const user = await User.findById(userId);
@@ -13,7 +20,8 @@ export async function checkUsageLimit(
     }
 
     const tier = user.subscription?.tier || "basic";
-    const limit = TIER_LIMITS[tier][feature];
+    const tierLimits = TIER_LIMITS[tier];
+    const limit = tierLimits[feature];
     const current = user.usageLimits?.[feature] || 0;
 
     // Unlimited access
@@ -39,7 +47,7 @@ export async function checkUsageLimit(
 
 export async function incrementUsage(
   userId: string,
-  feature: keyof typeof TIER_LIMITS.basic
+  feature: UsageFeature
 ): Promise<boolean> {
   try {
     await User.findByIdAndUpdate(userId, {

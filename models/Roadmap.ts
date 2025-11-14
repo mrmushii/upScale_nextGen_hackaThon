@@ -1,12 +1,34 @@
 import mongoose, { Schema, Model, model, models } from "mongoose";
 
+interface Exercise {
+  title: string;
+  description: string;
+  code: string;
+  solution: string;
+  hints: string[];
+  testCases: Array<{
+    input: string;
+    expected: string;
+  }>;
+  completed: boolean;
+  lastSubmission?: string;
+}
+
+interface SuggestedCourses {
+  youtube: string[];
+  udemy: string[];
+}
+
 interface RoadmapStage {
   name: string;
   goals: string[];
+  exercises: Exercise[];
   resources: string[];
   projects: string[];
   estimatedWeeks: number;
   completed: boolean;
+  completedExercises: number;
+  suggestedCourses?: SuggestedCourses;
 }
 
 export interface IRoadmap {
@@ -19,6 +41,31 @@ export interface IRoadmap {
   updatedAt: Date;
 }
 
+const ExerciseSchema = new Schema<Exercise>(
+  {
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    code: { type: String, required: true },
+    solution: { type: String, required: true },
+    hints: { type: [String], default: [] },
+    testCases: {
+      type: [
+        new Schema(
+          {
+            input: { type: String, required: true },
+            expected: { type: String, required: true },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
+    completed: { type: Boolean, default: false },
+    lastSubmission: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
 const RoadmapStageSchema = new Schema<RoadmapStage>(
   {
     name: {
@@ -28,6 +75,10 @@ const RoadmapStageSchema = new Schema<RoadmapStage>(
     goals: {
       type: [String],
       required: true,
+    },
+    exercises: {
+      type: [ExerciseSchema],
+      default: [],
     },
     resources: {
       type: [String],
@@ -44,6 +95,21 @@ const RoadmapStageSchema = new Schema<RoadmapStage>(
     completed: {
       type: Boolean,
       default: false,
+    },
+    completedExercises: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    suggestedCourses: {
+      type: new Schema(
+        {
+          youtube: { type: [String], default: [] },
+          udemy: { type: [String], default: [] },
+        },
+        { _id: false }
+      ),
+      default: undefined,
     },
   },
   { _id: false }

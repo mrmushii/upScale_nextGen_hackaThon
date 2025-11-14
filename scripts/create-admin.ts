@@ -25,12 +25,17 @@ async function createAdminAndRecruiter() {
         subscription: {
           tier: "ultimate",
           status: "active",
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          autoRenew: true,
         },
         usageLimits: {
           evaluationInterviews: 999,
           careerRoadmaps: 999,
           mockInterviews: 999,
-          projectReviews: 999,
+          cvAnalyses: 999,
+          mentorSessions: 999,
+          resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
       });
       console.log("✅ Admin user created:", adminEmail);
@@ -59,12 +64,17 @@ async function createAdminAndRecruiter() {
         subscription: {
           tier: "pro",
           status: "active",
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          autoRenew: true,
         },
         usageLimits: {
           evaluationInterviews: 50,
           careerRoadmaps: 50,
           mockInterviews: 50,
-          projectReviews: 50,
+          cvAnalyses: 50,
+          mentorSessions: 10,
+          resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
       });
       console.log("✅ Recruiter user created:", recruiterEmail);

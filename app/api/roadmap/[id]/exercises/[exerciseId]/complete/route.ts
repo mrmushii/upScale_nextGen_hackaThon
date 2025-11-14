@@ -28,24 +28,43 @@ export async function POST(
     }
 
     // Mark exercise as completed in the stage
-    if (roadmap.stages[stageIndex]) {
-      if (!roadmap.stages[stageIndex].completedExercises) {
-        roadmap.stages[stageIndex].completedExercises = 0;
-      }
-      roadmap.stages[stageIndex].completedExercises += 1;
-
-      // Check if all exercises in stage are completed
-      const totalExercises = roadmap.stages[stageIndex].exercises?.length || 0;
-      if (roadmap.stages[stageIndex].completedExercises >= totalExercises) {
-        roadmap.stages[stageIndex].completed = true;
-      }
-
-      // Update overall progress
-      const completedStages = roadmap.stages.filter((s: any) => s.completed).length;
-      roadmap.progress = Math.round((completedStages / roadmap.stages.length) * 100);
-
-      await roadmap.save();
+    const stage = roadmap.stages[stageIndex];
+    if (!stage) {
+      return NextResponse.json({ error: "Stage not found" }, { status: 404 });
     }
+
+    const totalExercises = stage.exercises?.length ?? 0;
+    if (totalExercises === 0) {
+      return NextResponse.json(
+        { error: "Stage has no exercises to complete" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      typeof exerciseIndex === "number" &&
+      stage.exercises &&
+      stage.exercises[exerciseIndex]
+    ) {
+      stage.exercises[exerciseIndex].completed = true;
+      stage.exercises[exerciseIndex].lastSubmission = code || "";
+    }
+
+    stage.completedExercises = (stage.completedExercises || 0) + 1;
+    stage.completedExercises = Math.min(stage.completedExercises, totalExercises);
+
+    if (stage.completedExercises >= totalExercises) {
+      stage.completed = true;
+    }
+
+    roadmap.stages[stageIndex] = stage;
+
+    // Update overall progress
+    const completedStages = roadmap.stages.filter((s: any) => s.completed).length;
+    roadmap.progress = Math.round((completedStages / roadmap.stages.length) * 100);
+
+    roadmap.markModified("stages");
+    await roadmap.save();
 
     return NextResponse.json({
       message: "Exercise completed!",
