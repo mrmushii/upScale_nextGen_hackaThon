@@ -75,6 +75,10 @@ export async function GET(
     // Get top 3-5 missing skills for course suggestions
     // Use validatedMissingSkills to ensure we only suggest courses for truly missing skills
     const topMissingSkills = validatedMissingSkills.slice(0, 5);
+    
+    // Debug logging to verify correct skills are being used
+    console.log("Course suggestions - Missing skills:", topMissingSkills);
+    console.log("Course suggestions - Existing skills (excluded):", existingSkills);
 
     // Fetch Udemy courses
     try {

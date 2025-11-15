@@ -25,12 +25,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user preferences
-    const searchQuery = user.preferredTrack || user.targetRoles?.[0] || "programming";
-    const skills = user.skills || [];
-
-    // Build search query
-    const query = `${searchQuery} ${skills.slice(0, 2).join(" ")} tutorial`;
+    // Get search parameter from query string (for skill gap course suggestions)
+    const { searchParams } = new URL(request.url);
+    const searchParam = searchParams.get("search");
+    
+    // If search parameter is provided (from skill gap suggestions), use it
+    // Otherwise, fall back to user preferences
+    let query: string;
+    if (searchParam) {
+      // Use the provided search term (missing skill) for course suggestions
+      query = `${searchParam} tutorial`;
+      console.log("YouTube API - Using missing skill for search:", searchParam);
+    } else {
+      // Get user preferences (for general resource browsing)
+      const searchQuery = user.preferredTrack || user.targetRoles?.[0] || "programming";
+      const skills = user.skills || [];
+      query = `${searchQuery} ${skills.slice(0, 2).join(" ")} tutorial`;
+      console.log("YouTube API - Using user preferences for search:", query);
+    }
 
     // Fetch from FreeCodeCamp channel
     const freeCodeCampVideos = await fetchYouTubeVideos(
