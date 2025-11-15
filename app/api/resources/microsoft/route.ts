@@ -33,19 +33,31 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const queryParam = searchParams.get("query");
+    // Check for both 'search' (from skill gap suggestions) and 'query' (from general browsing)
+    const searchParam = searchParams.get("search") || searchParams.get("query");
 
+    // If search parameter is provided (from skill gap suggestions), use it
+    // Otherwise, fall back to user preferences
     const baseQuery =
-      queryParam ||
+      searchParam ||
       user.preferredTrack ||
       user.targetRoles?.[0] ||
       (Array.isArray(user.skills) && user.skills.length ? user.skills[0] : "") ||
       "developer";
 
-    const secondaryQuery =
-      user.skills?.slice(0, 3).join(" ") ||
-      user.preferredTrack ||
-      "";
+    // For skill gap suggestions, don't use user's existing skills as secondary query
+    // Only use secondary query when browsing general resources
+    const secondaryQuery = searchParam
+      ? "" // Don't filter by user skills when searching for missing skills
+      : user.skills?.slice(0, 3).join(" ") ||
+        user.preferredTrack ||
+        "";
+    
+    if (searchParam) {
+      console.log("Microsoft API - Using missing skill for search:", searchParam);
+    } else {
+      console.log("Microsoft API - Using user preferences for search:", baseQuery);
+    }
 
     const courses = await fetchMicrosoftCourses(baseQuery, secondaryQuery);
 
