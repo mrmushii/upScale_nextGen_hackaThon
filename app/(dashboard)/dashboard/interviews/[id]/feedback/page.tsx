@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import Interview from "@/models/Interview";
+import Interview, { IInterview } from "@/models/Interview";
 import InterviewFeedback from "@/models/InterviewFeedback";
 import { isProTier } from "@/lib/aiInterview";
 import { redirect } from "next/navigation";
@@ -45,7 +45,9 @@ export default async function InterviewFeedbackPage({
     redirect("/dashboard/interviews");
   }
 
-  const interview = await Interview.findById(id).lean();
+  const interview = (await Interview.findById(id).lean()) as (IInterview & {
+    _id: string;
+  }) | null;
   if (!interview) {
     redirect("/dashboard/interviews");
   }
