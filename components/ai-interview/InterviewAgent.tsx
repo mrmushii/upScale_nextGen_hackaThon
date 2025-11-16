@@ -73,6 +73,7 @@ export default function InterviewAgent({
     vapi.on("error", onError);
 
     return () => {
+      if (!vapi) return;
       vapi.off("call-start", onCallStart);
       vapi.off("call-end", onCallEnd);
       vapi.off("message", onMessage);

@@ -77,7 +77,7 @@ function extractSkillsFromText(text: string | string[] | any): string[] {
   skillPatterns.forEach((pattern) => {
     const matches = text.match(pattern);
     if (matches) {
-      matches.forEach((match) => {
+      matches.forEach((match: string) => {
         skills.add(normalizeSkill(match));
       });
     }
@@ -91,7 +91,7 @@ function extractSkillsFromText(text: string | string[] | any): string[] {
 
   phrasePatterns.forEach((pattern) => {
     const matches = [...text.matchAll(pattern)];
-    matches.forEach((match) => {
+    matches.forEach((match: RegExpMatchArray) => {
       if (match[1]) {
         const skill = normalizeSkill(match[1]);
         if (skill.length > 2 && skill.length < 50) {

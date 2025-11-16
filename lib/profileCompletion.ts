@@ -5,6 +5,13 @@ export interface ProfileCompletionCheck {
   percentage: number;
   missingFields: string[];
   completedFields: string[];
+  // Tier breakdown for UI display
+  tier1Complete: number;
+  tier1Total: number;
+  tier2Complete: number;
+  tier2Total: number;
+  tier3Complete: number;
+  tier3Total: number;
 }
 
 export function checkProfileCompletion(user: IUser | null): ProfileCompletionCheck {
@@ -14,6 +21,12 @@ export function checkProfileCompletion(user: IUser | null): ProfileCompletionChe
       percentage: 0,
       missingFields: [],
       completedFields: [],
+      tier1Complete: 0,
+      tier1Total: 0,
+      tier2Complete: 0,
+      tier2Total: 0,
+      tier3Complete: 0,
+      tier3Total: 0,
     };
   }
 

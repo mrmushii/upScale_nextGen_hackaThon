@@ -64,8 +64,8 @@ function parseQuestionsResponse(response: string): string[] {
   try {
     // Try to parse as JSON first
     const cleaned = response.trim();
-    // Remove markdown code blocks if present
-    const jsonMatch = cleaned.match(/\[.*\]/s);
+    // Remove markdown code blocks if present (support environments without /s flag)
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
       if (Array.isArray(parsed)) {

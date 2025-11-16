@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import Interview from "@/models/Interview";
+import Interview, { IInterview } from "@/models/Interview";
 import { isProTier } from "@/lib/aiInterview";
 
 export async function GET(
@@ -33,7 +33,9 @@ export async function GET(
       );
     }
 
-    const interview = await Interview.findById(id).lean();
+    const interview = (await Interview.findById(id).lean()) as (IInterview & {
+      _id: string;
+    }) | null;
     if (!interview) {
       return NextResponse.json({ error: "Interview not found" }, { status: 404 });
     }

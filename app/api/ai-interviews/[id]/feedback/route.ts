@@ -119,11 +119,13 @@ export async function POST(
     }
 
     const sanitizedTranscript = transcript
-      .map((item: any) => ({
+      .map((item: { role?: unknown; content?: unknown }) => ({
         role: String(item.role || "").slice(0, 32),
         content: String(item.content || "").slice(0, 2000),
       }))
-      .filter((item) => item.role && item.content);
+      .filter(
+        (item: { role: string; content: string }) => item.role && item.content
+      );
 
     if (!sanitizedTranscript.length) {
       return NextResponse.json(

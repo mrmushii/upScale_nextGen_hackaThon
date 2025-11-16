@@ -304,7 +304,7 @@ export default function SettingsPage() {
           return;
         }
       } else if (!profile?.subscription && billingPrefs.autoRenew) {
-        toast.info("Upgrade to a paid plan to enable auto-renew.");
+        toast("Upgrade to a paid plan to enable auto-renew.");
         setBillingPrefs((prev) => ({ ...prev, autoRenew: false }));
       }
 

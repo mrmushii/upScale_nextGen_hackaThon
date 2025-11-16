@@ -1,8 +1,10 @@
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
-import Interview from "@/models/Interview";
-import InterviewFeedback from "@/models/InterviewFeedback";
+import Interview, { IInterview } from "@/models/Interview";
+import InterviewFeedback, {
+  IInterviewFeedback,
+} from "@/models/InterviewFeedback";
 import { isProTier } from "@/lib/aiInterview";
 import InterviewAgent from "@/components/ai-interview/InterviewAgent";
 import TechStackIcons from "@/components/ai-interview/TechStackIcons";
@@ -37,7 +39,9 @@ export default async function InterviewDetailPage({
 
   await connectDB();
 
-  const user = await User.findById(session.user.id).select("fullName subscription");
+  const user = await User.findById(session.user.id).select(
+    "fullName subscription"
+  );
   if (!user) {
     redirect("/dashboard");
   }
@@ -46,17 +50,23 @@ export default async function InterviewDetailPage({
     redirect("/dashboard/interviews");
   }
 
-  const interview = await Interview.findById(id).lean();
+  const interview = (await Interview.findById(id).lean()) as (IInterview & {
+    _id: string;
+  }) | null;
   if (!interview) {
     redirect("/dashboard/interviews");
   }
 
-  const feedback = await InterviewFeedback.findOne({
+  const feedback = (await InterviewFeedback.findOne({
     interviewId: id,
     userId: user._id,
   })
     .select("totalScore finalAssessment createdAt")
-    .lean();
+    .lean()) as
+    | (IInterviewFeedback & {
+        _id: string;
+      })
+    | null;
 
   const typeLabel = /mix/i.test(interview.type)
     ? "Mixed"

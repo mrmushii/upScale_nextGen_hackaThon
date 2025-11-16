@@ -520,4 +520,4 @@ console.log(doubled, evens, sum);`,
   return [];
 }
 
-export { type Exercise, type RoadmapStage };
+// Types are already exported above and can be imported directly.

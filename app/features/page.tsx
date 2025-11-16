@@ -94,7 +94,9 @@ export default function FeaturesPage() {
           {/* AI Features */}
           <div className="space-y-16">
             <div 
-              ref={(el) => (sectionRefs.current[0] = el)}
+              ref={(el: HTMLDivElement | null) => {
+                sectionRefs.current[0] = el;
+              }}
               className={`transition-all duration-1000 ${
                 visibleSections.has(0) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
               }`}
@@ -104,7 +106,9 @@ export default function FeaturesPage() {
             </div>
             
             <div 
-              ref={(el) => (sectionRefs.current[1] = el)}
+              ref={(el: HTMLDivElement | null) => {
+                sectionRefs.current[1] = el;
+              }}
               className={`transition-all duration-1000 ${
                 visibleSections.has(1) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
               }`}
@@ -114,7 +118,9 @@ export default function FeaturesPage() {
             </div>
             
             <div 
-              ref={(el) => (sectionRefs.current[2] = el)}
+              ref={(el: HTMLDivElement | null) => {
+                sectionRefs.current[2] = el;
+              }}
               className={`transition-all duration-1000 ${
                 visibleSections.has(2) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
               }`}
@@ -124,7 +130,9 @@ export default function FeaturesPage() {
             </div>
             
             <div 
-              ref={(el) => (sectionRefs.current[3] = el)}
+              ref={(el: HTMLDivElement | null) => {
+                sectionRefs.current[3] = el;
+              }}
               className={`transition-all duration-1000 ${
                 visibleSections.has(3) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
               }`}
@@ -134,7 +142,9 @@ export default function FeaturesPage() {
             </div>
             
             <div 
-              ref={(el) => (sectionRefs.current[4] = el)}
+              ref={(el: HTMLDivElement | null) => {
+                sectionRefs.current[4] = el;
+              }}
               className={`transition-all duration-1000 ${
                 visibleSections.has(4) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
               }`}

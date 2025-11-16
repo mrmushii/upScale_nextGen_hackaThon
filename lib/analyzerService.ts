@@ -312,7 +312,6 @@ export async function analyzeResumeFromFile(
       if (parseResult.metadata) {
         console.error("PDF parsing metadata:", {
           numPages: parseResult.metadata.numPages,
-          hasInfo: !!parseResult.metadata.info,
         });
       }
       
