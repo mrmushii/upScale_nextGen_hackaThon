@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 
+// Auth-protected preferences route; must run dynamically
+export const dynamic = "force-dynamic";
+
 const DEFAULT_PREFERENCES = {
   account: {
     twoFactorEnabled: false,

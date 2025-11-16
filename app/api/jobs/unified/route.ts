@@ -4,6 +4,9 @@ import connectDB from "@/lib/mongodb";
 import Job from "@/models/Job";
 import User from "@/models/User";
 
+// Uses auth and request headers; must be dynamic at runtime
+export const dynamic = "force-dynamic";
+
 const FINDWORK_API_URL = "https://findwork.dev/api/jobs/";
 
 function getFindworkApiToken(): string {

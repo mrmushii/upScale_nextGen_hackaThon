@@ -3,6 +3,9 @@ import connectDB from "@/lib/mongodb";
 import Roadmap from "@/models/Roadmap";
 import { auth } from "@/auth";
 
+// Roadmap is user-specific and uses auth; mark as dynamic
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

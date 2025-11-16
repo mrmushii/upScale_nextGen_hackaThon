@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connectDB from "@/lib/mongodb";
 
+// Auth-dependent route; disable static rendering
+export const dynamic = "force-dynamic";
+
 // Mock session model - you can create this properly later
 const mockSessions = [
   { date: "2025-01", earnings: 15000, sessions: 10 },

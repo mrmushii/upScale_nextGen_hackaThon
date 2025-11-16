@@ -4,6 +4,9 @@ import Job from "@/models/Job";
 import User from "@/models/User";
 import { auth } from "@/auth";
 
+// Uses auth and cookies; mark as dynamic to avoid static export warnings
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
